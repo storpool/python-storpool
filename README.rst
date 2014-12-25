@@ -1,3 +1,6 @@
+Description
+===========
+
 This package contains Python bindings to the JSON-over-HTTP API of the StorPool
 distributed storage software.
 
@@ -13,13 +16,23 @@ a client.  The StorPool server allows a hypervisor to act as a storage node,
 while the StorPool client allows a hypervisor node to access the storage pool
 and act as a compute node.
 
-Version 1.0.2:
-- fix the author e-mail address in setup.py
+Version history
+===============
 
-Version 1.0.1:
+1.0.2
+-----
+
+- fix the author e-mail address in setup.py
+- fix the README file's Markdown format
+
+1.0.1
+-----
+
 - relicense under the Apache 2.0 License
 - switch the README file to Markdown format
 - remove a leftover OpenStack reference from the README file
 
-Version 1.0.0:
+1.0.0
+-----
+
 - first public release
