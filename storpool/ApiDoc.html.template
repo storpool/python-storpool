@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Storpool API Reference</title>
+		<style>
+			pre {
+				border: 1px dashed #333333;
+				padding: 1em;
+				margin-top: 5px;
+				margin-bottom: 5px;
+				overflow: auto;
+				width: 95%;
+				color: #000066;
+			}
+			
+			pre var {
+				font-weight: bold;
+				color: #FF0000;
+			}
+			
+			strong {
+				font-style: italic;
+				color: #000066;
+			}
+			
+			li.attribute {
+				margin-bottom: 0.2em;
+			}
+		</style>
+	</head>
+	<body>
+	
+__DOC__
+	
+	</body>
+</html>

@@ -1,0 +1,66 @@
+#
+#-
+# Copyright (c) 2014  StorPool.
+# All rights reserved.
+#
+''' Simple StorPool API example script '''
+from os import environ
+
+from sputils import GB, InvalidArgumentException
+from spapi import Api, ApiError
+from sptypes import VolumeCreateDesc
+
+
+api = Api(
+		host=environ.get('SP_API_HTTP_HOST', "127.0.0.1"),
+		port=environ.get('SP_API_HTTP_PORT', 80),
+		auth=environ.get('SP_AUTH_TOKEN', "")
+	)
+
+
+for diskId, disk in api.disksList().iteritems():
+	assert disk.id == diskId
+	print "Disk {disk.id:3}: serverId={disk.serverId}, objectsCount={disk.objectsCount}".format(disk=disk)
+
+for pgName, pgDesc in api.placementGroupsList().iteritems():
+	assert pgName == pgDesc.name
+	print "Placement group {pg.name}: servers={pg.servers}, disks={pg.disks}".format(pg=pgDesc)
+
+for volume in api.volumesList():
+	print "Volume {volume.name}: size={volume.size}, replication={volume.replication}, objectsCount={volume.objectsCount}".format(volume=volume)
+
+
+api.volumeCreate({ 'name': 'myTestVol1', 'size': 10 * GB, 'replication': 2, 'placeAll': 'hdd', 'placeTail': 'ssd' })
+api.volumeDelete('myTestVol1')
+
+desc = VolumeCreateDesc()
+desc.name = 'myTestVol2'
+try:
+	desc.size = 1234
+except InvalidArgumentException as e:
+	print "Invalid argument:", e
+	desc.size = 10 * GB
+desc.replication = 2
+desc.placeAll = 'hdd'
+desc.placeTail = 'ssd'
+
+api.volumeCreate(desc)
+
+vols = api.volumeList(desc.name)
+assert len(vols) == 1
+
+vol = vols[0]
+assert vol.name == desc.name
+assert vol.size == desc.size
+assert vol.replication == desc.replication
+assert vol.placeAll == desc.placeAll
+assert vol.placeTail == desc.placeTail
+
+api.volumeDelete(desc.name)
+
+try:
+	vols = api.volumeList(desc.name)
+except ApiError as e:
+	print "API Error:", e
+
+
