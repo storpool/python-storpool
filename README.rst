@@ -13,6 +13,9 @@ a client.  The StorPool server allows a hypervisor to act as a storage node,
 while the StorPool client allows a hypervisor node to access the storage pool
 and act as a compute node.
 
+Version 1.0.2:
+- fix the author e-mail address in setup.py
+
 Version 1.0.1:
 - relicense under the Apache 2.0 License
 - switch the README file to Markdown format
