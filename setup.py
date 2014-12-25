@@ -64,7 +64,7 @@ setuptools.setup(
 	namespace_packages = ('storpool',),
 
 	author = 'Peter Pentchev',
-	author_email = 'pp@storpool.com',
+	author_email = 'openstack-dev@storpool.com',
 	description = 'Bindings for the StorPool distributed storage API',
 	license = 'Apache License 2.0',
 	keywords = 'storpool StorPool',
