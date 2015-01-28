@@ -486,7 +486,7 @@ class VolumeCreateDesc(VolumePolicyDesc):
 	template: The name of the template that the settings of the new volume are based on.
 	'''
 
-@JsonObject(rename=maybe(VolumeName), size=maybe(VolumeSize), sizeAdd=maybe(VolumeResize), template=maybe(VolumeTemplateName))
+@JsonObject(rename=maybe(VolumeName), size=maybe(VolumeSize), sizeAdd=maybe(VolumeResize), template=maybe(VolumeTemplateName), shrinkOk=maybe(bool))
 class VolumeUpdateDesc(VolumePolicyDesc):
 	'''
 	rename: The new name to be set.
