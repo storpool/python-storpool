@@ -597,12 +597,13 @@ class VolumeTemplateCreateDesc(VolumePolicyDesc):
 	size: A default size for the volumes (in bytes).
 	'''
 
-@JsonObject(rename=maybe(VolumeTemplateName), parent=maybe(SnapshotName), size=maybe(VolumeSize))
+@JsonObject(rename=maybe(VolumeTemplateName), parent=maybe(SnapshotName), size=maybe(VolumeSize), propagate=maybe(bool))
 class VolumeTemplateUpdateDesc(VolumePolicyDesc):
 	'''
 	rename: The new name of the template.
 	parent: The name of the snapshot on which to base volumes created by this template.
 	size: A default size for the volumes (in bytes).
+	propagate: Whether to propagate this change to all the volumes and snapshots using this template.
 	'''
 
 
