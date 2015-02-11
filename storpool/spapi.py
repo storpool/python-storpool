@@ -172,7 +172,8 @@ class Api(object):
 		if json is not None:
 			json = js.dumps(json)
 		
-		with http.HTTPConnection(self._host, self._port, self._timeout) as conn:
+		try:
+			conn = http.HTTPConnection(self._host, self._port, self._timeout)
 			request = conn.request(method, path, json, self._authHeader)
 			response = conn.getresponse()
 			status, json = response.status, js.load(response)
@@ -183,6 +184,8 @@ class Api(object):
 			else:
 #				print json
 				return json['data']
+		finally:
+			conn.close()
 	
 	def volumeDevLinkWait(self, volumeName, attach, pollTime=200*msec, maxTime=60*sec):
 		return pathPollWait(SP_DEV_PATH + volumeName, attach, True, pollTime, maxTime)
