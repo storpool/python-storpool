@@ -1,6 +1,6 @@
 #
 #-
-# Copyright (c) 2014  StorPool.
+# Copyright (c) 2014, 2015  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,7 +59,7 @@ class BuildPyCommand(build_py.build_py):
 
 setuptools.setup(
 	name = 'storpool',
-	version = '1.0.2',
+	version = '1.0.3',
 	packages = ('storpool',),
 	namespace_packages = ('storpool',),
 
