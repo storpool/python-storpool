@@ -19,6 +19,11 @@ and act as a compute node.
 Version history
 ===============
 
+1.0.3
+-----
+
+- update the API documentation
+
 1.0.2
 -----
 
