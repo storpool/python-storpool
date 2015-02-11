@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 import re
-from sputils import error, spTypeFun, maybe, const, either, eitherOr
+from sputils import error, spTypeFun, maybe, const, either, eitherOr, internal
 from spjson import JsonObject
 
 
@@ -46,7 +46,7 @@ def oneOf(argName, *accepted):
 	
 	def validator(value):
 		if value not in _accepted:
-			error("Invalid {argName}: {value}. Must be on of {accepted}", argName=argName, value=value, accepted=accepted)
+			error("Invalid {argName}: {value}. Must be one of {accepted}", argName=argName, value=value, accepted=accepted)
 		else:
 			return value
 	
@@ -58,11 +58,11 @@ def intRange(argName, min, max):
 			i = int(i)
 			
 			if i < min or i > max:
-				error('Ivalid {argName}. Must be between {min} and {max}', argName=argName, min=min, max=max)
+				error('Invalid {argName}. Must be between {min} and {max}', argName=argName, min=min, max=max)
 			
 			return i
 		except ValueError:
-			error('Invalid {argName}. Must be integer', argName=argName)
+			error('Invalid {argName}. Must be an integer', argName=argName)
 	
 	return spTypeFun(argName, validator, '''integer, {min} <= value <= {max}'''.format(min=min, max=max))
 
@@ -82,7 +82,7 @@ def namedEnum(argName, names, first=0):
 			
 			return names[val - first]
 		except ValueError:
-			error("Invalid {argName}. Must be integer")
+			error("Invalid {argName}. Must be an integer")
 	
 	return spTypeFun(argName, validator, '''{argName}, enumeration from {first} to {last}'''.format(argName=argName, first=first, last=end-1))
 
@@ -102,7 +102,7 @@ def unlimitedInt(argName, min, unlimited):
 		except ValueError:
 			error('Non-numeric {argName}: {value}', argName=argName, value=val)
 	
-	return spTypeFun(argName, validator, '''positive integer or '{unlimited}' for unlimited'''.format(unlimited=unlimited))
+	return spTypeFun(argName, validator, '''a positive integer or '{unlimited}' for unlimited'''.format(unlimited=unlimited))
 
 def nameValidator(argName, regex, size, *blacklisted):
 	_regex = re.compile(regex)
@@ -125,9 +125,9 @@ def nameValidator(argName, regex, size, *blacklisted):
 			else:
 				return name
 		except ValueError:
-			error('Invalid {argName}. Must be string', argName=argName)
+			error('Invalid {argName}. Must be a string', argName=argName)
 	
-	return spTypeFun(argName, validator, '''string({size}), matching {regex}, except {{{blacklisted}}}'''.format(size=size, regex=regex, blacklisted=", ".join(map(str, blacklisted))))
+	return spTypeFun(argName, validator, '''a string({size}), matching {regex}, except {{{blacklisted}}}'''.format(size=size, regex=regex, blacklisted=", ".join(map(str, blacklisted))))
 
 def volumeSizeValidator(argName):
 	def validator(size):
@@ -136,13 +136,13 @@ def volumeSizeValidator(argName):
 			if size < 1:
 				error('Invalid {argName} {size}. Must be positive', argName=argName, size=size)
 			elif size % SECTOR_SIZE:
-				error('Invalid {argName} {size}. Must be multiple of {sectorSize}', argName=argName, size=size, sectorSize=SECTOR_SIZE)
+				error('Invalid {argName} {size}. Must be a multiple of {sectorSize}', argName=argName, size=size, sectorSize=SECTOR_SIZE)
 			else:
 				return size
 		except ValueError:
 			error('Non-numeric {argName}: {size}', argName=argName, size=size)
 	
-	return spTypeFun(argName, validator, '''positive integer, divisible by {sectorSize}'''.format(sectorSize=SECTOR_SIZE))
+	return spTypeFun(argName, validator, '''a positive integer divisible by {sectorSize}'''.format(sectorSize=SECTOR_SIZE))
 
 
 ### Common constants ###
@@ -210,27 +210,44 @@ class NetDesc(object):
 
 @JsonObject(networks={NetId: NetDesc})
 class PeerDesc(object):
-	pass
+	'''
+	networks: List of the networks that StorPool communicates through on this node.
+	'''
 
 
 ### SERVER ###
 @JsonObject(nodeId=NodeId, version=str)
 class Service(object):
+	'''
+	nodeId: The ID of the node on which the service is running.
+	version: The version of the running StorPool service.
+	'''
 	@property
 	def running(self):
 		return self.status == 'running'
 
 @JsonObject(id=ServerId, status=ServerStatus, missingDisks=[DiskId], pendingDisks=[DiskId])
 class Server(Service):
-	pass
+	'''
+	id: The ID of the service. Currently this is the same as the ID of the node.
+	status: down - There is no storpool_server daemon running or it is still recovering its drives from a crashed state. waiting - storpool_server is running but waiting for some disks to appear to prevent split-brain situations. booting - No missing disks; the server is in the process of joining the cluster ...
+	missingDisks: The cluster will remain down until these disks are seen again. This happens in the case of simultaneous failure of the whole cluster (power failure); the servers keep track of where the most recent configuration and data was stored.
+	pendingDisks: Similar to missingDisks, these are the disks that are ready and waiting for the missing ones.
+	'''
 
 @JsonObject(id=ClientId, status=ClientStatus)
 class Client(Service):
-	pass
+	'''
+	id: The ID of the service. Currently this is the same as the ID of the node.
+	status: The current status of the client.
+	'''
 
 @JsonObject(id=MgmtId, status=ClientStatus)
 class Mgmt(Service):
-	pass
+	'''
+	id: The ID of the service. It will always be 65535.
+	status: The current status of the whole cluster. running - At least one running server; a cluster is formed. waiting - In quorum but negotiations between servers are not over yet. down - No quorum; most likely because more beacons are needed.
+	'''
 
 @JsonObject(mgmt=Mgmt, clients={ClientId: Client}, servers={ServerId: Server})
 class ClusterStatus(object):
@@ -240,122 +257,243 @@ class ClusterStatus(object):
 ### CLIENT ###
 @JsonObject(id=ClientId, generation=long, clientGeneration=long, configStatus=oneOf("client status", 'ok', 'updating', 'down'), delay=int)
 class ClientConfigStatus(object):
-	pass
+	'''
+	generation: The cluster generation based on the number of configuration changes since the cluster was created.
+	clientGeneration: The generation of the specific client.
+	configStatus: Whether there is an update of the configuration in progress.
+	delay: The time it took for the client generation to reach the cluster generation. Only applicable to ClientConfigWait. Always 0 in ClientsConfigDump.
+	'''
 
 
 ### TASK ###
-@JsonObject(diskId=DiskId, transactionId=long, allObjects=int, completedObjects=int, dispatchedObjects=int, unresolvedObjects=int)
+@JsonObject(diskId=DiskId, transactionId=long, allObjects=int, completedObjects=int, dispatchedObjects=int, unresolvedObjects=internal(int))
 class Task(object):
-	pass
+	'''
+	transactionId: An ID associated with the currently running task. This ID is the same for all the tasks running on different disks but initiated by the same action (e.g. when reallocating a volume, all tasks associated with that volume will have the same ID).
+	allObjects: The number of all the objects that the task is performing actions on.
+	completedObjects: The number of objects that the task has finished working on.
+	dispatchedObjects: Objects that the task has started working on.
+	'''
 
 
 ### DISK ###
-@JsonObject(objectId=int, generation=long, version=long, volume=str, parentVolume=str, onDiskSize=int, storedSize=int, state=ObjectState,
-	volumeId=long)
+@JsonObject(objectId=internal(int), generation=long, version=long, volume=str, parentVolume=str, onDiskSize=int, storedSize=int, state=ObjectState,
+	volumeId=internal(long))
 class DiskObject(object):
+	'''
+	parentVolume: The name of the parent snapshot.
+	generation: The generation when the last write to this object occurred.
+	onDiskSize: The space allocated on the disk for the object. This can go up to 32MB.
+	storedSize: The size of the actual data in that object (<= onDiskSize).
+	volume: The name of the volume for which the object contains data.
+	version: With each write the version is increased.
+	'''
 	@property
 	def ok(self):
 		return self.state == OBJECT_OK
 
 @JsonObject(name=str, storedSize=long, onDiskSize=long, objectsCount=long, objectStates={ObjectState:int})
 class DiskVolumeInfo(object):
-	pass
+	'''
+	objectsCount: The number of objects of the volume stored on this disk.
+	objectStates: For each state, the number of objects that are in that state. 0-undefined 1-ok 2-outdated 3-in_recovery 4-waiting_for_version 5-waiting_for_disk 6-data_not_present 7-data_lost 8-waiting_for_chain 9-wait_idle
+	onDiskSize: The space allocated on the disk for the object. This can go up to 32MB.
+	storedSize: The size of the actual data in that object (<= onDiskSize).
+	'''
+
 
 @JsonObject(id=DiskId, serverId=ServerId, generationLeft=long, sectorsCount=long, empty=bool, ssd=bool, softEject=oneOf('DiskSoftEjectStatus', "on", "off", "paused"),
 	device=str, model=str, serial=str, description=DiskDescription,
-	agCount=int, agAllocated=int, agFree=int, agFull=int, agPartial=int, agFreeing=int, agMaxSizeFull=int, agMaxSizePartial=int,
+	agCount=internal(int), agAllocated=internal(int), agFree=internal(int), agFull=internal(int), agPartial=internal(int), agFreeing=internal(int), agMaxSizeFull=internal(int), agMaxSizePartial=internal(int),
 	entriesCount=int, entriesAllocated=int, entriesFree=int,
 	objectsCount=int, objectsAllocated=int, objectsFree=int, objectsOnDiskSize=long)
 class DiskSummary(object):
+	'''
+	generationLeft: The last cluster generation when the disk was active on a running server, or -1 if the disk is currently active.
+	sectorsCount: The amount of 512-byte sectors on the disk.
+	ssd: Whether the device is an SSD.
+	softEject: The status of the soft-eject process.
+	device: The name of the physical disk device on the server.
+	description: A user-defined description of the disk for easier identification of the device.
+	entriesAllocated: Used entries of the disk.
+	objectsAllocated: Used objects of the disk.
+	entriesFree: The remaining number of entries that can be stored on the disk.
+	objectsFree: The remaining number of objects that can be stored on the disk.
+	entriesCount: The maximum amount of entries that can exists on the disk.
+	objectsCount: The maximum amount of object that can exists on the disk.
+	empty: True if no volumes or snapshots are on this disk.
+	objectsOnDiskSize: Total size occupied by objects. In essence, this is the estimated disk usage by StorPool.
+	'''
 	@property
 	def ok(self):
 		return self.generationLeft == -1
 
 @JsonObject(objectStates={ObjectState:int}, volumeInfos={str:DiskVolumeInfo})
 class DiskInfo(DiskSummary):
-	pass
+	'''
+	For each state, the number of objects that are in that state. 0-undefined 1-ok 2-outdated 3-in_recovery 4-waiting_for_version 5-waiting_for_disk 6-data_not_present 7-data_lost 8-waiting_for_chain 9-wait_idle
+	volumeInfos: Detailed information about the volumes that have data stored on the disk.
+	'''
 
 @JsonObject(objects={int:DiskObject})
 class Disk(DiskSummary):
-	pass
+	'''
+	objects: Detailed information about each object on the disk.
+	'''
 
 @JsonObject(description=DiskDescription)
 class DiskDescUpdate(object):
-	pass
+	'''
+	description: A user-defined description of the disk for easier identification of the device.
+	'''
 
 
 ### ACTIVE REQUESTS ###
-@JsonObject(requestId=str, requestIdx=int, volumeId=long, address=long, size=int,
+@JsonObject(requestId=str, requestIdx=int, volume=VolumeName, address=long, size=int,
 	op=oneOf('RequestOp', "read", "write", "merge", "system", "entries flush", "#bad_state", "#bad_drOp"), state=str, prevState=str, drOp=str, msecActive=int)
 class ActiveRequestDesc(object):
-	pass
+	'''
+	requestId: A unique request ID that may be matched between clients and disks.
+	requestIdx: A temporary local request identifier for this request on this client or disk.
+	address: The offset in bytes within the logical volume.
+	size: The size of the request in bytes.
+	op: The type of the requested operation; one of read, write, system, merge, entries flush, #bad_state, #bad_drOp
+	state: An internal attribute used only for debugging. We strongly recommend that you do not use this attribute in any kind of automation.
+	prevState: An internal attribute used only for debugging. We strongly recommend that you do not use this attribute in any kind of automation.
+	drOp: An internal attribute used only for debugging. We strongly recommend that you do not use this attribute in any kind of automation.
+	msecActive: Time in microseconds since the request was submitted.
+	'''
 
 @JsonObject(clientId=ClientId, requests=[ActiveRequestDesc])
 class ClientActiveRequests(object):
-	pass
+	'''
+	requests: A detailed listing of all the requests associated with the given client.
+	'''
 
 @JsonObject(diskId=DiskId, requests=[ActiveRequestDesc])
 class DiskActiveRequests(object):
-	pass
-
+	'''
+	requests: A detailed listing of all the requests associated with the given disk.
+	'''
 
 ### PLACEMENT GROUP ###
 @JsonObject(id=int, name=PlacementGroupName, disks=set([DiskId]), servers=set([ServerId]))
 class PlacementGroup(object):
-	pass
+	'''
+	disks: IDs of the participating disks.
+	servers: IDs of the participating servers.
+	'''
 
 @JsonObject(rename=maybe(PlacementGroupName), addServers=set([ServerId]), addDisks=set([DiskId]), rmServers=set([ServerId]), rmDisks=set([DiskId]))
 class PlacementGroupUpdateDesc(object):
-	pass
+	'''
+	rename: The new name of the placement group.
+	addServers: IDs of the servers to add to this group. (This will add all the accessible disks of these servers)
+	addDisks: IDs of the disks to add to this group.
+	rmServers: IDs of the servers to be removed from this group.
+	rmDisks: IDs of the disks to be removed from this group.
+	'''
+
 
 
 ### VOLUME and SNAPSHOT ###
 @JsonObject(bw=Bandwidth, iops=IOPS)
 class VolumeLimits(object):
-	pass
+	'''
+	bw: Bandwidth limit in KB.
+	iops: iops limit.
+	'''
 
 @JsonObject(id=long, name=VolumeName, parentName=eitherOr(SnapshotName, ""), templateName=eitherOr(VolumeTemplateName, ""),
 	size=VolumeSize, replication=VolumeReplication,
 	placeAll=PlacementGroupName, placeTail=PlacementGroupName,
-	parentVolumeId=long, originalParentVolumeId=long, visibleVolumeId=long,
-	objectsCount=int, creationTimestamp=long, flags=int)
+	parentVolumeId=long, originalParentVolumeId=internal(long), visibleVolumeId=long,
+	objectsCount=int, creationTimestamp=long, flags=internal(int))
 class VolumeSummary(VolumeLimits):
-	pass
+	'''
+	parentName: The volume's parent snapshot.
+	templateName: The template that the volume's settings are taken from.
+	size: The volume's size in bytes.
+	replication: The number of copies/replicas kept.
+	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
+	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+	parentVolumeId: The ID of the parent snapshot.
+	visibleVolumeId: The ID by which the volume/snapshot was created.
+	objectsCount: The number of objects that the volume/snapshot is comprised of.
+	'''
 
 @JsonObject(onVolume=VolumeName)
 class SnapshotSummary(VolumeSummary):
-	pass
+	'''
+	onVolume: The name of the volume that this is a parent of.
+	'''
 
 @JsonObject(disks=[DiskId], count=int)
 class VolumeChainStat(object):
-	pass
+	'''
+	disks: IDs of the disks.
+	count: The number of objects on the disks.
+	'''
 
 @JsonObject(disksCount=int, objectsPerDisk={DiskId:int}, objectsPerChain=[VolumeChainStat], objectsPerDiskSet=[VolumeChainStat])
 class VolumeInfo(VolumeSummary):
 	pass
 
 @JsonObject(name=VolumeName, size=VolumeSize, replication=VolumeReplication,
-	status=str, migrating=bool, decreasedRedundancy=bool, balancerBlocked=bool,
+	status=oneOf("VolumeCurentStatus", "up", "up soon", "data lost", "down"), migrating=bool, decreasedRedundancy=bool, balancerBlocked=bool,
 	storedSize=int, onDiskSize=int, syncingDataBytes=int, syncingMetaObjects=int, downBytes=int,
 	downDrives=[DiskId], missingDrives=[DiskId], missingTargetDrives=[DiskId], softEjectingDrives=[DiskId])
 class VolumeStatus(object):
-	pass
+	'''
+	size: The volume's size in bytes.
+	replication: The number of copies/replicas kept.
+	status: up - The volume is operational. up soon - Synchronizing versions of objects after a disk has come back up. data lost - The last copy of some of the data in the volume has been lost. down - Some or all of the objects of the volume are missing and the volume is not in a state to continue serving operations.
+	migrating: True if there are tasks for reallocation of the volume.
+	decreasedRedundancy: True if any of the replicas of the volume are missing.
+	storedSize: The number of bytes of client data on the volume. This does not take into account the StorPool replication and overhead, thus it is never larger than the volume size.
+	onDiskSize: The actual size that the objects of this volume occupy on the disks.
+	syncingDataBytes: The total number of bytes in objects currently being synchronized (degraded objects or objects with not yet known version)
+	syncingMetaObjects: The number of objects currently being synchronized (degraded objects or objects with not yet known version)
+	downBytes: The number of bytes of the volume that are not accessible at the moment.
+	downDrives: The IDs of the drives that are not accessible at the moment but needed by this volume. The volume will be in the 'down' status until all or some of these drives reappear.
+	missingDrives: The IDs of the drives that are not accessible at the moment. The volume has all the needed data on the rest of the disks and can continue serving requests but it is in the 'degraded' status.
+	'''
+
 
 @JsonObject(targetDiskSets=[[DiskId]], objects=[[DiskId]])
 class Volume(VolumeSummary):
-	pass
+	'''
+	targetDiskSets: Sets of disks that the volume's data should be stored on.
+	objects: Where each object is actually stored.
+	'''
 
 @JsonObject(placeAll=maybe(PlacementGroupName), placeTail=maybe(PlacementGroupName), replication=maybe(VolumeReplication), bw=maybe(Bandwidth), iops=maybe(IOPS))
 class VolumePolicyDesc(object):
-	pass
+	'''
+	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
+	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+	bw: Bandwidth limit in KB.
+	iops: iops limit.
+	replication: The number of copies/replicas kept.
+	'''
 
 @JsonObject(name=VolumeName, size=VolumeSize, parent=maybe(SnapshotName), template=maybe(VolumeTemplateName))
 class VolumeCreateDesc(VolumePolicyDesc):
-	pass
+	'''
+	name: The name of the volume to be created.
+	size: The volume's size in bytes.
+	parent: The name of the snapshot that the new volume is based on.
+	template: The name of the template that the settings of the new volume are based on.
+	'''
 
 @JsonObject(rename=maybe(VolumeName), size=maybe(VolumeSize), sizeAdd=maybe(VolumeResize), template=maybe(VolumeTemplateName))
 class VolumeUpdateDesc(VolumePolicyDesc):
-	pass
+	'''
+	rename: The new name to be set.
+	size: The new size in bytes.
+	sizeAdd: The number of bytes that the volume's size should be increased by.
+	template: The new template that the volume's settings should be based on.
+	'''
 
 @JsonObject(name=maybe(VolumeName))
 class VolumeSnapshotDesc(object):
@@ -363,7 +501,9 @@ class VolumeSnapshotDesc(object):
 
 @JsonObject(parentName=maybe(SnapshotName))
 class VolumeRebaseDesc(object):
-	pass
+	'''
+	parentName: The name of one of the volume's parents on which to re-base. If left out, it will be re-based to base.
+	'''
 
 
 ### VOLUME RIGHTS ###
@@ -372,30 +512,59 @@ AttachmentPos = intRange('AttachmentPos', 0, MAX_CLIENT_DISK)
 
 @JsonObject(volume=VolumeName, detach=maybe(DetachClientsList), ro=maybe([ClientId]), rw=maybe([ClientId]), force=False)
 class VolumeReassignDesc(object):
-	pass
+	'''
+	volume: The name of the volume to be reassigned.
+	detach: The clients from which to detach the given volume.
+	ro: The clients on which to attach the volume as read only.
+	rw: The clients on which to attach the volume as read/write.
+	force: Whether to force detaching of open volumes.
+	'''
 
 @JsonObject(snapshot=SnapshotName, detach=maybe(DetachClientsList), ro=maybe([ClientId]), force=False)
 class SnapshotReassignDesc(object):
-	pass
+	'''
+	snapshot: The name of the snapshot which should be reassigned.
+	detach: The clients from which to detach the given snapshot.
+	ro: The clients on which to attach the snapshot.
+	force: Whether to force detaching of open snapshots.
+	'''
 
 @JsonObject(volume=VolumeName, snapshot=bool, client=ClientId, rights=AttachmentRights, pos=AttachmentPos)
 class AttachmentDesc(object):
-	pass
+	'''
+	snapshot: Whether it is a snapshot or a volume.
+	client: The ID of the client on which it is attached.
+	rights: Whether the volume is attached as read only or read/write; always ro for snapshots.
+	pos: The attachment position on the client; used by the StorPool client to form the name of the internal /dev/spN device node.
+	'''
 
 
 ### VOLUME TEMPLATES ###
 @JsonObject(name=VolumeTemplateName, parentName=eitherOr(SnapshotName, ""), placeAll=PlacementGroupName, placeTail=PlacementGroupName,
 	size=eitherOr(VolumeSize, "-"), replication=eitherOr(VolumeReplication, "-"))
 class VolumeTemplateDesc(VolumeLimits):
-	pass
+	'''
+	parentName: The name of the snapshot on which volumes will be based.
+	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
+	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+	size: A default size for the volumes (in bytes).
+	replication: A default number of copies to be kept by StorPool.
+	'''
 
 @JsonObject(name=VolumeTemplateName, parent=maybe(SnapshotName), size=maybe(VolumeSize))
 class VolumeTemplateCreateDesc(VolumePolicyDesc):
-	pass
+	'''
+	parent: The name of the snapshot on which to base volumes created by this template.
+	size: A default size for the volumes (in bytes).
+	'''
 
 @JsonObject(rename=maybe(VolumeTemplateName), parent=maybe(SnapshotName), size=maybe(VolumeSize))
 class VolumeTemplateUpdateDesc(VolumePolicyDesc):
-	pass
+	'''
+	rename: The new name of the template.
+	parent: The name of the snapshot on which to base volumes created by this template.
+	size: A default size for the volumes (in bytes).
+	'''
 
 
 ### VOLUME RELOCATOR ###

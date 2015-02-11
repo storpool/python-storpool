@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Storpool API Reference</title>
+		<title>StorPool API Reference</title>
 		<style>
 			pre {
 				border: 1px dashed #333333;
@@ -25,6 +25,18 @@
 			
 			li.attribute {
 				margin-bottom: 0.2em;
+			}
+			table {
+				position: relative;
+				left: 20px;
+				border-collapse: collapse;
+			}
+			td {
+				border-bottom: 1px dashed #aaa;
+			}
+			pre.code {
+				position: relative;
+				left: 50px;
 			}
 		</style>
 	</head>

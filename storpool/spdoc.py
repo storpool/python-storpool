@@ -15,6 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+import spapi as api
+
 class Html(object):
 	escapeTable = {
 		"&": "&amp;",
@@ -56,7 +59,13 @@ class TypeDoc(Doc):
 		self.deps = deps
 	
 	def attrList(self, html):
-		html.add('<strong>{name}</strong>, {desc}', name=self.name, desc=self.desc)
+		if not self.deps:
+			html.add('<strong><a href="#{name}">{name}</a></strong>', name=self.name)
+		else:
+			assert len(self.deps) == 1
+			dep = self.deps[0]
+			html.add('<strong>{name}(<a href="#{dep}">{dep}</a>)</strong>', name=self.name, dep=dep.name)
+		api.Api.spDoc.addType(self.name, self)
 	
 	def toJson(self, html, pad):
 		html.add('<var>{0}</var>', self.name)
@@ -81,7 +90,7 @@ class EitherDoc(TypeDoc):
 class ListDoc(TypeDoc):
 	def attrList(self, html):
 		valT, = self.deps
-		html.add('{0}\n', self.desc)
+		#html.add('{0}\n', self.desc)
 		html.add('<ul>Element type: ')
 		valT.attrList(html)
 		html.add('\n</li></ul>\n')
@@ -112,7 +121,8 @@ class DictDoc(TypeDoc):
 		keySt.toJson(html, pad + 2)
 		html.add('": ')
 		valSt.toJson(html, pad + 2)
-		html.add(', ...}}')
+		html.add(', ...\n')
+		html.add('{pad}}}', pad=' ' * (pad))
 
 class JsonObjectDoc(Doc):
 	def __init__(self, name, desc, attrs):
@@ -120,14 +130,21 @@ class JsonObjectDoc(Doc):
 		self.attrs = attrs
 	
 	def attrList(self, html):
-		html.add('<strong>{0}</strong>', self.name)
+		html.add('<strong>{name}</strong>', name=self.name)
 		html.add('<ul>\n')
 		for attrName, (attrType, attrDesc) in sorted(self.attrs.iteritems()):
 			html.add('<li class="attribute">{0}: ', attrName)
-			if attrDesc:
-				html.add('{0}', attrDesc)
-				html.add("</br><em>Property type info</em>: ")
-			attrType.attrList(html)
+			if type(attrType) is TypeDoc:
+				html.add(' (')
+				attrType.attrList(html)
+				html.add(')')
+				if attrDesc:
+					html.add(': {0}', attrDesc)
+			else:
+				if attrDesc:
+					html.add(' {0}', attrDesc)
+				attrType.attrList(html)
+			
 			html.add('</li>')
 		html.add('</ul>\n')
 	
@@ -188,7 +205,7 @@ class ApiCallDoc(Doc):
 			html.add('<em>No arguments</em>')
 		html.add('</li>\n')
 		
-		html.add('<li>Json: ')
+		html.add('<li>JSON: ')
 		if self.json:
 			self.json.attrList(html)
 		else:
@@ -228,12 +245,31 @@ class DocSection(Doc):
 	""" Description for API and API sections"""
 	def buildDesc(self, html):
 		currentParagraph = []
-		for line in map(str.strip, self.desc.split('\n')):
-			if line:
-				currentParagraph.append(line)
+		isCode = False
+		preSpaces = 0
+		for line in self.desc.split('\n'):
+			#print line.strip()
+			if isCode:
+				if line and line.strip() == '```':
+					html.add('</code></pre>\n')
+					isCode = False
+				else:
+					html.add('{0}\n', line[preSpaces:])
 			else:
-				html.add('<p>{0}</p>\n', " ".join(currentParagraph))
-				currentParagraph = []
+				if line and line.strip() == '```':
+					html.add('<p>{0}</p>\n', "\n".join(currentParagraph))
+					currentParagraph = []
+					html.add('<pre class="code"><code>')
+					preSpaces = len(line) - 3
+					isCode = True
+				elif line.strip():
+					currentParagraph.append(line.strip())
+				else:
+					html.add('<p>{0}</p>\n', "\n".join(currentParagraph))
+					currentParagraph = []
+		if( len(currentParagraph) > 0 ):
+			html.add('<p>{0}</p>\n', "\n".join(currentParagraph))
+			currentParagraph = []
 
 class ApiSectionDoc(DocSection):
 	""" Doc. section for related API calls """
@@ -257,11 +293,15 @@ class ApiSectionDoc(DocSection):
 			call.build(html)
 
 class ApiDoc(DocSection):
-	""" Api documentation holder """
+	""" API documentation holder """
 	def __init__(self, title, desc):
 		super(ApiDoc, self).__init__(title, desc)
 		self.sections = []
 		self.currentSection = None
+		self.types = {}
+	
+	def addType(self, name, desc):
+		self.types[name] = desc
 	
 	def addSection(self, name, desc):
 		self.currentSection = ApiSectionDoc(name, desc)
@@ -277,10 +317,18 @@ class ApiDoc(DocSection):
 		html.add('<ol>\n')
 		for sect in self.sections:
 			sect.index(html)
+		html.add('<li><a href="#types">Data Types</a></li>\n')
 		html.add('</ol>\n')
 		
 		for sect in self.sections:
 			sect.build(html)
+		
+		html.add('<h2 id="types">Data Types</h2>\n')
+		html.add('<table>\n')
+		for name, doc in sorted(self.types.iteritems()):
+			if not doc.deps:
+				html.add('<tr id="{n}"><td><strong>{n}</strong>:</td><td>{d}</td></tr>\n', n=name, d=doc.desc)
+		html.add('</table>\n')
 
 
 if __name__ == '__main__':

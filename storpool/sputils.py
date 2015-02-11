@@ -132,19 +132,26 @@ def maybe(val):
 	subType = spType(val)
 	valT = subType.handleVal
 	name = "Optional({0})".format(subType.name)
-	_doc = doc.TypeDoc(name, "If present must be of type {0}".format(subType.name))
+	_doc = doc.TypeDoc("Optional", "If present must be of type {0}".format(subType.name), deps=[subType.spDoc])
+	return SpType(name, valT, lambda: None, _doc)
+
+def internal(val):
+	subType = spType(val)
+	valT = subType.handleVal
+	name = "Internal({0})".format(subType.name)
+	_doc = doc.TypeDoc("Internal", "An internal attribute used only for debugging. We strongly recommend that you do not use this attribute in any kind of automation.", deps=[subType.spDoc])
 	return SpType(name, valT, lambda: None, _doc)
 
 def const(constVal):
 	name = js.dumps(constVal)
 	_doc = doc.TypeDoc(name, "The constant value {0}.".format(name))
-	return SpType(name, lambda val: val if val == constVal else error("Trying to assign value to const val"), lambda: constVal, _doc)
+	return SpType(name, lambda val: val if val == constVal else error("Trying to assign a value to const val"), lambda: constVal, _doc)
 
 def either(*types):
 	types = map(spType, types)
 	tpNames = ", ".join(t.name for t in types)
 	name = "Either({0})".format(tpNames)
-	_doc = doc.EitherDoc(name, "Value must be from one of the following types: {0}.".format(tpNames), [st.spDoc for st in types])
+	_doc = doc.EitherDoc(name, "The value must be of one of the following types: {0}.".format(tpNames), [st.spDoc for st in types])
 	
 	def handleVal(val):
 		for t in types:
@@ -153,7 +160,7 @@ def either(*types):
 			except:
 				pass
 		else:
-			error("Value does not match any type")
+			error("The value does not match any type")
 	
 	return SpType(name, handleVal, lambda: error("No default value for either type"), _doc)
 
