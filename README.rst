@@ -23,6 +23,7 @@ Version history
 -----
 
 - update the API documentation
+- fix a HTTPConnection usage bug
 
 1.0.2
 -----
