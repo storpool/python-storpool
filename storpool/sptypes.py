@@ -350,7 +350,7 @@ class DiskDescUpdate(object):
 
 ### ACTIVE REQUESTS ###
 @JsonObject(requestId=str, requestIdx=int, volume=VolumeName, address=long, size=int,
-	op=oneOf('RequestOp', "read", "write", "merge", "system", "entries flush", "#bad_state", "#bad_drOp"), state=str, prevState=str, drOp=str, msecActive=int)
+	op=oneOf('RequestOp', "read", "write", "merge", "system", "entries flush", "#bad_state", "#bad_drOp"), state=internal(str), prevState=internal(str), drOp=internal(str), msecActive=int)
 class ActiveRequestDesc(object):
 	'''
 	requestId: A unique request ID that may be matched between clients and disks.
@@ -377,7 +377,7 @@ class DiskActiveRequests(object):
 	'''
 
 ### PLACEMENT GROUP ###
-@JsonObject(id=int, name=PlacementGroupName, disks=set([DiskId]), servers=set([ServerId]))
+@JsonObject(id=internal(int), name=PlacementGroupName, disks=set([DiskId]), servers=set([ServerId]))
 class PlacementGroup(object):
 	'''
 	disks: IDs of the participating disks.
@@ -404,10 +404,10 @@ class VolumeLimits(object):
 	iops: iops limit.
 	'''
 
-@JsonObject(id=long, name=VolumeName, parentName=eitherOr(SnapshotName, ""), templateName=eitherOr(VolumeTemplateName, ""),
+@JsonObject(id=internal(long), name=VolumeName, parentName=eitherOr(SnapshotName, ""), templateName=eitherOr(VolumeTemplateName, ""),
 	size=VolumeSize, replication=VolumeReplication,
 	placeAll=PlacementGroupName, placeTail=PlacementGroupName,
-	parentVolumeId=long, originalParentVolumeId=internal(long), visibleVolumeId=long,
+	parentVolumeId=internal(long), originalParentVolumeId=internal(long), visibleVolumeId=long,
 	objectsCount=int, creationTimestamp=long, flags=internal(int))
 class VolumeSummary(VolumeLimits):
 	'''
