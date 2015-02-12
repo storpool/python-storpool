@@ -59,16 +59,22 @@ class TypeDoc(Doc):
 		self.deps = deps
 	
 	def attrList(self, html):
-		if not self.deps:
-			html.add('<strong><a href="#{name}">{name}</a></strong>', name=self.name)
-		else:
+		if self.deps:
 			assert len(self.deps) == 1
 			dep = self.deps[0]
-			html.add('<strong>{name}(<a href="#{dep}">{dep}</a>)</strong>', name=self.name, dep=dep.name)
-		api.Api.spDoc.addType(self.name, self)
+			html.add('<span class="opt">{name}</span> <strong><a href="#{dep}">{dep}</a></strong>', name=self.name, dep=dep.name)
+		else:
+			html.add('<strong><a href="#{name}">{name}</a></strong>', name=self.name)
+			api.Api.spDoc.addType(self.name, self)
 	
 	def toJson(self, html, pad):
-		html.add('<var>{0}</var>', self.name)
+		if self.deps:
+			assert len(self.deps) == 1
+			dep = self.deps[0]
+			dep.toJson(html, pad)
+			html.add(' <span class="opt">/* {0} */</span>', self.name)
+		else:
+			html.add('<var>{0}</var>', self.name)
 
 class EitherDoc(TypeDoc):
 	def attrList(self, html):

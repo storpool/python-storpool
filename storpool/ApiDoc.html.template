@@ -51,9 +51,18 @@ limitations under the License.
 			td {
 				border-bottom: 1px dashed #aaa;
 			}
+			
 			pre.code {
 				position: relative;
 				left: 50px;
+			}
+			.opt {
+				font-style: italic;
+				font-weight: bold;
+			}
+			
+			pre .opt {
+				color: #444;
 			}
 		</style>
 	</head>
