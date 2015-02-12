@@ -325,7 +325,7 @@ class DiskSummary(object):
 	objectsOnDiskSize: Total size occupied by objects. In essence, this is the estimated disk usage by StorPool.
 	'''
 	@property
-	def ok(self):
+	def up(self):
 		return self.generationLeft == -1
 
 @JsonObject(objectStates={ObjectState:int}, volumeInfos={str:DiskVolumeInfo})
