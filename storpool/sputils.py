@@ -181,7 +181,7 @@ spDocTypes = {
 
 def spTypeVal(val):
 	subType = spType(type(val))
-	name = "{0}, default={1}".format(subType.name, val)
+	name = "{0}, default={1}".format(subType.name, js.dumps(val))
 	_doc = doc.TypeDoc(name, "A value of type {0}. Default value = {1}.".format(subType.name, val))
 	return SpType(name, subType.handleVal, lambda: val, _doc)
 
