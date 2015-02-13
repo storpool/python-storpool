@@ -17,7 +17,7 @@
 #
 import re
 from sputils import error, spTypeFun, maybe, const, either, eitherOr, internal
-from spjson import JsonObject
+from spjson import JsonObject, dumps
 
 
 ### Simple validator functions ###
@@ -50,7 +50,7 @@ def oneOf(argName, *accepted):
 		else:
 			return value
 	
-	return spTypeFun(argName, validator, '''One of {{{accepted}}}'''.format(accepted=", ".join(map(str, accepted))))
+	return spTypeFun(argName, validator, '''One of {{{accepted}}}'''.format(accepted=", ".join(map(dumps, accepted))))
 
 def intRange(argName, min, max):
 	def validator(i):
