@@ -37,6 +37,7 @@ class _API_ARG(object):
 DiskId = _API_ARG('diskId', sp.DiskId)
 ServerId = _API_ARG('serverId', sp.ServerId)
 ClientId = _API_ARG('clientId', sp.ClientId)
+AoeTargetId = _API_ARG('aoeTargetId', sp.AoeTargetId)
 VolumeName = _API_ARG('volumeName', sp.VolumeName)
 SnapshotName = _API_ARG('snapshotName', sp.SnapshotName)
 PlacementGroupName = _API_ARG('placementGroupName', sp.PlacementGroupName)
@@ -320,6 +321,39 @@ Api.clientActiveRequests = GET('ClientActiveRequests/{clientId}', ClientId, retu
 	"""
 	List detailed information about the requests being currently processed on
 	the given client.
+	"""
+	)
+
+Api.spDocSection("AoE Targets", """ """)
+Api.aoeStatus = GET('AoeStatus', returns=[sp.AoeExport]).doc("Display AoE status",
+	"""
+	List the StorPool volumes and snapshots exported over AoE.
+	"""
+	)
+Api.aoeExportVolume = POST('AoeExportVolume/{volumeName}', VolumeName).doc("Export a volume",
+	"""
+	Export the specified volume over AoE.
+	"""
+	)
+Api.aoeExportSnapshot = POST('AoeExportSnapshot/{snapshotName}', SnapshotName).doc("Unexport a volume",
+	"""
+	Export the specified snapshot over AoE.
+	"""
+	)
+Api.aoeUnexportVolume = POST('AoeUnexportVolume/{volumeName}', VolumeName).doc("Export a snapshot",
+	"""
+	Stop exporting the specified volume over AoE.
+	"""
+	)
+Api.aoeUnexportSnapshot = POST('AoeUnexportSnapshot/{snapshotName}', SnapshotName).doc("Unexport a snaphot",
+	"""
+	Stop exporting the specified snapshot over AoE.
+	"""
+	)
+Api.aoeTargetActiveRequests = GET('AoeTargetActiveRequests/{aoeTargetId}', AoeTargetId, returns=sp.AoeTargetActiveRequests).doc("List all active requests on an AoE target",
+	"""
+	List detailed information about the requests being currently processed on
+	the given AoE target
 	"""
 	)
 

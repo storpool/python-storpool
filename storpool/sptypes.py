@@ -167,6 +167,7 @@ MAX_NODE_ID = 63
 MAX_PEER_ID = 65535
 MAX_SERVER_ID = 0x8000
 MAX_CLIENT_ID = 0x8000
+MAX_AOE_TARGET_ID = 4095
 PEER_CTL = 0xffff
 
 
@@ -182,6 +183,7 @@ PeerId = intRange('PeerID', 0, MAX_PEER_ID)
 ClientId = intRange('ClientID', 1, MAX_CLIENT_ID)
 ServerId = intRange('ServerID', 1, MAX_SERVER_ID)
 MgmtId = const(PEER_CTL)
+AoeTargetId = intRange("AoeTargetID", 1, MAX_AOE_TARGET_ID)
 
 DiskId = intRange('DiskID', 0, MAX_DISK_ID)
 DiskDescription = regex('DiskDescritpion', DISK_DESC_REGEX)
@@ -264,6 +266,21 @@ class ClientConfigStatus(object):
 	delay: The time it took for the client generation to reach the cluster generation. Only applicable to ClientConfigWait. Always 0 in ClientsConfigDump.
 	'''
 
+
+### AOE ###
+AoeExportStatus = oneOf('AoeExportStatus', "OK", "down")
+
+@JsonObject(name=either(VolumeName, SnapshotName), snapshot=bool, aoeId=str, target=eitherOr(AoeTargetId, None), status=AoeExportStatus)
+class AoeExport(object):
+	'''
+	A single StorPool volume or snapshot exported over AoE.
+
+	name: The name of the StorPool volume.
+	snapshot: True if this entry describes a snapshot instead of a volume.
+	aoeId: The AoE identifier that the volume is exported as.
+	target: The StorPool node that serves as an AoE target to export this volume.
+	status: The status of the StorPool AoE target node if target is set.
+	'''
 
 ### TASK ###
 @JsonObject(diskId=DiskId, transactionId=long, allObjects=int, completedObjects=int, dispatchedObjects=int, unresolvedObjects=internal(int))
@@ -375,6 +392,13 @@ class DiskActiveRequests(object):
 	'''
 	requests: A detailed listing of all the requests associated with the given disk.
 	'''
+
+@JsonObject(aoeTargetId=AoeTargetId, requests=[ActiveRequestDesc])
+class AoeTargetActiveRequests(object):
+	'''
+	requests: A detailed listing of all the requests associated with the given AoE target.
+	'''
+
 
 ### PLACEMENT GROUP ###
 @JsonObject(id=internal(int), name=PlacementGroupName, disks=set([DiskId]), servers=set([ServerId]))
