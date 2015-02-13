@@ -179,6 +179,7 @@ MacAddr = regex('MAC Address', r'^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$')
 PeerStatus = oneOf('PeerStatus', 'up', 'down')
 ClientStatus = oneOf('ClientStatus', 'running', 'down')
 ServerStatus = oneOf('ServerStatus', 'running', 'waiting', 'booting', 'down')
+ClusterStatus = oneOf('ClusterStatus', 'running', 'waiting', 'down')
 
 NetId = intRange('NetID', 0, MAX_NET_ID)
 NodeId = intRange('NodeID', 0, MAX_NODE_ID)
@@ -247,15 +248,26 @@ class Client(Service):
 	status: The current status of the client.
 	'''
 
-@JsonObject(id=MgmtId, status=ClientStatus)
+@JsonObject(id=MgmtId, status=ClientStatus, prio=internal(int), active=bool)
 class Mgmt(Service):
 	'''
-	id: The ID of the service. It will always be 65535.
-	status: The current status of the whole cluster. running - At least one running server; a cluster is formed. waiting - In quorum but negotiations between servers are not over yet. down - No quorum; most likely because more beacons are needed.
+	id: The ID of the service.
+	status: The current status of the mgmt instance.
+	active: If the instance is currently active. For a given cluster one mgmt instance will be active at any given time.
 	'''
 
-@JsonObject(mgmt=Mgmt, clients={ClientId: Client}, servers={ServerId: Server})
+@JsonObject(id=AoeTargetId, status=ClientStatus)
+class AoeTarget(Service):
+	'''
+	id: The ID of the service.
+	status: The current status of the AoE target.
+	'''
+
+@JsonObject(clusterStatus=ClusterStatus, mgmt={MgmtId: Mgmt}, clients={ClientId: Client}, servers={ServerId: Server}, aoeTargets={AoeTargetId: AoeTarget})
 class ClusterStatus(object):
+	'''
+	clusterStatus: The current status of the whole cluster. running - At least one running server; a cluster is formed. waiting - In quorum but negotiations between servers are not over yet. down - No quorum; most likely because more beacons are needed.
+	'''
 	pass
 
 
