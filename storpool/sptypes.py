@@ -179,7 +179,7 @@ ServerStatus = oneOf('ServerStatus', 'running', 'waiting', 'booting', 'down')
 NetId = intRange('NetID', 0, MAX_NET_ID)
 NodeId = intRange('NodeID', 0, MAX_NODE_ID)
 PeerId = intRange('PeerID', 0, MAX_PEER_ID)
-ClientId = intRange('CientID', 1, MAX_CLIENT_ID)
+ClientId = intRange('ClientID', 1, MAX_CLIENT_ID)
 ServerId = intRange('ServerID', 1, MAX_SERVER_ID)
 MgmtId = const(PEER_CTL)
 
