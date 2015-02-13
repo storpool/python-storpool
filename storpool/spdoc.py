@@ -15,9 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-import spapi as api
-
 class Html(object):
 	escapeTable = {
 		"&": "&amp;",
@@ -54,9 +51,22 @@ class Doc(object):
 		self.desc = desc.strip()
 
 class TypeDoc(Doc):
+	types = {}
+	
+	@classmethod
+	def buildTypes(cls, html):
+		html.add('<h2 id="types">Data Types</h2>\n')
+		html.add('<table>\n')
+		for name, doc in sorted(TypeDoc.types.iteritems()):
+			html.add('<tr id="{n}"><td><strong>{n}</strong>:</td><td>{d}</td></tr>\n', n=name, d=doc.desc)
+		html.add('</table>\n')
+	
 	def __init__(self, name, desc, deps=[]):
 		super(TypeDoc, self).__init__(name, desc)
 		self.deps = deps
+		
+		if not self.deps and self.name not in TypeDoc.types:
+			TypeDoc.types[self.name] = self
 	
 	def attrList(self, html):
 		if self.deps:
@@ -65,7 +75,6 @@ class TypeDoc(Doc):
 			html.add('<span class="opt">{name}</span> <strong><a href="#{dep}">{dep}</a></strong>', name=self.name, dep=dep.name)
 		else:
 			html.add('<strong><a href="#{name}">{name}</a></strong>', name=self.name)
-			api.Api.spDoc.addType(self.name, self)
 	
 	def toJson(self, html, pad):
 		if self.deps:
@@ -304,10 +313,6 @@ class ApiDoc(DocSection):
 		super(ApiDoc, self).__init__(title, desc)
 		self.sections = []
 		self.currentSection = None
-		self.types = {}
-	
-	def addType(self, name, desc):
-		self.types[name] = desc
 	
 	def addSection(self, name, desc):
 		self.currentSection = ApiSectionDoc(name, desc)
@@ -329,12 +334,7 @@ class ApiDoc(DocSection):
 		for sect in self.sections:
 			sect.build(html)
 		
-		html.add('<h2 id="types">Data Types</h2>\n')
-		html.add('<table>\n')
-		for name, doc in sorted(self.types.iteritems()):
-			if not doc.deps:
-				html.add('<tr id="{n}"><td><strong>{n}</strong>:</td><td>{d}</td></tr>\n', n=name, d=doc.desc)
-		html.add('</table>\n')
+		TypeDoc.buildTypes(html)
 
 
 if __name__ == '__main__':
