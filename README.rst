@@ -21,7 +21,14 @@ Version history
 
 1.0.4
 -----
-- ??
+- rename Disk.ok to Disk.up
+- fix typo: CientID => ClientID
+- clean-up/fix peer ID types
+- mark a bunch of attributes as internal
+- use js.dumps and not str when printing values in the documentation
+- generate better json for optional and internal values in the documentation
+- export changes to ClusterStatus due to AoE and mgmt failover
+- add AoE commands
 
 1.0.3
 -----
