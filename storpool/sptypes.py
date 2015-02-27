@@ -148,8 +148,8 @@ def volumeSizeValidator(argName):
 ### Common constants ###
 VOLUME_NAME_SIZE = 200
 PLACEMENT_GROUP_NAME_SIZE = 128
-VOLUME_NAME_REGEX = r'^[A-Za-z0-9_\-.:]+$'
-SNAPSHOT_NAME_REGEX = r'^[A-Za-z0-9_\-.@:]+$'
+VOLUME_NAME_REGEX = r'^\#?[A-Za-z0-9_\-.:]+$'
+SNAPSHOT_NAME_REGEX = r'^\*?[A-Za-z0-9_\-.:@]+$'
 PLACEMENT_GROUP_NAME_REGEX = r'^[A-Za-z0-9_\-]+$'
 VOLUME_TEMPLATE_NAME_REGEX = r'^[A-Za-z0-9_\-]+$'
 DISK_DESC_REGEX = r'^[A-Za-z0-9_\- ]{,30}$'
