@@ -381,7 +381,7 @@ class DiskDescUpdate(object):
 
 
 ### ACTIVE REQUESTS ###
-@JsonObject(requestId=str, requestIdx=int, volume=VolumeName, address=long, size=int,
+@JsonObject(requestId=str, requestIdx=int, volume=either(VolumeName, SnapshotName), address=long, size=int,
 	op=oneOf('RequestOp', "read", "write", "merge", "system", "entries flush", "#bad_state", "#bad_drOp"), state=internal(str), prevState=internal(str), drOp=internal(str), msecActive=int)
 class ActiveRequestDesc(object):
 	'''
