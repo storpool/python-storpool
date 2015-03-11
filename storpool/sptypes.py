@@ -479,7 +479,7 @@ class VolumeInfo(VolumeSummary):
 	pass
 
 @JsonObject(name=VolumeName, size=VolumeSize, replication=VolumeReplication,
-	status=oneOf("VolumeCurentStatus", "up", "up soon", "data lost", "down"), migrating=bool, decreasedRedundancy=bool, balancerBlocked=bool,
+	status=oneOf("VolumeCurentStatus", "up", "up soon", "data lost", "down"), snapshot=bool, migrating=bool, decreasedRedundancy=bool, balancerBlocked=bool,
 	storedSize=int, onDiskSize=int, syncingDataBytes=int, syncingMetaObjects=int, downBytes=int,
 	downDrives=[DiskId], missingDrives=[DiskId], missingTargetDrives=[DiskId], softEjectingDrives=[DiskId])
 class VolumeStatus(object):
@@ -487,6 +487,7 @@ class VolumeStatus(object):
 	size: The volume's size in bytes.
 	replication: The number of copies/replicas kept.
 	status: up - The volume is operational. up soon - Synchronizing versions of objects after a disk has come back up. data lost - The last copy of some of the data in the volume has been lost. down - Some or all of the objects of the volume are missing and the volume is not in a state to continue serving operations.
+	snapshot: True if this response describes a snapshot instead of a volume.
 	migrating: True if there are tasks for reallocation of the volume.
 	decreasedRedundancy: True if any of the replicas of the volume are missing.
 	storedSize: The number of bytes of client data on the volume. This does not take into account the StorPool replication and overhead, thus it is never larger than the volume size.
