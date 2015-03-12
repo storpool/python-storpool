@@ -29,6 +29,13 @@ Version history
 - generate better json for optional and internal values in the documentation
 - export changes to ClusterStatus due to AoE and mgmt failover
 - add AoE commands
+- add the optional "propagate" parameter to volumeTemplateUpdate()
+- extend the validation regular expressions for the names of volumes and
+  snapshots to support the special notation for system volumes and
+  snapshots currently being deleted
+- fix the ActiveRequestDesc "name" parameter to also support snapshot names
+- add the "snapshot" flag to the volumeStatus() result to signify that this
+  entry represents a snapshot and not a volume
 
 1.0.3
 -----
