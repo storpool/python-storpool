@@ -597,6 +597,27 @@ class VolumeTemplateDesc(VolumeLimits):
 	replication: A default number of copies to be kept by StorPool.
 	'''
 
+@JsonObject(name=VolumeTemplateName, placeAll=PlacementGroupName, placeTail=PlacementGroupName, replication=eitherOr(VolumeReplication, "-"),
+	volumesCount=int, snapshotsCount=int, removingSnapshotsCount=int,
+	size=eitherOr(VolumeSize, 0), totalSize=eitherOr(VolumeSize, 0), onDiskSize=long, storedSize=long,
+	availablePlaceAll=long, availablePlaceTail=long)
+class VolumeTemplateStatusDesc(object):
+	'''
+	name: The name of the template.
+	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
+	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+	replication: The number of copies to be kept by StorPool if defined for this template, otherwise "-".
+	volumesCount: The number of volumes based on this template.
+	snapshotsCount: The number of snapshots based on this template (incl. snapshots currently being deleted).
+	removingSnapshotsCount: The number of snapshots based on this template currently being deleted.
+	size: The number of bytes of all volumes based on this template, not counting the StorPool replication and checksums overhead.
+	totalSize: The number of bytes of all volumes based on this template, including the StorPool replication overhead.
+	storedSize: The number of bytes of client data on all the volumes based on this template. This does not take into account the StorPool replication and overhead, thus it is never larger than the volume size.
+	onDiskSize: The actual on-disk number of bytes occupied by all the volumes based on this template.
+	availablePlaceAll: An estimate of the available space on all the disks in this template's placeAll placement group.
+	availablePlaceTail: An estimate of the available space on all the disks in this template's placeTail placement group.
+	'''
+
 @JsonObject(name=VolumeTemplateName, parent=maybe(SnapshotName), size=maybe(VolumeSize))
 class VolumeTemplateCreateDesc(VolumePolicyDesc):
 	'''

@@ -515,6 +515,7 @@ Api.spDocSection("Volume Templates",
 	""" Templates are a set of rules used for creating many similar volumes. """
 	)
 Api.volumeTemplatesList = GET('VolumeTemplatesList', returns=[sp.VolumeTemplateDesc]).doc("List all volume templates", """ """)
+Api.volumeTemplatesStatus = GET('VolumeTemplatesStatus', returns=[sp.VolumeTemplateStatusDesc]).doc("List the status of all volume templates", """ """)
 Api.volumeTemplateDescribe = GET('VolumeTemplateDescribe/{templateName}', VolumeTemplateName, returns=sp.VolumeTemplateDesc).doc("Describe a single volume template",
 	"""
 	Same as VolumeTemplatesList but only return information about a given template.
