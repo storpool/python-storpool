@@ -470,7 +470,7 @@ Api.snapshotCreate = POST('VolumeSnapshot/{volumeName}', VolumeName, json=sp.Vol
 	the volume.
 	"""
 	)
-Api.snapshotUpdate = POST('SnapshotUpdate/{snapshotName}', SnapshotName, json=sp.VolumeUpdateDesc).doc("Update a snapshot",
+Api.snapshotUpdate = POST('SnapshotUpdate/{snapshotName}', SnapshotName, json=sp.SnapshotUpdateDesc).doc("Update a snapshot",
 	""" Alter the configuration of an existing snapshot. """
 	)
 Api.snapshotRebase = POST('SnapshotRebase/{snapshotName}', SnapshotName, json=sp.VolumeRebaseDesc).doc("Rebase a snapshot",

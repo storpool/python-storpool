@@ -539,6 +539,12 @@ class VolumeUpdateDesc(VolumePolicyDesc):
 class VolumeSnapshotDesc(object):
 	pass
 
+@JsonObject(rename=maybe(VolumeName))
+class SnapshotUpdateDesc(VolumePolicyDesc):
+	'''
+	rename: The new name to be set.
+	'''
+
 @JsonObject(parentName=maybe(SnapshotName))
 class VolumeRebaseDesc(object):
 	'''
