@@ -594,7 +594,7 @@ class AttachmentDesc(object):
 
 
 ### VOLUME TEMPLATES ###
-@JsonObject(name=VolumeTemplateName, parentName=eitherOr(SnapshotName, ""), placeAll=PlacementGroupName, placeTail=PlacementGroupName,
+@JsonObject(id=internal(int), name=VolumeTemplateName, parentName=eitherOr(SnapshotName, ""), placeAll=PlacementGroupName, placeTail=PlacementGroupName,
 	size=eitherOr(VolumeSize, "-"), replication=eitherOr(VolumeReplication, "-"))
 class VolumeTemplateDesc(VolumeLimits):
 	'''
@@ -606,7 +606,7 @@ class VolumeTemplateDesc(VolumeLimits):
 	replication: A default number of copies to be kept by StorPool.
 	'''
 
-@JsonObject(name=VolumeTemplateName, placeAll=PlacementGroupName, placeTail=PlacementGroupName, replication=eitherOr(VolumeReplication, "-"),
+@JsonObject(id=internal(int), name=VolumeTemplateName, placeAll=PlacementGroupName, placeTail=PlacementGroupName, replication=eitherOr(VolumeReplication, "-"),
 	volumesCount=int, snapshotsCount=int, removingSnapshotsCount=int,
 	size=eitherOr(VolumeSize, 0), totalSize=eitherOr(VolumeSize, 0), onDiskSize=long, storedSize=long,
 	availablePlaceAll=long, availablePlaceTail=long)
