@@ -301,6 +301,7 @@ class AoeExport(object):
 @JsonObject(diskId=DiskId, transactionId=long, allObjects=int, completedObjects=int, dispatchedObjects=int, unresolvedObjects=internal(int))
 class Task(object):
 	'''
+	diskId: The disk ID this task is on.
 	transactionId: An ID associated with the currently running task. This ID is the same for all the tasks running on different disks but initiated by the same action (e.g. when reallocating a volume, all tasks associated with that volume will have the same ID).
 	allObjects: The number of all the objects that the task is performing actions on.
 	completedObjects: The number of objects that the task has finished working on.
@@ -341,6 +342,8 @@ class DiskVolumeInfo(object):
 	objectsCount=int, objectsAllocated=int, objectsFree=int, objectsOnDiskSize=long)
 class DiskSummary(object):
 	'''
+	id: The ID of this disk. It is set when the disk is formatted to work with StorPool.
+	serverId: The ID of the server this disk is currently on. In case the disk is currently down, the last known server ID is reported.
 	generationLeft: The last cluster generation when the disk was active on a running server, or -1 if the disk is currently active.
 	sectorsCount: The amount of 512-byte sectors on the disk.
 	ssd: Whether the device is an SSD.
@@ -595,6 +598,7 @@ class AttachmentDesc(object):
 	size=eitherOr(VolumeSize, "-"), replication=eitherOr(VolumeReplication, "-"))
 class VolumeTemplateDesc(VolumeLimits):
 	'''
+	name: The name of the template.
 	parentName: The name of the snapshot on which volumes will be based.
 	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
 	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
