@@ -375,6 +375,9 @@ Api.diskEject = POST('DiskEject/{diskId}', DiskId).doc("Eject a disk",
 Api.diskForget = POST('DiskForget/{diskId}', DiskId).doc("Forget a disk",
 	""" Remove the disk from any placement groups or volumes that it is used in. """
 	)
+Api.diskIgnore = POST('DiskIgnore/{diskId}', DiskId).doc("Ignore a disk",
+	""" Try to boot the cluster by ignoring this disk. """
+	)
 Api.diskSoftEject = POST('DiskSoftEject/{diskId}', DiskId).doc("Soft-eject a disk",
 	""" Stop writes to the given disk and start relocating all the data stored on it to other disks. """
 	)
