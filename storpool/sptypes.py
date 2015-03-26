@@ -451,11 +451,11 @@ class VolumeLimits(object):
 	placeAll=PlacementGroupName, placeTail=PlacementGroupName,
 	parentVolumeId=internal(long), originalParentVolumeId=internal(long), visibleVolumeId=long,
 	objectsCount=int, creationTimestamp=long, flags=internal(int))
-class VolumeSummary(VolumeLimits):
+class VolumeSummaryBase(VolumeLimits):
 	'''
-	parentName: The volume's parent snapshot.
-	templateName: The template that the volume's settings are taken from.
-	size: The volume's size in bytes.
+	parentName: The volume/snapshot's parent snapshot.
+	templateName: The template that the volume/snapshot's settings are taken from.
+	size: The volume/snapshots's size in bytes.
 	replication: The number of copies/replicas kept.
 	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
 	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
@@ -464,9 +464,16 @@ class VolumeSummary(VolumeLimits):
 	objectsCount: The number of objects that the volume/snapshot is comprised of.
 	'''
 
-@JsonObject(onVolume=VolumeName)
-class SnapshotSummary(VolumeSummary):
+@JsonObject(name=VolumeName)
+class VolumeSummary(VolumeSummaryBase):
 	'''
+	name: The name of this volume.
+	'''
+
+@JsonObject(name=SnapshotName, onVolume=VolumeName)
+class SnapshotSummary(VolumeSummaryBase):
+	'''
+	name: The name of this snapshot
 	onVolume: The name of the volume that this is a parent of.
 	'''
 
