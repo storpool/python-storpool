@@ -1,6 +1,6 @@
 #
 #-
-# Copyright (c) 2014  StorPool.
+# Copyright (c) 2014, 2015  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -81,6 +81,9 @@ class JsonObjectImpl(object):
 	
 	def toJson(self):
 		return dict((attr, getattr(self, attr)) for attr in self.__jsonAttrDefs__)
+	
+	def __iter__(self):
+		return self.toJson().iteritems()
 	
 	__str__ = __repr__ = lambda self: str(self.toJson())
 
