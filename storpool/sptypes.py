@@ -335,21 +335,28 @@ class DiskVolumeInfo(object):
 	'''
 
 
-@JsonObject(id=DiskId, serverId=ServerId, generationLeft=long, sectorsCount=long, empty=bool, ssd=bool, softEject=oneOf('DiskSoftEjectStatus', "on", "off", "paused"),
-	device=str, model=str, serial=str, description=DiskDescription,
-	agCount=internal(int), agAllocated=internal(int), agFree=internal(int), agFull=internal(int), agPartial=internal(int), agFreeing=internal(int), agMaxSizeFull=internal(int), agMaxSizePartial=internal(int),
-	entriesCount=int, entriesAllocated=int, entriesFree=int,
-	objectsCount=int, objectsAllocated=int, objectsFree=int, objectsOnDiskSize=long)
-class DiskSummary(object):
+@JsonObject(id=DiskId, serverId=ServerId, generationLeft=long, model=str, serial=str, description=DiskDescription, softEject=oneOf('DiskSoftEjectStatus', "on", "off", "paused"))
+class DiskSummaryBase(object):
 	'''
 	id: The ID of this disk. It is set when the disk is formatted to work with StorPool.
 	serverId: The ID of the server this disk is currently on. In case the disk is currently down, the last known server ID is reported.
 	generationLeft: The last cluster generation when the disk was active on a running server, or -1 if the disk is currently active.
+	softEject: The status of the soft-eject process.
+	description: A user-defined description of the disk for easier identification of the device.
+	'''
+
+class DownDiskSummary(DiskSummaryBase):
+	up = False
+
+@JsonObject(generationLeft=const(-1L), sectorsCount=long, empty=bool, ssd=bool, device=str,
+	agCount=internal(int), agAllocated=internal(int), agFree=internal(int), agFull=internal(int), agPartial=internal(int), agFreeing=internal(int), agMaxSizeFull=internal(int), agMaxSizePartial=internal(int),
+	entriesCount=int, entriesAllocated=int, entriesFree=int,
+	objectsCount=int, objectsAllocated=int, objectsFree=int, objectsOnDiskSize=long)
+class UpDiskSummary(DiskSummaryBase):
+	'''
 	sectorsCount: The amount of 512-byte sectors on the disk.
 	ssd: Whether the device is an SSD.
-	softEject: The status of the soft-eject process.
 	device: The name of the physical disk device on the server.
-	description: A user-defined description of the disk for easier identification of the device.
 	entriesAllocated: Used entries of the disk.
 	objectsAllocated: Used objects of the disk.
 	entriesFree: The remaining number of entries that can be stored on the disk.
@@ -359,19 +366,20 @@ class DiskSummary(object):
 	empty: True if no volumes or snapshots are on this disk.
 	objectsOnDiskSize: Total size occupied by objects. In essence, this is the estimated disk usage by StorPool.
 	'''
-	@property
-	def up(self):
-		return self.generationLeft == -1
+	up = True
+
+DiskSummary = either(UpDiskSummary, DownDiskSummary)
+
 
 @JsonObject(objectStates={ObjectState:int}, volumeInfos={str:DiskVolumeInfo})
-class DiskInfo(DiskSummary):
+class DiskInfo(UpDiskSummary):
 	'''
 	For each state, the number of objects that are in that state. 0-undefined 1-ok 2-outdated 3-in_recovery 4-waiting_for_version 5-waiting_for_disk 6-data_not_present 7-data_lost 8-waiting_for_chain 9-wait_idle
 	volumeInfos: Detailed information about the volumes that have data stored on the disk.
 	'''
 
 @JsonObject(objects={int:DiskObject})
-class Disk(DiskSummary):
+class Disk(UpDiskSummary):
 	'''
 	objects: Detailed information about each object on the disk.
 	'''
