@@ -574,6 +574,12 @@ class VolumeRebaseDesc(object):
 	parentName: The name of one of the volume's parents on which to re-base. If left out, it will be re-based to base.
 	'''
 
+@JsonObject(diskId=DiskId)
+class AbandonDiskDesc(object):
+	'''
+	diskId: the disk to abandon.
+	'''
+
 
 ### VOLUME RIGHTS ###
 DetachClientsList = eitherOr([ClientId], "all")

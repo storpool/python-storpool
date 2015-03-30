@@ -436,6 +436,10 @@ Api.volumeRebase = POST('VolumeRebase/{volumeName}', VolumeName, json=sp.VolumeR
 	the hierarchy or by rebasing it to no parent.
 	"""
 	)
+Api.volumeAbandonDisk = POST('VolumeAbandonDisk/{volumeName}', VolumeName, json=sp.AbandonDiskDesc).doc("Abandon disk",
+	"""
+	"""
+	)
 Api.volumeDelete = POST('VolumeDelete/{volumeName}', VolumeName).doc("Delete a volume", """ """)
 
 Api.spDocSection("Snapshots",
@@ -480,6 +484,10 @@ Api.snapshotRebase = POST('SnapshotRebase/{snapshotName}', SnapshotName, json=sp
 	"""
 	Change the parent of the snapshot by choosing from the ones higher in
 	the hierarchy or by rebasing it to no parent.
+	"""
+	)
+Api.snapshotAbandonDisk = POST('VolumeAbandonDisk/{snapshotName}', SnapshotName, json=sp.AbandonDiskDesc).doc("Abandon disk",
+	"""
 	"""
 	)
 Api.snapshotDelete = POST('SnapshotDelete/{snapshotName}', SnapshotName).doc("Delete a snapshot", """ """)
