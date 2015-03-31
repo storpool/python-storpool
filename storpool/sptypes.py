@@ -535,7 +535,7 @@ class VolumePolicyDesc(object):
 	replication: The number of copies/replicas kept.
 	'''
 
-@JsonObject(name=VolumeName, size=VolumeSize, parent=maybe(SnapshotName), template=maybe(VolumeTemplateName), baseOn=maybe(VolumeName))
+@JsonObject(name=VolumeName, size=maybe(VolumeSize), parent=maybe(SnapshotName), template=maybe(VolumeTemplateName), baseOn=maybe(VolumeName))
 class VolumeCreateDesc(VolumePolicyDesc):
 	'''
 	name: The name of the volume to be created.
