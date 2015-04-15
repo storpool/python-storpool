@@ -19,8 +19,29 @@ and act as a compute node.
 Version history
 ===============
 
+1.0.5
+-----
+
+- add the SnapshotUpdateDesc type, since snapshotUpdate() only accepts a subset
+  of volumeUpdate()'s parameters
+- add the volumeTemplateStatus(), diskIgnore(), volumeAbandonDisk() and
+  snapshotAbandonDisk() commands
+- add the "bind" parameter to volumeUpdate() and snapshotUpdate()
+- add the "baseOn" parameter to volumeCreate()
+- add some internal templateId attributes; they are returned by the StorPool
+  management service, but they should not really be used by consumers
+- fix the validation of snapshot names to accept the anonymous snapshots that
+  may be returned by the various "list snapshots" commands
+- properly return information about missing/down disks in disksList() and
+  serverDisksList() - introduce a separate type for them
+- make the objects returned by the API calls iterable - "for i in obj" is now
+  similar to a dictionary's iteritems() method
+- make volumeCreate()'s "size" parameter optional, since the size may be
+  defined in a volume template
+
 1.0.4
 -----
+
 - rename Disk.ok to Disk.up
 - fix typo: CientID => ClientID
 - clean-up/fix peer ID types
