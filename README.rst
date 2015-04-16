@@ -19,9 +19,10 @@ and act as a compute node.
 Version history
 ===============
 
-1.0.6
+1.1.0
 -----
 
+- add the get() method with a default value to SPConfig objects
 
 1.0.5
 -----
