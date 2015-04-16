@@ -1,6 +1,6 @@
 #
 #-
-# Copyright (c) 2013, 2014  StorPool.
+# Copyright (c) 2013 - 2015  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -70,6 +70,9 @@ class SPConfig(object):
 
     def __getitem__(self, key):
         return self._dict[key]
+
+    def get(self, key, defval):
+        return self._dict.get(key, defval)
 
     def __iter__(self):
         return self.iterkeys()
