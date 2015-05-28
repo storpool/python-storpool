@@ -115,8 +115,7 @@ def GET(query, *args, **kwargs):
 	return _API_METHOD('GET', query, args, None, kwargs['returns'])
 
 def POST(query, *args, **kwargs):
-	assert 'returns' not in kwargs, 'POST requests currently return the same result type'
-	return _API_METHOD('POST', query, args, kwargs.get('json', None), ApiOk)
+	return _API_METHOD('POST', query, args, kwargs.get('json', None), kwargs.get('returns', ApiOk))
 
 
 @js.JsonObject(ok=const(True), generation=long)
@@ -124,6 +123,12 @@ class ApiOk(object):
 	'''
 	ok: Always returns true. If something goes wrong, an ApiError is returned instead.
 	generation: The cluster generation based on the number of configuration changes since the cluster was created.
+	'''
+
+@js.JsonObject(autoName=sp.maybe(sp.SnapshotName))
+class ApiOkVolumeCreate(ApiOk):
+	'''
+	autoName: The name of the transient snapshot used during the creation of the volume.
 	'''
 
 class ApiError(Exception):
@@ -423,7 +428,7 @@ Api.volumeListSnapshots = GET('VolumeListSnapshots/{volumeName}', VolumeName, re
 	VolumeList
 	"""
 	)
-Api.volumeCreate = POST('VolumeCreate', json=sp.VolumeCreateDesc).doc("Create a new volume", """ """)
+Api.volumeCreate = POST('VolumeCreate', json=sp.VolumeCreateDesc, returns=ApiOkVolumeCreate).doc("Create a new volume", """ """)
 Api.volumeUpdate = POST('VolumeUpdate/{volumeName}', VolumeName, json=sp.VolumeUpdateDesc).doc("Update a volume",
 	""" Alter the configuration of an existing volume. """
 	)
@@ -471,7 +476,7 @@ Api.snapshotInfo = GET('SnapshotGetInfo/{snapshotName}', SnapshotName, returns=s
 	disks.
 	"""
 	)
-Api.snapshotCreate = POST('VolumeSnapshot/{volumeName}', VolumeName, json=sp.VolumeSnapshotDesc).doc("Snapshot a volume",
+Api.snapshotCreate = POST('VolumeSnapshot/{volumeName}', VolumeName, json=sp.VolumeSnapshotDesc, returns=ApiOkVolumeCreate).doc("Snapshot a volume",
 	"""
 	Create a snapshot of the given volume; the snapshot becomes the parent of
 	the volume.
