@@ -24,15 +24,17 @@ class SPConfigException(Exception):
     """ An error that occurred during the StorPool configuration parsing. """
 
 class SPConfig(object):
-    def __init__(self, confget='/usr/sbin/storpool_confget'):
+    def __init__(self, confget='/usr/sbin/storpool_confget', section=None):
         self._confget = confget
         self._dict = dict()
+        self._section = section
         self.confget()
 
     def confget(self):
-        confget = self._confget
+        args = (self._confget,) if self._section is None else (self._confget, '-s', self._section)
+        confget = str.join(' ', args)
         try:
-            p = subprocess.Popen((confget,), stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=4096)
+            p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=4096)
             out = p.communicate()
             wres = p.wait()
         except OSError as ose:
