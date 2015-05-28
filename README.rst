@@ -19,8 +19,8 @@ and act as a compute node.
 Version history
 ===============
 
-1.2.0-alpha
------------
+1.2.0
+-----
 
 - fix the return type of volumeCreate() and snapshotCreate() - a new type,
   ApiOkVolumeCreate, that extends ApiOk to add the optinal "autoName"
