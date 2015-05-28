@@ -162,7 +162,7 @@ class Api(object):
 		"""
 		Copyright (c) 2014-2015 StorPool. All rights reserved.
 		
-		This reference document describes the StorPool API version 14.10 and
+		This reference document describes the StorPool API version 15.02 and
 		the supported API calls.
 		"""
 	)
