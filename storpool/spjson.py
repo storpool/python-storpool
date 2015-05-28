@@ -53,13 +53,14 @@ class JsonObjectImpl(object):
 			assert not kwargs, "Unsupported update on already contructed object"
 			return json
 		else:
-			json.update(kwargs)
+			j = dict(json)
+			j.update(kwargs)
 			
 			self = super(JsonObjectImpl, cls).__new__(cls)
 			object.__setattr__(self, '__jsonAttrs__', {})
 			object.__setattr__(self, '__jsonCachedAttrs__', {})
 			
-			for key, val in json.iteritems():
+			for key, val in j.iteritems():
 				setattr(self, key, val)
 			
 			return self
