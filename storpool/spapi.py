@@ -475,7 +475,7 @@ Api.snapshotDescribe = GET('SnapshotDescribe/{snapshotName}', SnapshotName, retu
 	disks.
 	"""
 	)
-Api.snapshotInfo = GET('SnapshotGetInfo/{snapshotName}', SnapshotName, returns=sp.VolumeInfo).doc("Get snapshot info",
+Api.snapshotInfo = GET('SnapshotGetInfo/{snapshotName}', SnapshotName, returns=sp.SnapshotInfo).doc("Get snapshot info",
 	"""
 	Return general information about the distribution of the snapshot's data on the
 	disks.

@@ -30,6 +30,7 @@ Version history
   snapshot, thus the name may also be a SnapshotName
 - drop the "name" attribute of VolumeSummaryBase since it is always
   overridden in its child classes (either a volume or a snapshot name)
+- fix the snapshotInfo() return type
 
 1.2.0
 -----
