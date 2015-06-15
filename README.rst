@@ -23,6 +23,8 @@ Version history
 -----
 
 - remove an unused internal Python object attribute
+- only check the defined attributes in JsonObject, ignore any additional
+  members received in a JSON message
 
 1.2.0
 -----

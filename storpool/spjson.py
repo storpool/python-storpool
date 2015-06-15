@@ -59,24 +59,19 @@ class JsonObjectImpl(object):
 			self = super(JsonObjectImpl, cls).__new__(cls)
 			object.__setattr__(self, '__jsonAttrs__', {})
 			
-			for key, val in j.iteritems():
-				setattr(self, key, val)
+			for attr, attrDef in self.__jsonAttrDefs__.iteritems():
+				self.__jsonAttrs__[attr] = attrDef.handleVal(j[attr]) if attr in j else attrDef.defaultVal()
 			
 			return self
 	
-	def __checkAttr(self, attr):
-		if attr not in self.__jsonAttrDefs__:
-			error = "'{cls}' has no attribute '{attr}'".format(cls=self.__class__.__name__, attr=attr)
-			raise AttributeError(error)
-	
 	def __getattr__(self, attr):
-		if attr not in self.__jsonAttrs__:
-			self.__checkAttr(attr)
-			self.__jsonAttrs__[attr] = self.__jsonAttrDefs__[attr].defaultVal()
 		return self.__jsonAttrs__[attr]
 	
 	def __setattr__(self, attr, value):
-		self.__checkAttr(attr)
+		if attr not in self.__jsonAttrDefs__:
+			error = "'{cls}' has no attribute '{attr}'".format(cls=self.__class__.__name__, attr=attr)
+			raise AttributeError(error)
+		
 		self.__jsonAttrs__[attr] = self.__jsonAttrDefs__[attr].handleVal(value)
 	
 	def toJson(self):
