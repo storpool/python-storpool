@@ -289,7 +289,7 @@ AoeExportStatus = oneOf('AoeExportStatus', "OK", "down")
 class AoeExport(object):
 	'''
 	A single StorPool volume or snapshot exported over AoE.
-
+	
 	name: The name of the StorPool volume.
 	snapshot: True if this entry describes a snapshot instead of a volume.
 	aoeId: The AoE identifier that the volume is exported as.
@@ -443,7 +443,6 @@ class PlacementGroupUpdateDesc(object):
 	rmServers: IDs of the servers to be removed from this group.
 	rmDisks: IDs of the disks to be removed from this group.
 	'''
-
 
 
 ### VOLUME and SNAPSHOT ###
