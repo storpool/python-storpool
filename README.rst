@@ -31,6 +31,7 @@ Version history
 - drop the "name" attribute of VolumeSummaryBase since it is always
   overridden in its child classes (either a volume or a snapshot name)
 - fix the return types of snapshotInfo() and snapshotDescribe()
+- add the "autoName", "bound", "deleted", and "transient" snapshot flags
 
 1.2.0
 -----

@@ -477,11 +477,16 @@ class VolumeSummary(VolumeSummaryBase):
 	name: The name of this volume.
 	'''
 
-@JsonObject(name=SnapshotName, onVolume=VolumeName)
+@JsonObject(name=SnapshotName, onVolume=VolumeName,
+	autoName=bool, bound=bool, deleted=bool, transient=bool)
 class SnapshotSummary(VolumeSummaryBase):
 	'''
 	name: The name of this snapshot
 	onVolume: The name of the volume that this is a parent of.
+	autoName: Is this snapshot anonymous.
+	bound: Is this a bound snapshot. Bound snapshots are garbage-collected as soon as they remain childless and are no longer attached.
+	deleted: Is this snapshot currently being deleted.
+	transient: Is this a transient snapshot. Transient snapshots are internally created when cloning a volume. They cannot be attached as they may be garbage-collected at any time.
 	'''
 
 @JsonObject(storedSize=long, spaceUsed=long)
