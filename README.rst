@@ -32,6 +32,8 @@ Version history
   overridden in its child classes (either a volume or a snapshot name)
 - fix the return types of snapshotInfo() and snapshotDescribe()
 - add the "autoName", "bound", "deleted", and "transient" snapshot flags
+- add the "noFua" and "isWbc" disk flags, the "wbc" write-back cache info,
+  and the "aggregateScore" aggregation info
 
 1.2.0
 -----

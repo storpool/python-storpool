@@ -334,6 +334,13 @@ class DiskVolumeInfo(object):
 	storedSize: The size of the actual data in that object (<= onDiskSize).
 	'''
 
+@JsonObject(pages=int, pagesPending=int, maxPages=int, ios=int, bandwidth=eitherOr(int, None))
+class DiskWbcStats(object):
+	pass
+
+@JsonObject(entries=int, space=int, total=int)
+class DiskAggregateScores(object):
+	pass
 
 @JsonObject(id=DiskId, serverId=ServerId, generationLeft=long, model=str, serial=str, description=DiskDescription, softEject=oneOf('DiskSoftEjectStatus', "on", "off", "paused"))
 class DiskSummaryBase(object):
@@ -348,14 +355,17 @@ class DiskSummaryBase(object):
 class DownDiskSummary(DiskSummaryBase):
 	up = False
 
-@JsonObject(generationLeft=const(-1L), sectorsCount=long, empty=bool, ssd=bool, device=str,
+@JsonObject(generationLeft=const(-1L), sectorsCount=long, empty=bool, ssd=bool, noFua=bool, isWbc=bool, device=str,
 	agCount=internal(int), agAllocated=internal(int), agFree=internal(int), agFull=internal(int), agPartial=internal(int), agFreeing=internal(int), agMaxSizeFull=internal(int), agMaxSizePartial=internal(int),
 	entriesCount=int, entriesAllocated=int, entriesFree=int,
-	objectsCount=int, objectsAllocated=int, objectsFree=int, objectsOnDiskSize=long)
+	objectsCount=int, objectsAllocated=int, objectsFree=int, objectsOnDiskSize=long,
+	wbc=eitherOr(DiskWbcStats, None), aggregateScore=DiskAggregateScores)
 class UpDiskSummary(DiskSummaryBase):
 	'''
 	sectorsCount: The amount of 512-byte sectors on the disk.
 	ssd: Whether the device is an SSD.
+	noFua: Whether to issue FUA writes to this device.
+	isWbc: Whether write-back cache is enabled for this device.
 	device: The name of the physical disk device on the server.
 	entriesAllocated: Used entries of the disk.
 	objectsAllocated: Used objects of the disk.
