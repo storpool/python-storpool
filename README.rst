@@ -28,6 +28,8 @@ Version history
 - add snapshotsSpace() for the snapshot reverse space estimation
 - reflect the fact that volumeStatus() may also return an anonymous
   snapshot, thus the name may also be a SnapshotName
+- drop the "name" attribute of VolumeSummaryBase since it is always
+  overridden in its child classes (either a volume or a snapshot name)
 
 1.2.0
 -----

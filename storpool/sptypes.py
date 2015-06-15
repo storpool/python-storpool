@@ -453,7 +453,7 @@ class VolumeLimits(object):
 	iops: iops limit.
 	'''
 
-@JsonObject(id=internal(long), name=VolumeName, parentName=eitherOr(SnapshotName, ""), templateName=eitherOr(VolumeTemplateName, ""),
+@JsonObject(id=internal(long), parentName=eitherOr(SnapshotName, ""), templateName=eitherOr(VolumeTemplateName, ""),
 	size=VolumeSize, replication=VolumeReplication,
 	placeAll=PlacementGroupName, placeTail=PlacementGroupName,
 	parentVolumeId=internal(long), originalParentVolumeId=internal(long), visibleVolumeId=long, templateId=internal(long),
