@@ -485,6 +485,13 @@ class SnapshotSummary(VolumeSummaryBase):
 	onVolume: The name of the volume that this is a parent of.
 	'''
 
+@JsonObject(storedSize=long, spaceUsed=long)
+class SnapshotSpace(SnapshotSummary):
+	'''
+	storedSize: The number of bytes of client data on this snapshot. This does not take into account the StorPool replication and overhead, thus it is never larger than the volume size.
+	spaceUsed: The number of bytes of client data that will be freed if this snapshot is deleted.
+	'''
+
 @JsonObject(disks=[DiskId], count=int)
 class VolumeChainStat(object):
 	'''

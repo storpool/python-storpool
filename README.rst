@@ -19,12 +19,13 @@ and act as a compute node.
 Version history
 ===============
 
-1.2.1
+1.3.0
 -----
 
 - remove an unused internal Python object attribute
 - only check the defined attributes in JsonObject, ignore any additional
   members received in a JSON message
+- add snapshotsSpace() for the snapshot reverse space estimation
 
 1.2.0
 -----

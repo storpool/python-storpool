@@ -461,6 +461,11 @@ Api.snapshotsList = GET('SnapshotsList', returns=[sp.SnapshotSummary]).doc("List
 	format as VolumeList.
 	"""
 	)
+Api.snapshotsSpace = GET('SnapshotsSpace', returns=[sp.SnapshotSpace]).doc("List snapshots space estimations",
+	"""
+	List estimated virtual space used by each snapshot.
+	"""
+	)
 Api.snapshotList = GET('Snapshot/{snapshotName}', SnapshotName, returns=[sp.SnapshotSummary]).doc("List a single snapshot",
 	""" Same as SnapshotList but only return information about a given snapshot. """
 	)
