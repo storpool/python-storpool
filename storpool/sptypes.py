@@ -529,6 +529,13 @@ class VolumeStatus(object):
 
 
 @JsonObject(targetDiskSets=[[DiskId]], objects=[[DiskId]])
+class Snapshot(SnapshotSummary):
+	'''
+	targetDiskSets: Sets of disks that the volume's data should be stored on.
+	objects: Where each object is actually stored.
+	'''
+
+@JsonObject(targetDiskSets=[[DiskId]], objects=[[DiskId]])
 class Volume(VolumeSummary):
 	'''
 	targetDiskSets: Sets of disks that the volume's data should be stored on.

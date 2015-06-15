@@ -469,7 +469,7 @@ Api.snapshotsSpace = GET('SnapshotsSpace', returns=[sp.SnapshotSpace]).doc("List
 Api.snapshotList = GET('Snapshot/{snapshotName}', SnapshotName, returns=[sp.SnapshotSummary]).doc("List a single snapshot",
 	""" Same as SnapshotList but only return information about a given snapshot. """
 	)
-Api.snapshotDescribe = GET('SnapshotDescribe/{snapshotName}', SnapshotName, returns=sp.Volume).doc("Describe a snapshot",
+Api.snapshotDescribe = GET('SnapshotDescribe/{snapshotName}', SnapshotName, returns=sp.Snapshot).doc("Describe a snapshot",
 	"""
 	Return detailed information about the distribution of the snapshot's data on the
 	disks.
