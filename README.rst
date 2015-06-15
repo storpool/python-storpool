@@ -19,6 +19,11 @@ and act as a compute node.
 Version history
 ===============
 
+1.2.1
+-----
+
+- remove an unused internal Python object attribute
+
 1.2.0
 -----
 

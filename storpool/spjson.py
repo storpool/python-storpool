@@ -58,7 +58,6 @@ class JsonObjectImpl(object):
 			
 			self = super(JsonObjectImpl, cls).__new__(cls)
 			object.__setattr__(self, '__jsonAttrs__', {})
-			object.__setattr__(self, '__jsonCachedAttrs__', {})
 			
 			for key, val in j.iteritems():
 				setattr(self, key, val)
