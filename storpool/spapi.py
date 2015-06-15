@@ -556,11 +556,18 @@ Api.spDocSection("Volume Relocator",
 Api.volumeRelocatorOn = POST('VolumeRelocatorOn').doc("Turn the relocator on", """ """)
 Api.volumeRelocatorOff = POST('VolumeRelocatorOff').doc("Turn the relocator off", """ """)
 Api.volumeRelocatorStatus = GET('VolumeRelocatorStatus', returns=sp.VolumeRelocatorStatus).doc("Get the relocator's status", """ """)
+Api.volumeRelocatorDisks = GET('VolumeRelocatorDisksList', returns={sp.DiskId: sp.DiskTarget}).doc("", """ """)
+Api.volumeRelocatorVolumeDisks = GET('VolumeRelocatorVolumeDisks/{volumeName}', VolumeName, returns={sp.DiskId: sp.DiskTarget}).doc("", """ """)
+Api.volumeRelocatorSnapshotDisks = GET('VolumeRelocatorSnapshotDisks/{snapshotName}', SnapshotName, returns={sp.DiskId: sp.DiskTarget}).doc("", """ """)
 
 Api.spDocSection("Balancer",
 	""" This is a service that decides when it is a good time to move data. """
 	)
-Api.volumeRelocatorOn = POST('VolumeBalancerOn').doc("Turn the balancer on", """ """)
-Api.volumeRelocatorOff = POST('VolumeBalancerOff').doc("Turn the balancer off", """ """)
-Api.volumeRelocatorStatus = GET('VolumeBalancerStatus', returns=sp.VolumeBalancerStatus).doc("Get the balancer's status", """ """)
-
+Api.volumeBalancerGetStatus = GET('VolumeBalancerStatus', returns=sp.VolumeBalancerStatus).doc("Get the balancer's status", """ """)
+Api.volumeBalancerSetStatus = POST('VolumeBalancerStatus', json=sp.VolumeBalancerCommand).doc("Set the balancer's status", """ """)
+Api.volumeBalancerVolumesStatus = GET('VolumeBalancerVolumesStatus', returns=[sp.VolumaBalancerVolumeStatus]).doc("", """ """)
+Api.volumeBalancerDisks = GET('VolumeBalancerDisksList', returns={sp.DiskId: sp.DiskTarget}).doc("", """ """)
+Api.volumeBalancerVolumeDisks = GET('VolumeBalancerVolumeDisks/{volumeName}', VolumeName, returns={sp.DiskId: sp.DiskTarget}).doc("", """ """)
+Api.volumeBalancerSnapshotDisks = GET('VolumeBalancerSnapshotDisks/{snapshotName}', SnapshotName, returns={sp.DiskId: sp.DiskTarget}).doc("", """ """)
+Api.volumeBalancerVolumeDiskSets = GET('VolumeBalancerVolumeDiskSets/{volumeName}', VolumeName, returns=sp.VolumeBalancerVolumeDiskSets).doc("", """ """)
+Api.volumeBalancerSnapshotDiskSets = GET('VolumeBalancerSnapshotDiskSets/{snapshotName}', SnapshotName, returns=sp.VolumeBalancerVolumeDiskSets).doc("", """ """)

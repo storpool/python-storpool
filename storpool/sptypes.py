@@ -697,12 +697,42 @@ class VolumeTemplateUpdateDesc(VolumePolicyDesc):
 	'''
 
 
-### VOLUME RELOCATOR ###
+### VOLUME RELOCATOR and BALANCER ###
 @JsonObject(status=oneOf("RelocatorStatus", 'on', 'off', 'blocked'))
 class VolumeRelocatorStatus(object):
 	pass
 
-### VOLUME BALANCER ###
-@JsonObject(status=oneOf("BalancerStatus", 'on', 'off', 'blocked'))
+@JsonObject(status=oneOf("BalancerStatus", 'nothing to do', 'blocked', 'waiting', 'working', 'ready', 'commiting'), auto=bool)
 class VolumeBalancerStatus(object):
 	pass
+
+@JsonObject(cmd=oneOf("BalancerCommand", 'start', 'stop', 'commit', 'auto'))
+class VolumeBalancerCommand(object):
+	pass
+
+@JsonObject(name=either(VolumeName, SnapshotName),
+	placeAll=PlacementGroupName, placeTail=PlacementGroupName, replication=VolumeReplication,
+	size=long, objectsCount=int,
+	snapshot=bool, reallocated=bool, blocked=bool)
+class VolumaBalancerVolumeStatus(object):
+	pass
+
+@JsonObject(currentDiskSets=[[DiskId]], balancerDiskSets=[[DiskId]])
+class VolumeBalancerVolumeDiskSets(VolumaBalancerVolumeStatus):
+	pass
+
+@JsonObject(current=int, target=int, delta=int)
+class TargetDesc(object):
+	pass
+
+@JsonObject(id=DiskId, serverId=ServerId, generationLeft=long)
+class DownDiskTarget(object):
+	pass
+
+@JsonObject(id=DiskId, serverId=ServerId, generationLeft=const(-1L),
+	objectsAllocated=TargetDesc, objectsCount=int, objectsToRecover=int,
+	storedSize=TargetDesc, onDiskSize=TargetDesc)
+class UpDiskTarget(object):
+	pass
+
+DiskTarget = either(UpDiskTarget, DownDiskTarget)

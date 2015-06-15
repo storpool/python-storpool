@@ -34,6 +34,7 @@ Version history
 - add the "autoName", "bound", "deleted", and "transient" snapshot flags
 - add the "noFua" and "isWbc" disk flags, the "wbc" write-back cache info,
   and the "aggregateScore" aggregation info
+- flesh out the volume balancer and relocator support
 
 1.2.0
 -----
