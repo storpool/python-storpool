@@ -26,6 +26,8 @@ Version history
 - only check the defined attributes in JsonObject, ignore any additional
   members received in a JSON message
 - add snapshotsSpace() for the snapshot reverse space estimation
+- reflect the fact that volumeStatus() may also return an anonymous
+  snapshot, thus the name may also be a SnapshotName
 
 1.2.0
 -----

@@ -502,7 +502,7 @@ class VolumeChainStat(object):
 class VolumeInfo(VolumeSummary):
 	pass
 
-@JsonObject(name=VolumeName, size=VolumeSize, replication=VolumeReplication,
+@JsonObject(name=either(VolumeName, SnapshotName), size=VolumeSize, replication=VolumeReplication,
 	status=oneOf("VolumeCurentStatus", "up", "up soon", "data lost", "down"), snapshot=bool, migrating=bool, decreasedRedundancy=bool, balancerBlocked=bool,
 	storedSize=int, onDiskSize=int, syncingDataBytes=int, syncingMetaObjects=int, downBytes=int,
 	downDrives=[DiskId], missingDrives=[DiskId], missingTargetDrives=[DiskId], softEjectingDrives=[DiskId])

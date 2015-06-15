@@ -404,7 +404,7 @@ Api.spDocSection("Volumes", """ """)
 Api.volumesList = GET('VolumesList', returns=[sp.VolumeSummary]).doc("List all volumes",
 	""" Return configuration information about all the volumes. """
 	)
-Api.volumesStatus = GET('VolumesGetStatus', returns={sp.VolumeName: sp.VolumeStatus}).doc("Get volume and snapshot status",
+Api.volumesStatus = GET('VolumesGetStatus', returns={either(sp.VolumeName, sp.SnapshotName): sp.VolumeStatus}).doc("Get volume and snapshot status",
 	""" Return the status of each volume and snapshot. """
 	)
 Api.volumeList = GET('Volume/{volumeName}', VolumeName, returns=[sp.VolumeSummary]).doc("List a single volume",
