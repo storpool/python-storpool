@@ -334,7 +334,7 @@ class DiskVolumeInfo(object):
 	storedSize: The size of the actual data in that object (<= onDiskSize).
 	'''
 
-@JsonObject(pages=int, pagesPending=int, maxPages=int, ios=int, bandwidth=eitherOr(int, None))
+@JsonObject(pages=int, pagesPending=int, maxPages=int, iops=int, bandwidth=eitherOr(int, None))
 class DiskWbcStats(object):
 	pass
 
