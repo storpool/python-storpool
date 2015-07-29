@@ -738,3 +738,15 @@ class UpDiskTarget(object):
 	pass
 
 DiskTarget = either(UpDiskTarget, DownDiskTarget)
+
+@JsonObject(storedSize=int, objectsCount=int)
+class VolumeBalancerSlot(object):
+	pass
+
+@JsonObject(placeAll=PlacementGroupName, placeTail=PlacementGroupName, replication=VolumeReplication,
+	feasible=bool, blocked=bool,
+	size=int, storedSize=int, objectsCount=int,
+	root=either(VolumeName, SnapshotName), volumes=[either(VolumeName, SnapshotName)],
+	targetDiskSets=[[DiskId]], slots=[VolumeBalancerSlot])
+class VolumeBalancerAllocationGroup(object):
+	pass

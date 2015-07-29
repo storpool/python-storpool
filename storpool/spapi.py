@@ -571,3 +571,4 @@ Api.volumeBalancerVolumeDisks = GET('VolumeBalancerVolumeDisks/{volumeName}', Vo
 Api.volumeBalancerSnapshotDisks = GET('VolumeBalancerSnapshotDisks/{snapshotName}', SnapshotName, returns={sp.DiskId: sp.DiskTarget}).doc("", """ """)
 Api.volumeBalancerVolumeDiskSets = GET('VolumeBalancerVolumeDiskSets/{volumeName}', VolumeName, returns=sp.VolumeBalancerVolumeDiskSets).doc("", """ """)
 Api.volumeBalancerSnapshotDiskSets = GET('VolumeBalancerSnapshotDiskSets/{snapshotName}', SnapshotName, returns=sp.VolumeBalancerVolumeDiskSets).doc("", """ """)
+Api.volumeBalancerGroups = GET('VolumeBalancerGroups', returns=[sp.VolumeBalancerAllocationGroup]).doc("List balancer allocation groups", """ """)
