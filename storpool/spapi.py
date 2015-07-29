@@ -556,19 +556,27 @@ Api.spDocSection("Volume Relocator",
 Api.volumeRelocatorOn = POST('VolumeRelocatorOn').doc("Turn the relocator on", """ """)
 Api.volumeRelocatorOff = POST('VolumeRelocatorOff').doc("Turn the relocator off", """ """)
 Api.volumeRelocatorStatus = GET('VolumeRelocatorStatus', returns=sp.VolumeRelocatorStatus).doc("Get the relocator's status", """ """)
-Api.volumeRelocatorDisks = GET('VolumeRelocatorDisksList', returns={sp.DiskId: sp.DiskTarget}).doc("", """ """)
-Api.volumeRelocatorVolumeDisks = GET('VolumeRelocatorVolumeDisks/{volumeName}', VolumeName, returns={sp.DiskId: sp.DiskTarget}).doc("", """ """)
-Api.volumeRelocatorSnapshotDisks = GET('VolumeRelocatorSnapshotDisks/{snapshotName}', SnapshotName, returns={sp.DiskId: sp.DiskTarget}).doc("", """ """)
+Api.volumeRelocatorDisks = GET('VolumeRelocatorDisksList', returns={sp.DiskId: sp.DiskTarget}).doc("List total per disk relocation estimates",
+	"""
+	"""
+	)
+Api.volumeRelocatorVolumeDisks = GET('VolumeRelocatorVolumeDisks/{volumeName}', VolumeName, returns={sp.DiskId: sp.DiskTarget}).doc("List per disk relocation estimates for a given volume", """ """)
+Api.volumeRelocatorSnapshotDisks = GET('VolumeRelocatorSnapshotDisks/{snapshotName}', SnapshotName, returns={sp.DiskId: sp.DiskTarget}).doc("List per disk relocation estimates for a given snapshot", """ """)
 
 Api.spDocSection("Balancer",
 	""" This is a service that decides when it is a good time to move data. """
 	)
 Api.volumeBalancerGetStatus = GET('VolumeBalancerStatus', returns=sp.VolumeBalancerStatus).doc("Get the balancer's status", """ """)
 Api.volumeBalancerSetStatus = POST('VolumeBalancerStatus', json=sp.VolumeBalancerCommand).doc("Set the balancer's status", """ """)
-Api.volumeBalancerVolumesStatus = GET('VolumeBalancerVolumesStatus', returns=[sp.VolumaBalancerVolumeStatus]).doc("", """ """)
-Api.volumeBalancerDisks = GET('VolumeBalancerDisksList', returns={sp.DiskId: sp.DiskTarget}).doc("", """ """)
-Api.volumeBalancerVolumeDisks = GET('VolumeBalancerVolumeDisks/{volumeName}', VolumeName, returns={sp.DiskId: sp.DiskTarget}).doc("", """ """)
-Api.volumeBalancerSnapshotDisks = GET('VolumeBalancerSnapshotDisks/{snapshotName}', SnapshotName, returns={sp.DiskId: sp.DiskTarget}).doc("", """ """)
-Api.volumeBalancerVolumeDiskSets = GET('VolumeBalancerVolumeDiskSets/{volumeName}', VolumeName, returns=sp.VolumeBalancerVolumeDiskSets).doc("", """ """)
-Api.volumeBalancerSnapshotDiskSets = GET('VolumeBalancerSnapshotDiskSets/{snapshotName}', SnapshotName, returns=sp.VolumeBalancerVolumeDiskSets).doc("", """ """)
+Api.volumeBalancerVolumesStatus = GET('VolumeBalancerVolumesStatus', returns=[sp.VolumaBalancerVolumeStatus]).doc("List balancer volume and snapshot status",
+	"""
+	Show which volumes and snapshots will be reallocated by the
+	current balancer run.
+	"""
+	)
+Api.volumeBalancerDisks = GET('VolumeBalancerDisksList', returns={sp.DiskId: sp.DiskTarget}).doc("List total per disk rebalancing estimates", """ """)
+Api.volumeBalancerVolumeDisks = GET('VolumeBalancerVolumeDisks/{volumeName}', VolumeName, returns={sp.DiskId: sp.DiskTarget}).doc("List per disk rebalancing estimated for a given volume", """ """)
+Api.volumeBalancerSnapshotDisks = GET('VolumeBalancerSnapshotDisks/{snapshotName}', SnapshotName, returns={sp.DiskId: sp.DiskTarget}).doc("List per disk rebalancing estimates for a given snapshot", """ """)
+Api.volumeBalancerVolumeDiskSets = GET('VolumeBalancerVolumeDiskSets/{volumeName}', VolumeName, returns=sp.VolumeBalancerVolumeDiskSets).doc("Get the disk sets computed by the balancer for a given volume", """ """)
+Api.volumeBalancerSnapshotDiskSets = GET('VolumeBalancerSnapshotDiskSets/{snapshotName}', SnapshotName, returns=sp.VolumeBalancerVolumeDiskSets).doc("Get the disk sets computed by the balancer for a given snapshot", """ """)
 Api.volumeBalancerGroups = GET('VolumeBalancerGroups', returns=[sp.VolumeBalancerAllocationGroup]).doc("List balancer allocation groups", """ """)
