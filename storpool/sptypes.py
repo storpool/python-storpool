@@ -359,7 +359,7 @@ class DownDiskSummary(DiskSummaryBase):
 	agCount=internal(int), agAllocated=internal(int), agFree=internal(int), agFull=internal(int), agPartial=internal(int), agFreeing=internal(int), agMaxSizeFull=internal(int), agMaxSizePartial=internal(int),
 	entriesCount=int, entriesAllocated=int, entriesFree=int,
 	objectsCount=int, objectsAllocated=int, objectsFree=int, objectsOnDiskSize=long,
-	wbc=eitherOr(DiskWbcStats, None), aggregateScore=DiskAggregateScores)
+	wbc=internal(eitherOr(DiskWbcStats, None)), aggregateScore=internal(DiskAggregateScores))
 class UpDiskSummary(DiskSummaryBase):
 	'''
 	sectorsCount: The amount of 512-byte sectors on the disk.
