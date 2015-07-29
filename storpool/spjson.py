@@ -80,6 +80,7 @@ class JsonObjectImpl(object):
 	def __iter__(self):
 		return self.toJson().iteritems()
 	
+	_asdict = toJson
 	__str__ = __repr__ = lambda self: str(self.toJson())
 
 
