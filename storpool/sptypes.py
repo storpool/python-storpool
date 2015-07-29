@@ -723,7 +723,7 @@ class VolumaBalancerVolumeStatus(object):
 class VolumeBalancerVolumeDiskSets(VolumaBalancerVolumeStatus):
 	pass
 
-@JsonObject(current=int, target=int, delta=int)
+@JsonObject(current=int, target=int, delta=int, toRecover=int)
 class TargetDesc(object):
 	pass
 
@@ -732,7 +732,7 @@ class DownDiskTarget(object):
 	pass
 
 @JsonObject(id=DiskId, serverId=ServerId, generationLeft=const(-1L),
-	objectsAllocated=TargetDesc, objectsCount=int, objectsToRecover=int,
+	objectsAllocated=TargetDesc, objectsCount=int,
 	storedSize=TargetDesc, onDiskSize=TargetDesc)
 class UpDiskTarget(object):
 	pass
