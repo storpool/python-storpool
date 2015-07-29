@@ -662,7 +662,7 @@ class VolumeTemplateDesc(VolumeLimits):
 @JsonObject(id=internal(int), name=VolumeTemplateName, placeAll=PlacementGroupName, placeTail=PlacementGroupName, replication=eitherOr(VolumeReplication, "-"),
 	volumesCount=int, snapshotsCount=int, removingSnapshotsCount=int,
 	size=eitherOr(VolumeSize, 0), totalSize=eitherOr(VolumeSize, 0), onDiskSize=long, storedSize=long,
-	availablePlaceAll=long, availablePlaceTail=long)
+	availablePlaceAll=long, availablePlaceTail=long, capacityPlaceAll=long, capacityPlaceTail=long)
 class VolumeTemplateStatusDesc(object):
 	'''
 	name: The name of the template.
@@ -678,6 +678,8 @@ class VolumeTemplateStatusDesc(object):
 	onDiskSize: The actual on-disk number of bytes occupied by all the volumes based on this template.
 	availablePlaceAll: An estimate of the available space on all the disks in this template's placeAll placement group.
 	availablePlaceTail: An estimate of the available space on all the disks in this template's placeTail placement group.
+	capacityPlaceAll: An estimate of the total physical space on all the disks in this template's placeAll placement group.
+	capacityPlaceTail: An estimate of the total physical space on all the disks in this template's placeTail placement group.
 	'''
 
 @JsonObject(name=VolumeTemplateName, parent=maybe(SnapshotName), size=maybe(VolumeSize))
