@@ -19,6 +19,24 @@ and act as a compute node.
 Version history
 ===============
 
+2.0.0
+-----
+
+- add the capacityPlaceAll and capacityPlaceTail template properties
+- add volumeBalancerGroups() and the VolumeBalancerSlot and
+  VolumeBalancerAllocationGroup types
+- replace UpDiskTarget's objectsToRecover attribute with a toRecover
+  attribute for the target's storedSize and onDiskSize members;
+  accordingly, bump the storpool module's version to 2.0.0 for
+  a backwards-incompatible change
+- add the _asdict() method to JsonObject to fix the breakage in newer
+  versions of simplejson when they try to look for this method using
+  getattr(), triggering an unknown attribute JsonObject exception
+- add some omitted documentation titles for some rarely-used internal
+  relocator/balancer commands
+- mark the disk wbc and aggregateScore properties as internal
+- add the missing documentation for the AttachmentDesc.volume attribute
+
 1.3.1
 -----
 
