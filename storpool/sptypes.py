@@ -641,6 +641,7 @@ class AttachmentDesc(object):
 	'''
 	snapshot: Whether it is a snapshot or a volume.
 	client: The ID of the client on which it is attached.
+	volume: The name of the attached volume.
 	rights: Whether the volume is attached as read only or read/write; always ro for snapshots.
 	pos: The attachment position on the client; used by the StorPool client to form the name of the internal /dev/spN device node.
 	'''
