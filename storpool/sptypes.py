@@ -709,7 +709,7 @@ class VolumeTemplateUpdateDesc(VolumePolicyDesc):
 
 
 ### VOLUME RELOCATOR and BALANCER ###
-@JsonObject(status=oneOf("RelocatorStatus", 'on', 'off', 'blocked'))
+@JsonObject(status=oneOf("RelocatorStatus", 'on', 'off', 'blocked'), volumesToRelocate=int)
 class VolumeRelocatorStatus(object):
 	pass
 
