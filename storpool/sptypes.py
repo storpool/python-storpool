@@ -668,10 +668,19 @@ class VolumeTemplateDesc(VolumeLimits):
 	replication: A default number of copies to be kept by StorPool.
 	'''
 
+@JsonObject(used=int, free=int, capacity=int, ideal=int)
+class VolumeTemplateSpaceEstEntry(object):
+	pass
+
+@JsonObject(placeAll=VolumeTemplateSpaceEstEntry, placeTail=VolumeTemplateSpaceEstEntry)
+class VolumeTemplateSpaceEst(VolumeTemplateSpaceEstEntry):
+	pass
+
 @JsonObject(id=internal(int), name=VolumeTemplateName, placeAll=PlacementGroupName, placeTail=PlacementGroupName, replication=eitherOr(VolumeReplication, "-"),
 	volumesCount=int, snapshotsCount=int, removingSnapshotsCount=int,
 	size=eitherOr(VolumeSize, 0), totalSize=eitherOr(VolumeSize, 0), onDiskSize=long, storedSize=long,
-	availablePlaceAll=long, availablePlaceTail=long, capacityPlaceAll=long, capacityPlaceTail=long)
+	availablePlaceAll=long, availablePlaceTail=long, capacityPlaceAll=long, capacityPlaceTail=long,
+	phys=VolumeTemplateSpaceEst, stored=VolumeTemplateSpaceEst)
 class VolumeTemplateStatusDesc(object):
 	'''
 	name: The name of the template.
