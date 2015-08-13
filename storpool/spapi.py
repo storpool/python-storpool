@@ -17,6 +17,9 @@
 #
 import httplib as http
 import json as js
+import socket as sock
+import time as time
+from errno import ECONNREFUSED, ECONNRESET
 
 import spjson as js
 import sptypes as sp
@@ -138,6 +141,7 @@ class ApiError(Exception):
 		self.json = json
 		self.name = json['error'].get('name', "<Missing error name>")
 		self.desc = json['error'].get('descr', "<Missing error description>")
+		self.transient = json['error'].get('transient', False)
 	
 	def __str__(self):
 		return "{0}: {1}".format(self.name, self.desc)
@@ -167,31 +171,53 @@ class Api(object):
 		"""
 	)
 	
-	def __init__(self, host='127.0.0.1', port=80, auth='', timeout=10):
+	def __init__(self, host='127.0.0.1', port=80, auth='', timeout=10, transientRetries=5, transientSleep=lambda retry: 2 ** retry):
 #		print host, port, auth
 		self._host = host
 		self._port = port
 		self._timeout = timeout
+		self._transientRetries = transientRetries
+		self._transientSleep = transientSleep
 		self._authHeader = {"Authorization": "Storpool v1:" + str(auth)}
 	
 	def __call__(self, method, path, json=None):
 		if json is not None:
 			json = js.dumps(json)
 		
-		try:
-			conn = http.HTTPConnection(self._host, self._port, self._timeout)
-			request = conn.request(method, path, json, self._authHeader)
-			response = conn.getresponse()
-			status, json = response.status, js.load(response)
+		retry, lastErr = 0, None
+		while True:
+			try:
+				conn = http.HTTPConnection(self._host, self._port, self._timeout)
+				request = conn.request(method, path, json, self._authHeader)
+				response = conn.getresponse()
+				status, jres = response.status, js.load(response)
+				
+				if status != http.OK or 'error' in jres:
+#					print status, jres
+					err = ApiError(status, jres)
+					if self._transientRetries and err.transient:
+						lastErr = err
+					else:
+						raise err
+				else:
+#					print jres
+					return jres['data']
+			except sock.error as err:
+				if self._transientRetries and err.errno in (ECONNREFUSED, ECONNRESET):
+					lastErr = err
+				else:
+					raise
+			finally:
+				conn.close()
 			
-			if status != http.OK or 'error' in json:
-#				print status, json
-				raise ApiError(status, json)
+			if retry < self._transientRetries:
+				retrySleep = self._transientSleep(retry)
+#				print "Transient ERROR:", lastErr
+#				print "Will retry after:", retrySleep, "sec."
+				time.sleep(retrySleep)
+				retry += 1
 			else:
-#				print json
-				return json['data']
-		finally:
-			conn.close()
+				raise lastErr
 	
 	def volumeDevLinkWait(self, volumeName, attach, pollTime=200*msec, maxTime=60*sec):
 		return pathPollWait(SP_DEV_PATH + volumeName, attach, True, pollTime, maxTime)
