@@ -506,6 +506,14 @@ class SnapshotSpace(SnapshotSummary):
 	spaceUsed: The number of bytes of client data that will be freed if this snapshot is deleted.
 	'''
 
+@JsonObject(storedSize=long, spaceUsed=long)
+class VolumeSpace(VolumeSummary):
+	'''
+	storedSize: The number of bytes of client data on this volume. This does not take into account the StorPool replication and overhead, thus it is never larger than the volume size.
+	spaceUsed: The total number of bytes of client data that on this volume. This includes data that is stored in all the volume's parents
+	'''
+
+
 @JsonObject(disks=[DiskId], count=int)
 class VolumeChainStat(object):
 	'''

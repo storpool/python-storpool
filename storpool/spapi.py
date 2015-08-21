@@ -407,6 +407,11 @@ Api.volumesList = GET('VolumesList', returns=[sp.VolumeSummary]).doc("List all v
 Api.volumesStatus = GET('VolumesGetStatus', returns={either(sp.VolumeName, sp.SnapshotName): sp.VolumeStatus}).doc("Get volume and snapshot status",
 	""" Return the status of each volume and snapshot. """
 	)
+Api.volumesSpace = GET('VolumesSpace', returns=[sp.VolumeSpace]).doc("List total used space by each volume",
+	"""
+	List estimated total virtual space used by each volume.
+	"""
+	)
 Api.volumeList = GET('Volume/{volumeName}', VolumeName, returns=[sp.VolumeSummary]).doc("List a single volume",
 	""" Same as VolumeList but only return information about a given volume. """
 	)
