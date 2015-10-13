@@ -24,7 +24,7 @@ from errno import ECONNREFUSED, ECONNRESET
 import spjson as js
 import sptypes as sp
 
-from sputils import msec, sec, pathPollWait, spType, either, const
+from sputils import msec, sec, pathPollWait, spType, either, const, maybe
 from spdoc import ApiDoc, ApiCallDoc
 
 
@@ -121,7 +121,7 @@ def POST(query, *args, **kwargs):
 	return _API_METHOD('POST', query, args, kwargs.get('json', None), kwargs.get('returns', ApiOk))
 
 
-@js.JsonObject(ok=const(True), generation=long)
+@js.JsonObject(ok=const(True), generation=long, info=maybe(str))
 class ApiOk(object):
 	'''
 	ok: Always returns true. If something goes wrong, an ApiError is returned instead.
