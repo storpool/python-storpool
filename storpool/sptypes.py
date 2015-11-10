@@ -366,7 +366,9 @@ class DownDiskSummary(DiskSummaryBase):
 	agCount=internal(int), agAllocated=internal(int), agFree=internal(int), agFull=internal(int), agPartial=internal(int), agFreeing=internal(int), agMaxSizeFull=internal(int), agMaxSizePartial=internal(int),
 	entriesCount=int, entriesAllocated=int, entriesFree=int,
 	objectsCount=int, objectsAllocated=int, objectsFree=int, objectsOnDiskSize=long,
-	wbc=internal(eitherOr(DiskWbcStats, None)), aggregateScore=internal(DiskAggregateScores))
+	wbc=internal(eitherOr(DiskWbcStats, None)), aggregateScore=internal(DiskAggregateScores),
+	scrubbingStartedBefore=int, scrubbedBytes=int, scrubbingBW=int, scrubbingFinishAfter=int,
+	scrubbingPausedFor=int, scrubbingPaused=bool, lastScrubCompleted=int)
 class UpDiskSummary(DiskSummaryBase):
 	'''
 	sectorsCount: The amount of 512-byte sectors on the disk.
@@ -381,6 +383,13 @@ class UpDiskSummary(DiskSummaryBase):
 	objectsCount: The maximum amount of object that can exists on the disk.
 	empty: True if no volumes or snapshots are on this disk.
 	objectsOnDiskSize: Total size occupied by objects. In essence, this is the estimated disk usage by StorPool.
+	scrubbingStartedBefore: In seconds.
+	scrubbedBytes: For current scrubbing job run.
+	scrubbingBW: Estimate of the disk BS used for scrubbing B/s.
+	scrubbingFinishAfter: Extimate of when the scrubbing job is expected to finish based on scrubbingBW and current disk usage.
+	scrubbingPausedFor: How many seconds has the current scrubbing job been paused.
+	scrubbingPaused: Is scrubbing currently paused
+	lastScrubCompleted: Unix time in seconds when last scrubbing job was completed.
 	'''
 	up = True
 
