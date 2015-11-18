@@ -176,6 +176,8 @@ MAX_MGMT_ID = MAX_PEER_ID - PEER_SUBTYPE_MGMT
 
 ### Simple type validators ###
 MacAddr = regex('MAC Address', r'^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$')
+BeaconNodeStatus = oneOf('BeaconNodeStatus', 'NODE_DOWN', 'NODE_UP')
+BeaconClusterStatus = oneOf('BeaconClusterStatus', 'CNODE_DOWN', 'CNODE_DAMPING', 'CNODE_UP')
 PeerStatus = oneOf('PeerStatus', 'up', 'down')
 ClientStatus = oneOf('ClientStatus', 'running', 'down')
 ServerStatus = oneOf('ServerStatus', 'running', 'waiting', 'booting', 'down')
@@ -214,10 +216,14 @@ ObjectState = namedEnum("ObjectState", "OBJECT_UNDEF OBJECT_OK OBJECT_OUTDATED O
 class NetDesc(object):
 	pass
 
-@JsonObject(networks={NetId: NetDesc})
+@JsonObject(beaconStatus=BeaconNodeStatus, clusterStatus=BeaconClusterStatus, joined=bool, networks={NetId: NetDesc}, nonVoting=bool)
 class PeerDesc(object):
 	'''
+	beaconStatus: Whether a beacon is running at all on this node.
+	clusterStatus: Whether we consider this node a part of the cluster quorum.
+	joined: Whether the node considers itself a part of the cluster quorum.
 	networks: List of the networks that StorPool communicates through on this node.
+	nonVoting: Whether this is a non-voting StorPool node (e.g. client only).
 	'''
 
 
