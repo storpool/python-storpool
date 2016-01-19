@@ -429,6 +429,7 @@ Api.diskActiveRequests = GET('DiskActiveRequests/{diskId}', DiskId, returns=sp.D
 Api.diskScrubStart = POST("DiskScrubStart/{diskId}", DiskId).doc("Start scrubbing process", """ """)
 Api.diskScrubPause = POST("DiskScrubPause/{diskId}", DiskId).doc("Pause scrubbing process", """ """)
 Api.diskScrubContinue = POST("DiskScrubContinue/{diskId}", DiskId).doc("Continue paused scrubbing process", """ """)
+Api.diskRetrim = POST("DiskRetrim/{diskId}", DiskId).doc("Retrim disk", """ """)
 
 Api.spDocSection("Volumes", """ """)
 Api.volumesList = GET('VolumesList', returns=[sp.VolumeSummary]).doc("List all volumes",
