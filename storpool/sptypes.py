@@ -362,7 +362,7 @@ class DiskSummaryBase(object):
 class DownDiskSummary(DiskSummaryBase):
 	up = False
 
-@JsonObject(generationLeft=const(-1L), sectorsCount=long, empty=bool, noFua=bool, isWbc=bool, device=str,
+@JsonObject(generationLeft=const(-1L), sectorsCount=long, empty=bool, noFua=bool, noFlush=bool, noTrim=bool, isWbc=bool, device=str,
 	agCount=internal(int), agAllocated=internal(int), agFree=internal(int), agFull=internal(int), agPartial=internal(int), agFreeing=internal(int), agMaxSizeFull=internal(int), agMaxSizePartial=internal(int),
 	entriesCount=int, entriesAllocated=int, entriesFree=int,
 	objectsCount=int, objectsAllocated=int, objectsFree=int, objectsOnDiskSize=long,
@@ -373,6 +373,8 @@ class UpDiskSummary(DiskSummaryBase):
 	'''
 	sectorsCount: The amount of 512-byte sectors on the disk.
 	noFua: Whether to issue FUA writes to this device.
+	noFlush: Whether write-back cache flushing is disabled for this device.
+	noTrim: Whether trim-below is disabled for this device.
 	isWbc: Whether write-back cache is enabled for this device.
 	device: The name of the physical disk device on the server.
 	entriesAllocated: Used entries of the disk.
