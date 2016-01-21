@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 import re
+import time
 from sputils import error, spTypeFun, maybe, const, either, eitherOr, internal
 from spjson import JsonObject, dumps
 
@@ -228,15 +229,24 @@ class PeerDesc(object):
 
 
 ### SERVER ###
-@JsonObject(nodeId=NodeId, version=str)
+@JsonObject(nodeId=NodeId, version=str, startTime=maybe(int))
 class Service(object):
 	'''
 	nodeId: The ID of the node on which the service is running.
 	version: The version of the running StorPool service.
+	startTime: The start time of this service (UNIX timestamp).
 	'''
 	@property
 	def running(self):
 		return self.status == 'running'
+	
+	@property
+	def uptime(self):
+		if self.startTime is None:
+			return None
+		else:
+			now = int(time.time())
+			return now - min(self.startTime, now)
 
 @JsonObject(id=ServerId, status=ServerStatus, missingDisks=[DiskId], pendingDisks=[DiskId])
 class Server(Service):
