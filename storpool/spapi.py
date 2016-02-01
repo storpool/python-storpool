@@ -1,6 +1,6 @@
 #
 #-
-# Copyright (c) 2014, 2015  StorPool.
+# Copyright (c) 2014 - 2016  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -547,6 +547,9 @@ Api.attachmentsList = GET('AttachmentsList', returns=[sp.AttachmentDesc]).doc("L
 	)
 Api.volumesReassign = POST('VolumesReassign', json=[either(sp.VolumeReassignDesc, sp.SnapshotReassignDesc)]).doc("Reassign volumes and/or snapshots",
 	""" Perform bulk attach/detach and attachment rights modification. """
+	)
+Api.volumesReassignNoWait = POST('VolumesReassignNoWait', json=[either(sp.VolumeReassignDesc, sp.SnapshotReassignDesc)]).doc("Reassign volumes and/or snapshots",
+	""" Perform bulk attach/detach and attachment rights modification without waiting for the clients to catch up. """
 	)
 
 Api.spDocSection("Placement Groups",
