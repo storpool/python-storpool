@@ -695,7 +695,11 @@ class VolumeTemplateDesc(VolumeLimits):
 	replication: A default number of copies to be kept by StorPool.
 	'''
 
-@JsonObject(used=int, free=int, capacity=int, ideal=int)
+@JsonObject(u1=int, u2=int, u3=int)
+class VolumeTemplateSpaceEstInternal(object):
+	pass
+
+@JsonObject(free=int, capacity=int, internal=VolumeTemplateSpaceEstInternal)
 class VolumeTemplateSpaceEstEntry(object):
 	pass
 
