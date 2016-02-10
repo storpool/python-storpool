@@ -176,6 +176,7 @@ spDocTypes = {
 	bool: doc.TypeDoc("bool", "true or false."),
 	int: doc.TypeDoc("int", "An integer value."),
 	long: doc.TypeDoc("long", "A long integer value."),
+	float: doc.TypeDoc("float", "A floating point number."),
 	str: doc.TypeDoc("string", "A string value."),
 }
 
