@@ -229,7 +229,7 @@ class PeerDesc(object):
 
 
 ### SERVER ###
-@JsonObject(nodeId=NodeId, version=str, startTime=maybe(int))
+@JsonObject(nodeId=NodeId, version=str, startTime=eitherOr(int, None))
 class Service(object):
 	'''
 	nodeId: The ID of the node on which the service is running.
