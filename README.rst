@@ -19,6 +19,32 @@ and act as a compute node.
 Version history
 ===============
 
+3.0.0
+-----
+
+- add volumesSpace() and the VolumeSpace type
+- add the volumesToRelocate member of the VolumeRelocatorStatus type
+- add the VolumeTemplateSpaceEstInternal, VolumeTemplateSpaceEst, and
+  VolumeTemplateSpaceEstEntry types for the new phys and stored members of
+  the VolumeTemplateStatusDesc type
+- retry the query to the StorPool API if a transient error is returned;
+  add the transientRetries and transientSleep parameters to the Api()
+  constructor
+- move the ssd member from the UpDiskSummary to the DiskSummaryBase type
+- add the optional info member to the ApiOk type
+- add the beaconStatus, clusterStatus, and joined members to
+  the PeerDesc type
+- add diskScrubStart(), diskScrubPause(), and diskScrubContinue() and
+  several scrubbing-related members to the DownDiskSummary and
+  UpDiskSummary types
+- add the noFlush and noTrim members to the UpDiskSummary type
+- add diskRetrim()
+- add volumesReassignNoWait()
+- add the startTime member and the uptime() method to the Service type
+- document the float property type
+- add the timeout member to the VolumeReassignDesc and
+  SnapshotReassignDesc types
+
 2.0.0
 -----
 
