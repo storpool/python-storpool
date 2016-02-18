@@ -652,7 +652,7 @@ class AbandonDiskDesc(object):
 DetachClientsList = eitherOr([ClientId], "all")
 AttachmentPos = intRange('AttachmentPos', 0, MAX_CLIENT_DISK)
 
-@JsonObject(volume=VolumeName, detach=maybe(DetachClientsList), ro=maybe([ClientId]), rw=maybe([ClientId]), force=False)
+@JsonObject(volume=VolumeName, detach=maybe(DetachClientsList), ro=maybe([ClientId]), rw=maybe([ClientId]), force=False, timeout=maybe(int))
 class VolumeReassignDesc(object):
 	'''
 	volume: The name of the volume to be reassigned.
@@ -660,15 +660,17 @@ class VolumeReassignDesc(object):
 	ro: The clients on which to attach the volume as read only.
 	rw: The clients on which to attach the volume as read/write.
 	force: Whether to force detaching of open volumes.
+	timeout: The number of seconds to wait for missing clients to appear when attaching to them.  If not specified, an error shall be returned immediately if a client is missing.
 	'''
 
-@JsonObject(snapshot=SnapshotName, detach=maybe(DetachClientsList), ro=maybe([ClientId]), force=False)
+@JsonObject(snapshot=SnapshotName, detach=maybe(DetachClientsList), ro=maybe([ClientId]), force=False, timeout=maybe(int))
 class SnapshotReassignDesc(object):
 	'''
 	snapshot: The name of the snapshot which should be reassigned.
 	detach: The clients from which to detach the given snapshot.
 	ro: The clients on which to attach the snapshot.
 	force: Whether to force detaching of open snapshots.
+	timeout: The number of seconds to wait for missing clients to appear when attaching to them.  If not specified, an error shall be returned immediately if a client is missing.
 	'''
 
 @JsonObject(volume=VolumeName, snapshot=bool, client=ClientId, rights=AttachmentRights, pos=AttachmentPos)
