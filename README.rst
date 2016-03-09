@@ -39,11 +39,12 @@ Version history
   UpDiskSummary types
 - add the noFlush and noTrim members to the UpDiskSummary type
 - add diskRetrim()
-- add volumesReassignNoWait()
 - add the startTime member and the uptime() method to the Service type
 - document the float property type
-- add the timeout member to the VolumeReassignDesc and
-  SnapshotReassignDesc types
+- remove volumeRelocatorOn() and volumeRelocatorOff(); this functionality
+  will be exposed in a better way later
+- add volumesReassignWait() and its VolumesReassignWaitDesc type;
+  volumesReassign() is now deprecated
 
 2.0.0
 -----
