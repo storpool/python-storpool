@@ -652,7 +652,7 @@ class AbandonDiskDesc(object):
 DetachClientsList = eitherOr([ClientId], "all")
 AttachmentPos = intRange('AttachmentPos', 0, MAX_CLIENT_DISK)
 
-@JsonObject(volume=VolumeName, detach=maybe(DetachClientsList), ro=maybe([ClientId]), rw=maybe([ClientId]), force=False, timeout=maybe(int))
+@JsonObject(volume=VolumeName, detach=maybe(DetachClientsList), ro=maybe([ClientId]), rw=maybe([ClientId]), force=False)
 class VolumeReassignDesc(object):
 	'''
 	volume: The name of the volume to be reassigned.
@@ -660,17 +660,22 @@ class VolumeReassignDesc(object):
 	ro: The clients on which to attach the volume as read only.
 	rw: The clients on which to attach the volume as read/write.
 	force: Whether to force detaching of open volumes.
-	timeout: The number of seconds to wait for missing clients to appear when attaching to them.  If not specified, an error shall be returned immediately if a client is missing.
 	'''
 
-@JsonObject(snapshot=SnapshotName, detach=maybe(DetachClientsList), ro=maybe([ClientId]), force=False, timeout=maybe(int))
+@JsonObject(snapshot=SnapshotName, detach=maybe(DetachClientsList), ro=maybe([ClientId]), force=False)
 class SnapshotReassignDesc(object):
 	'''
 	snapshot: The name of the snapshot which should be reassigned.
 	detach: The clients from which to detach the given snapshot.
 	ro: The clients on which to attach the snapshot.
 	force: Whether to force detaching of open snapshots.
-	timeout: The number of seconds to wait for missing clients to appear when attaching to them.  If not specified, an error shall be returned immediately if a client is missing.
+	'''
+
+@JsonObject(reassign=[either(VolumeReassignDesc, SnapshotReassignDesc)], attachTimeout=maybe(int))
+class VolumesReassignWaitDesc(object):
+	'''
+	reassign: The list of volumes and snapshots to modify the attachment settings for.
+	attachTimeout: The number of seconds to wait for missing clients to appear when attaching to them.  If not specified, wait indefinitely.  If explicitly set to 0, immediately return successfully even if any clients are missing.
 	'''
 
 @JsonObject(volume=VolumeName, snapshot=bool, client=ClientId, rights=AttachmentRights, pos=AttachmentPos)
