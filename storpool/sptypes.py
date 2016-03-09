@@ -713,7 +713,7 @@ class VolumeTemplateSpaceEst(VolumeTemplateSpaceEstEntry):
 	volumesCount=int, snapshotsCount=int, removingSnapshotsCount=int,
 	size=eitherOr(VolumeSize, 0), totalSize=eitherOr(VolumeSize, 0), onDiskSize=long, storedSize=long,
 	availablePlaceAll=long, availablePlaceTail=long, capacityPlaceAll=long, capacityPlaceTail=long,
-	phys=VolumeTemplateSpaceEst, stored=VolumeTemplateSpaceEst)
+	stored=VolumeTemplateSpaceEst)
 class VolumeTemplateStatusDesc(object):
 	'''
 	name: The name of the template.
