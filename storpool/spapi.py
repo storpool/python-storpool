@@ -592,8 +592,6 @@ Api.spDocSection("Volume Relocator",
 	removing or adding disks.
 	"""
 	)
-Api.volumeRelocatorOn = POST('VolumeRelocatorOn').doc("Turn the relocator on", """ """)
-Api.volumeRelocatorOff = POST('VolumeRelocatorOff').doc("Turn the relocator off", """ """)
 Api.volumeRelocatorStatus = GET('VolumeRelocatorStatus', returns=sp.VolumeRelocatorStatus).doc("Get the relocator's status", """ """)
 Api.volumeRelocatorDisks = GET('VolumeRelocatorDisksList', returns={sp.DiskId: sp.DiskTarget}).doc("List total per disk relocation estimates",
 	"""

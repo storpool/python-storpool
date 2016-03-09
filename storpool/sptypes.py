@@ -759,7 +759,7 @@ class VolumeRelocatorStatus(object):
 class VolumeBalancerStatus(object):
 	pass
 
-@JsonObject(cmd=oneOf("BalancerCommand", 'start', 'stop', 'commit', 'auto'))
+@JsonObject(cmd=oneOf("BalancerCommand", 'start', 'stop', 'commit'))
 class VolumeBalancerCommand(object):
 	pass
 
