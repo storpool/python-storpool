@@ -772,11 +772,11 @@ class VolumeBalancerCommand(object):
 	placeAll=PlacementGroupName, placeTail=PlacementGroupName, replication=VolumeReplication,
 	size=long, objectsCount=int,
 	snapshot=bool, reallocated=bool, blocked=bool)
-class VolumaBalancerVolumeStatus(object):
+class VolumeBalancerVolumeStatus(object):
 	pass
 
 @JsonObject(currentDiskSets=[[DiskId]], balancerDiskSets=[[DiskId]])
-class VolumeBalancerVolumeDiskSets(VolumaBalancerVolumeStatus):
+class VolumeBalancerVolumeDiskSets(VolumeBalancerVolumeStatus):
 	pass
 
 @JsonObject(current=int, target=int, delta=int, toRecover=int)

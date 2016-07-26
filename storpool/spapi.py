@@ -606,7 +606,7 @@ Api.spDocSection("Balancer",
 	)
 Api.volumeBalancerGetStatus = GET('VolumeBalancerStatus', returns=sp.VolumeBalancerStatus).doc("Get the balancer's status", """ """)
 Api.volumeBalancerSetStatus = POST('VolumeBalancerStatus', json=sp.VolumeBalancerCommand).doc("Set the balancer's status", """ """)
-Api.volumeBalancerVolumesStatus = GET('VolumeBalancerVolumesStatus', returns=[sp.VolumaBalancerVolumeStatus]).doc("List balancer volume and snapshot status",
+Api.volumeBalancerVolumesStatus = GET('VolumeBalancerVolumesStatus', returns=[sp.VolumeBalancerVolumeStatus]).doc("List balancer volume and snapshot status",
 	"""
 	Show which volumes and snapshots will be reallocated by the
 	current balancer run.
