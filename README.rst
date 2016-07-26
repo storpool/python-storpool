@@ -19,6 +19,13 @@ and act as a compute node.
 Version history
 ===============
 
+3.0.1
+-----
+
+- note that this documents version 16.01 of the StorPool API
+- fix a typo in the VolumeBalancerVolumeStatus class name
+- document a lot of classes and fields
+
 3.0.0
 -----
 
