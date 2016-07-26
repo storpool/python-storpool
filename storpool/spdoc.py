@@ -146,6 +146,9 @@ class JsonObjectDoc(Doc):
 	
 	def attrList(self, html):
 		html.add('<strong>{name}</strong>', name=self.name)
+		self._attrList(html)
+	
+	def _attrList(self, html):
 		html.add('<ul>\n')
 		for attrName, (attrType, attrDesc) in sorted(self.attrs.iteritems()):
 			html.add('<li class="attribute">{0}: ', attrName)
@@ -158,7 +161,10 @@ class JsonObjectDoc(Doc):
 			else:
 				if attrDesc:
 					html.add(' {0}', attrDesc)
-				attrType.attrList(html)
+				if type(attrType) is JsonObjectDoc:
+					attrType._attrList(html)
+				else:
+					attrType.attrList(html)
 			
 			html.add('</li>')
 		html.add('</ul>\n')

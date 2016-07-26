@@ -367,8 +367,11 @@ class DiskSummaryBase(object):
 	generationLeft: The last cluster generation when the disk was active on a running server, or -1 if the disk is currently active.
 	softEject: The status of the soft-eject process.
 	description: A user-defined description of the disk for easier identification of the device.
+	model: The drive's model.
+	serial: The drive's serial.
 	'''
 
+@JsonObject()
 class DownDiskSummary(DiskSummaryBase):
 	up = False
 
@@ -506,6 +509,7 @@ class VolumeSummaryBase(VolumeLimits):
 	parentVolumeId: The ID of the parent snapshot.
 	visibleVolumeId: The ID by which the volume/snapshot was created.
 	objectsCount: The number of objects that the volume/snapshot is comprised of.
+	creationTimestamp: The volume's creation timestamp (UNIX timestamp)
 	'''
 
 @JsonObject(name=VolumeName)
@@ -562,12 +566,14 @@ class SnapshotInfo(SnapshotSummary):
 	downDrives=[DiskId], missingDrives=[DiskId], missingTargetDrives=[DiskId], softEjectingDrives=[DiskId])
 class VolumeStatus(object):
 	'''
+	name: The volume's name.
 	size: The volume's size in bytes.
 	replication: The number of copies/replicas kept.
 	status: up - The volume is operational. up soon - Synchronizing versions of objects after a disk has come back up. data lost - The last copy of some of the data in the volume has been lost. down - Some or all of the objects of the volume are missing and the volume is not in a state to continue serving operations.
 	snapshot: True if this response describes a snapshot instead of a volume.
 	migrating: True if there are tasks for reallocation of the volume.
 	decreasedRedundancy: True if any of the replicas of the volume are missing.
+	balancerBlocked: Can this volume be rebalanced, or is rebalancing impossible with the current placement policy due to for example missing or soft-ejecting drives.
 	storedSize: The number of bytes of client data on the volume. This does not take into account the StorPool replication and overhead, thus it is never larger than the volume size.
 	onDiskSize: The actual size that the objects of this volume occupy on the disks.
 	syncingDataBytes: The total number of bytes in objects currently being synchronized (degraded objects or objects with not yet known version)
@@ -706,13 +712,19 @@ class VolumeTemplateDesc(VolumeLimits):
 class VolumeTemplateSpaceEstInternal(object):
 	pass
 
-@JsonObject(free=int, capacity=int, internal=VolumeTemplateSpaceEstInternal)
+@JsonObject(free=int, capacity=int, internal=internal(VolumeTemplateSpaceEstInternal))
 class VolumeTemplateSpaceEstEntry(object):
-	pass
+	'''
+	capacity: Estimated total client data capacity.
+	free: Estimated free space remaining.
+	'''
 
 @JsonObject(placeAll=VolumeTemplateSpaceEstEntry, placeTail=VolumeTemplateSpaceEstEntry)
 class VolumeTemplateSpaceEst(VolumeTemplateSpaceEstEntry):
-	pass
+	'''
+	placeAll: placeAll placement group estimations.
+	placeTail: placeTail placement group estimations.
+	'''
 
 @JsonObject(id=internal(int), name=VolumeTemplateName, placeAll=PlacementGroupName, placeTail=PlacementGroupName, replication=eitherOr(VolumeReplication, "-"),
 	volumesCount=int, snapshotsCount=int, removingSnapshotsCount=int,
@@ -736,11 +748,13 @@ class VolumeTemplateStatusDesc(object):
 	availablePlaceTail: An estimate of the available space on all the disks in this template's placeTail placement group.
 	capacityPlaceAll: An estimate of the total physical space on all the disks in this template's placeAll placement group.
 	capacityPlaceTail: An estimate of the total physical space on all the disks in this template's placeTail placement group.
+	stored: Estimated client data capacity and free space.
 	'''
 
 @JsonObject(name=VolumeTemplateName, parent=maybe(SnapshotName), size=maybe(VolumeSize))
 class VolumeTemplateCreateDesc(VolumePolicyDesc):
 	'''
+	name: The name of the new template.
 	parent: The name of the snapshot on which to base volumes created by this template.
 	size: A default size for the volumes (in bytes).
 	'''
@@ -758,46 +772,87 @@ class VolumeTemplateUpdateDesc(VolumePolicyDesc):
 ### VOLUME RELOCATOR and BALANCER ###
 @JsonObject(status=oneOf("RelocatorStatus", 'on', 'off', 'blocked'), volumesToRelocate=int)
 class VolumeRelocatorStatus(object):
-	pass
+	'''
+	status: 'off' - relocator is currently turned off. 'on' - relocator is on. 'blocked' - relocation is blocked, most likely due to missing drives.
+	volumesToRelocate: Number of volumes currently being relocated.
+	'''
 
 @JsonObject(status=oneOf("BalancerStatus", 'nothing to do', 'blocked', 'waiting', 'working', 'ready', 'commiting'), auto=bool)
 class VolumeBalancerStatus(object):
-	pass
+	'''
+	status: The current balancer status.
+	auto: Is balancer running in automatic mode.
+	'''
 
 @JsonObject(cmd=oneOf("BalancerCommand", 'start', 'stop', 'commit'))
 class VolumeBalancerCommand(object):
-	pass
+	'''
+	cmd: The command for the balacer to execute. 'start' - run the balancer. 'stop' - abort current run. 'commit' - commit volume allocation changes.
+	'''
 
 @JsonObject(name=either(VolumeName, SnapshotName),
 	placeAll=PlacementGroupName, placeTail=PlacementGroupName, replication=VolumeReplication,
 	size=long, objectsCount=int,
 	snapshot=bool, reallocated=bool, blocked=bool)
 class VolumeBalancerVolumeStatus(object):
-	pass
+	'''
+	name: The volume's name.
+	size: The volume's size in bytes.
+	replication: The number of copies/replicas kept.
+	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
+	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+	objectsCount: The number of objects that the volume/snapshot is comprised of.
+	snapshot: True if this response describes a snapshot instead of a volume.
+	reallocated: is this volume/snapshot going to reallocated by the balancing procedure.
+	blocked: Can this volume be rebalanced, or is rebalancing impossible with the current placement policy due to for example missing or soft-ejecting drives.
+	'''
 
 @JsonObject(currentDiskSets=[[DiskId]], balancerDiskSets=[[DiskId]])
 class VolumeBalancerVolumeDiskSets(VolumeBalancerVolumeStatus):
-	pass
+	'''
+	currentDiskSets: The current sets of disks that the volume's data should be stored on.
+	balancerDiskSets: The new sets of disks that the volume's data should be stored on according to the rebalancing algorithm.
+	'''
 
 @JsonObject(current=int, target=int, delta=int, toRecover=int)
 class TargetDesc(object):
-	pass
+	'''
+	current: The current value.
+	target: The target value.
+	delta: The difference between the target and current values.
+	toRecover: The amount that will have to be recovered to get from the current to the target state.
+	'''
 
 @JsonObject(id=DiskId, serverId=ServerId, generationLeft=long)
 class DownDiskTarget(object):
-	pass
+	'''
+	id: The ID of this disk.
+	serverId: The ID of the server this disk was last on.
+	generationLeft: The last cluster generation when the disk was active on a running server.
+	'''
 
 @JsonObject(id=DiskId, serverId=ServerId, generationLeft=const(-1L),
 	objectsAllocated=TargetDesc, objectsCount=int,
 	storedSize=TargetDesc, onDiskSize=TargetDesc)
 class UpDiskTarget(object):
-	pass
+	'''
+	id: The ID of this disk.
+	serverId: The ID of the server this disk was last on.
+	generationLeft: The last cluster generation when the disk was active on a running server. -1 since the disk is currently up.
+	objectsCount: The maximum amount of object that can exists on the disk.
+	objectsAllocated: Statistics about the amount of objects to be allocated on this disk.
+	storedSize: Statistics about the amount of cilent data to be stored on this disk.
+	onDiskSize: Statistics about the total amount of space occupied by the objects on this disk.
+	'''
 
 DiskTarget = either(UpDiskTarget, DownDiskTarget)
 
 @JsonObject(storedSize=int, objectsCount=int)
 class VolumeBalancerSlot(object):
-	pass
+	'''
+	storedSize: Number of bytes of client data stored on the corresponding disk set.
+	objectsCount: Number of objects on the corresponding disk set.
+	'''
 
 @JsonObject(placeAll=PlacementGroupName, placeTail=PlacementGroupName, replication=VolumeReplication,
 	feasible=bool, blocked=bool,
@@ -805,4 +860,17 @@ class VolumeBalancerSlot(object):
 	root=either(VolumeName, SnapshotName), volumes=[either(VolumeName, SnapshotName)],
 	targetDiskSets=[[DiskId]], slots=[VolumeBalancerSlot])
 class VolumeBalancerAllocationGroup(object):
-	pass
+	'''
+	root: The name of this group's root volume or snapshot
+	volumes: The names of all volumes and snapshots in this group.
+	size: The total size of all volumes and snapshots in the group.
+	storedSize: The total number of bytes of client data on all volumes and  snapshots in this group.
+	objectsCount: The total number of objects of all volumes and snapshots in the group.
+	replication: The number of copies/replicas kept.
+	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
+	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+	feasible: Can new volumes be allocated with the current placement policy and redundancy constraints.
+	blocked: Can this volume be rebalanced, or is rebalancing impossible with the current placement policy due to for example missing or soft-ejecting drives.
+	targetDiskSets: The current sets of disks that the volume's data should be stored on.
+	slots: Statistics about each of the current disk sets.
+	'''

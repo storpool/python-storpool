@@ -126,6 +126,7 @@ class ApiOk(object):
 	'''
 	ok: Always returns true. If something goes wrong, an ApiError is returned instead.
 	generation: The cluster generation based on the number of configuration changes since the cluster was created.
+	info: May contain additional information about the request.
 	'''
 
 @js.JsonObject(autoName=sp.maybe(sp.SnapshotName))
