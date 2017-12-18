@@ -17,6 +17,7 @@
 #
 import gc
 import re
+import sys
 
 from collections import Iterable, namedtuple
 from inspect import isfunction, isclass
@@ -90,27 +91,65 @@ def pathPollWait(path, shouldExist, isLink, pollTime, maxTime):
 
 
 class InvalidArgumentException(Exception):
-	def __init__(self, fmt, **kwargs):
+	def __init__(self, fmt, partial=None, **kwargs):
 		super(InvalidArgumentException, self).__init__()
+		self.partial = partial
 		self.__dict__.update(**kwargs)
-		self.__str = fmt.format(**kwargs)
+		self._str = fmt.format(**kwargs)
 	
 	def __str__(self):
-		return self.__str
+		return self._str
 
-def error(fmt, **kwargs):
+def error(fmt, partial=None, **kwargs):
 	raise InvalidArgumentException(fmt, **kwargs)
 
 
 SpType = namedtuple('SpType', ['name', 'handleVal', 'defaultVal', 'spDoc'])
 
+def spCatch(handle, func, exc):
+	try:
+		handle(func())
+	except InvalidArgumentException as e:
+		if e.partial is not None:
+			handle(e.partial)
+		if exc is None or not isinstance(exc[1], InvalidArgumentException):
+			return sys.exc_info()
+	except Exception as e:
+		if exc is None:
+			return sys.exc_info()
+
+	return exc
+
+def spCaught(exc, name, partial):
+	if exc is None:
+		return
+	elif isinstance(exc[1], InvalidArgumentException):
+		exc[1]._str = '{name}: {msg}'.format(name=name, msg=exc[1]._str)
+		exc[1].partial = partial
+		raise exc[0], exc[1], exc[2]
+	else:
+		raise InvalidArgumentException(fmt='{name}: {msg}', name=name, msg=exc[1].message, partial=partial)
+	
 def spList(lst):
 	assert len(lst) == 1, "SpList :: [subType]"
 	subType = spType(lst[0])
 	valT = subType.handleVal
 	name = "[{0}]".format(subType.name)
 	_doc = doc.ListDoc(name, "A list of {0}".format(subType.name), deps=[subType.spDoc])
-	return SpType(name, lambda xs: [valT(x) for x in xs], lambda: [], _doc)
+
+	def buildList(xs):
+		lst = []
+		exc = reduce(
+			lambda exc, x: spCatch(
+				lambda tx: lst.append(tx),
+				lambda: valT(x),
+				exc),
+			xs,
+			None)
+		spCaught(exc, name, lst)
+		return lst
+
+	return SpType(name, buildList, lambda: [], _doc)
 
 def spSet(st):
 	assert len(st) == 1, "SpSet :: set([subType])"
@@ -118,7 +157,20 @@ def spSet(st):
 	valT = subType.handleVal
 	name = "{{{0}}}".format(subType.name)
 	_doc = doc.ListDoc(name, "A set of {0}".format(subType.name), deps=[subType.spDoc])
-	return SpType(name, lambda xs: set(valT(x) for x in xs), lambda: set(), _doc)
+
+	def buildSet(xs):
+		st = set()
+		exc = reduce(
+			lambda exc, x: spCatch(
+				lambda tx: st.add(tx),
+				lambda: valT(x),
+				exc),
+			xs,
+			None)
+		spCaught(exc, name, st)
+		return st
+
+	return SpType(name, buildSet, lambda: set(), _doc)
 
 def spDict(dct):
 	assert len(dct) == 1, "SpDict :: {keyType: valueType}"
@@ -126,7 +178,29 @@ def spDict(dct):
 	keyT, valT = keySt.handleVal, valSt.handleVal
 	name = "{{{0}: {1}}}".format(keySt.name, valSt.name)
 	_doc = doc.DictDoc(name, "A dict from {0} to {1}".format(keySt.name, valSt.name), deps=[keySt.spDoc, valSt.spDoc])
-	return SpType(name, lambda dct: dict((keyT(key), valT(val)) for key, val in dct.iteritems()), lambda: {}, _doc)
+
+	def buildDict(xs):
+		d = dict()
+		exc = None
+		for key, val in xs.iteritems():
+			data = []
+			exc = spCatch(
+				lambda tx: data.append(tx),
+				lambda: keyT(key),
+				exc)
+			if len(data) == 1:
+				exc = spCatch(
+					lambda tx: data.append(tx),
+					lambda: valT(val),
+					exc)
+				if len(data) == 2:
+					d[data[0]] = data[1]
+				else:
+					d[data[0]] = None
+		spCaught(exc, name, d)
+		return d
+
+	return SpType(name, buildDict, lambda: {}, _doc)
 
 def maybe(val):
 	subType = spType(val)

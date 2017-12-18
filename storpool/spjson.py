@@ -59,8 +59,18 @@ class JsonObjectImpl(object):
 			self = super(JsonObjectImpl, cls).__new__(cls)
 			object.__setattr__(self, '__jsonAttrs__', {})
 			
+			exc = None
 			for attr, attrDef in self.__jsonAttrDefs__.iteritems():
-				self.__jsonAttrs__[attr] = attrDef.handleVal(j[attr]) if attr in j else attrDef.defaultVal()
+				data = []
+				exc = sp.spCatch(
+					lambda tx: data.append(tx),
+					lambda: attrDef.handleVal(j[attr]) if attr in j else attrDef.defaultVal(),
+					exc)
+				if data:
+					self.__jsonAttrs__[attr] = data[0]
+				else:
+					self.__jsonAttrs__[attr] = None
+			sp.spCaught(exc, self.__class__.__name__, self)
 			
 			return self
 	

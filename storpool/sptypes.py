@@ -1,6 +1,6 @@
 #
 #-
-# Copyright (c) 2014 - 2016  StorPool.
+# Copyright (c) 2014 - 2017  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -154,6 +154,10 @@ SNAPSHOT_NAME_REGEX = r'^\*?[A-Za-z0-9_\-.:@]+$'
 PLACEMENT_GROUP_NAME_REGEX = r'^[A-Za-z0-9_\-]+$'
 VOLUME_TEMPLATE_NAME_REGEX = r'^[A-Za-z0-9_\-]+$'
 DISK_DESC_REGEX = r'^[A-Za-z0-9_\- ]{,30}$'
+REMOTE_LOCATION_NAME_SIZE = 64
+REMOTE_LOCATION_NAME_REGEX = VOLUME_NAME_REGEX
+VOLUME_TAG_NAME_REGEX = r'^[A-Za-z0-9_\-.:]+$'
+VOLUME_TAG_VALUE_REGEX = r'^[A-Za-z0-9_\-.:]*$'
 
 SECTOR_SIZE = 512
 MAX_CHAIN_LENGTH = 6
@@ -166,13 +170,15 @@ MAX_DISK_ID = MAX_CLUSTER_DISKS - 1
 MAX_NET_ID = 3
 MAX_NODE_ID = 63
 MAX_PEER_ID = 0xffff
+PEER_SUBTYPE_BRIDGE = 0x7000
 PEER_TYPE_CLIENT = 0x8000
-PEER_SUBTYPE_CLIENT_AOE = 0xe000
 PEER_SUBTYPE_MGMT = 0xf000
+MAX_PEERS_PER_SUBTYPE = 0x1000
 MAX_SERVER_ID = PEER_TYPE_CLIENT - 1
-MAX_CLIENT_ID = PEER_SUBTYPE_CLIENT_AOE - PEER_TYPE_CLIENT - 1
-MAX_AOE_TARGET_ID = PEER_SUBTYPE_MGMT - PEER_SUBTYPE_CLIENT_AOE - 1
-MAX_MGMT_ID = MAX_PEER_ID - PEER_SUBTYPE_MGMT
+MAX_CLIENT_ID = PEER_TYPE_CLIENT - 1
+MAX_BRIDGE_ID = MAX_PEERS_PER_SUBTYPE
+MAX_CLIENT_ID = MAX_PEERS_PER_SUBTYPE
+MAX_MGMT_ID = MAX_PEERS_PER_SUBTYPE
 
 
 ### Simple type validators ###
@@ -182,7 +188,9 @@ BeaconClusterStatus = oneOf('BeaconClusterStatus', 'CNODE_DOWN', 'CNODE_DAMPING'
 PeerStatus = oneOf('PeerStatus', 'up', 'down')
 ClientStatus = oneOf('ClientStatus', 'running', 'down')
 ServerStatus = oneOf('ServerStatus', 'running', 'waiting', 'booting', 'down')
+BridgeStatus = oneOf('BridgeStatus', 'running', 'joining', 'down')
 ClusterStatus = oneOf('ClusterStatus', 'running', 'waiting', 'down')
+GUID = regex('GUID', r'^0x[0-9a-fA-F]{2,16}$')
 
 NetId = intRange('NetID', 0, MAX_NET_ID)
 NodeId = intRange('NodeID', 0, MAX_NODE_ID)
@@ -190,7 +198,7 @@ PeerId = intRange('PeerID', 0, MAX_PEER_ID)
 ClientId = intRange('ClientID', 1, MAX_CLIENT_ID)
 ServerId = intRange('ServerID', 1, MAX_SERVER_ID)
 MgmtId = intRange('MgmtID', 1, MAX_MGMT_ID)
-AoeTargetId = intRange("AoeTargetID", 1, MAX_AOE_TARGET_ID)
+BridgeId = intRange('BridgeId', 1, MAX_BRIDGE_ID)
 
 DiskId = intRange('DiskID', 0, MAX_DISK_ID)
 DiskDescription = regex('DiskDescritpion', DISK_DESC_REGEX)
@@ -202,7 +210,11 @@ VolumeReplication = intRange('Replication', 1, 3)
 VolumeSize = volumeSizeValidator("Size")
 VolumeResize = volumeSizeValidator("SizeAdd")
 
+VolumeTagName = nameValidator("VolumeTagName", VOLUME_TAG_NAME_REGEX, VOLUME_NAME_SIZE)
+VolumeTagValue = nameValidator("VolumeTagValue", VOLUME_TAG_VALUE_REGEX, VOLUME_NAME_SIZE)
+
 PlacementGroupName = nameValidator("PlacementGroupName", PLACEMENT_GROUP_NAME_REGEX, PLACEMENT_GROUP_NAME_SIZE, 'list')
+FaultSetName = PlacementGroupName
 VolumeTemplateName = nameValidator("VolumeTemplateName", VOLUME_TEMPLATE_NAME_REGEX, VOLUME_NAME_SIZE, 'list')
 
 Bandwidth = unlimitedInt('Bandwidth', 0, '-')
@@ -211,19 +223,33 @@ AttachmentRights = oneOf('AttachmentRights', 'rw', 'ro')
 
 ObjectState = namedEnum("ObjectState", "OBJECT_UNDEF OBJECT_OK OBJECT_OUTDATED OBJECT_IN_RECOVERY OBJECT_WAITING_FOR_VERSION OBJECT_WAITING_FOR_DISK OBJECT_DATA_NOT_PRESENT OBJECT_DATA_LOST OBJECT_WAINING_FOR_CHAIN OBJECT_WAIT_IDLE".split(' '))
 
+RemoteLocationName = nameValidator("RemoteLocationName", REMOTE_LOCATION_NAME_REGEX, REMOTE_LOCATION_NAME_SIZE, 'list')
+GlobalVolumeId = regex('Global Volume Id', r'[a-z0-9]+\.[a-z0-9]\.[a-z0-9]+$')
+LocationId = regex('Global Location Id', r'[a-z0-9]+$')
+
+iSCSIId = intRange('iSCSIId', 0, 0x0fff)
+iSCSIName = r'^[a-z0-9\-.:]+$'
+iSCSIPGName = r'^[A-Za-z0-9_\-.:]+$'
 
 ### NETWORK ###
 @JsonObject(mac=MacAddr)
 class NetDesc(object):
 	pass
 
-@JsonObject(beaconStatus=BeaconNodeStatus, clusterStatus=BeaconClusterStatus, joined=bool, networks={NetId: NetDesc}, nonVoting=bool)
+RdmaState = oneOf('RdmaState', 'Idle', 'GidReceived', 'Connecting', 'Connected', 'pendingError', 'Error' )
+
+@JsonObject(guid=GUID, state=RdmaState)
+class RdmaDesc(object):
+	pass
+
+@JsonObject(beaconStatus=BeaconNodeStatus, clusterStatus=BeaconClusterStatus, joined=bool, networks=maybe({NetId: NetDesc}), rdma=({NetId: RdmaDesc}), nonVoting=bool)
 class PeerDesc(object):
 	'''
 	beaconStatus: Whether a beacon is running at all on this node.
 	clusterStatus: Whether we consider this node a part of the cluster quorum.
 	joined: Whether the node considers itself a part of the cluster quorum.
-	networks: List of the networks that StorPool communicates through on this node.
+	networks: List of the Ethernet networks that StorPool communicates through on this node.
+	rdma: List of the RDMA networks that StorPool communicates through on this node.
 	nonVoting: Whether this is a non-voting StorPool node (e.g. client only).
 	'''
 
@@ -272,14 +298,14 @@ class Mgmt(Service):
 	active: If the instance is currently active. For a given cluster one mgmt instance will be active at any given time.
 	'''
 
-@JsonObject(id=AoeTargetId, status=ClientStatus)
-class AoeTarget(Service):
+@JsonObject(id=BridgeId, status=BridgeStatus)
+class Bridge(Service):
 	'''
 	id: The ID of the service.
-	status: The current status of the AoE target.
+	status: The current status of the remote cluster bridge.
 	'''
 
-@JsonObject(clusterStatus=ClusterStatus, mgmt={MgmtId: Mgmt}, clients={ClientId: Client}, servers={ServerId: Server}, aoeTargets={AoeTargetId: AoeTarget})
+@JsonObject(clusterStatus=ClusterStatus, mgmt={MgmtId: Mgmt}, clients={ClientId: Client}, servers={ServerId: Server}, bridges={BridgeId: Bridge})
 class ClusterStatus(object):
 	'''
 	clusterStatus: The current status of the whole cluster. running - At least one running server; a cluster is formed. waiting - In quorum but negotiations between servers are not over yet. down - No quorum; most likely because more beacons are needed.
@@ -297,21 +323,6 @@ class ClientConfigStatus(object):
 	delay: The time it took for the client generation to reach the cluster generation. Only applicable to ClientConfigWait. Always 0 in ClientsConfigDump.
 	'''
 
-
-### AOE ###
-AoeExportStatus = oneOf('AoeExportStatus', "OK", "down")
-
-@JsonObject(name=either(VolumeName, SnapshotName), snapshot=bool, aoeId=str, target=eitherOr(AoeTargetId, None), status=AoeExportStatus)
-class AoeExport(object):
-	'''
-	A single StorPool volume or snapshot exported over AoE.
-	
-	name: The name of the StorPool volume.
-	snapshot: True if this entry describes a snapshot instead of a volume.
-	aoeId: The AoE identifier that the volume is exported as.
-	target: The StorPool node that serves as an AoE target to export this volume.
-	status: The status of the StorPool AoE target node if target is set.
-	'''
 
 ### TASK ###
 @JsonObject(diskId=DiskId, transactionId=long, allObjects=int, completedObjects=int, dispatchedObjects=int, unresolvedObjects=internal(int))
@@ -350,7 +361,7 @@ class DiskVolumeInfo(object):
 	storedSize: The size of the actual data in that object (<= onDiskSize).
 	'''
 
-@JsonObject(pages=int, pagesPending=int, maxPages=int, iops=int, bandwidth=eitherOr(int, None))
+@JsonObject(pages=int, pagesPending=int, maxPages=int)
 class DiskWbcStats(object):
 	pass
 
@@ -375,7 +386,7 @@ class DiskSummaryBase(object):
 class DownDiskSummary(DiskSummaryBase):
 	up = False
 
-@JsonObject(generationLeft=const(-1L), sectorsCount=long, empty=bool, noFua=bool, noFlush=bool, noTrim=bool, isWbc=bool, device=str,
+@JsonObject(generationLeft=const(-1L), sectorsCount=long, empty=bool, noFua=bool, noFlush=bool, noTrim=bool, isWbc=bool, journaled=bool, device=str,
 	agCount=internal(int), agAllocated=internal(int), agFree=internal(int), agFull=internal(int), agPartial=internal(int), agFreeing=internal(int), agMaxSizeFull=internal(int), agMaxSizePartial=internal(int),
 	entriesCount=int, entriesAllocated=int, entriesFree=int,
 	objectsCount=int, objectsAllocated=int, objectsFree=int, objectsOnDiskSize=long,
@@ -389,6 +400,7 @@ class UpDiskSummary(DiskSummaryBase):
 	noFlush: Whether write-back cache flushing is disabled for this device.
 	noTrim: Whether trim-below is disabled for this device.
 	isWbc: Whether write-back cache is enabled for this device.
+	journaled: Whether StorPool journaling is enabled for this device.
 	device: The name of the physical disk device on the server.
 	entriesAllocated: Used entries of the disk.
 	objectsAllocated: Used objects of the disk.
@@ -459,31 +471,28 @@ class DiskActiveRequests(object):
 	requests: A detailed listing of all the requests associated with the given disk.
 	'''
 
-@JsonObject(aoeTargetId=AoeTargetId, requests=[ActiveRequestDesc])
-class AoeTargetActiveRequests(object):
-	'''
-	requests: A detailed listing of all the requests associated with the given AoE target.
-	'''
-
-
 ### PLACEMENT GROUP ###
-@JsonObject(id=internal(int), name=PlacementGroupName, disks=set([DiskId]), servers=set([ServerId]))
+@JsonObject(id=internal(int), name=PlacementGroupName, disks=set([DiskId]))
 class PlacementGroup(object):
 	'''
 	disks: IDs of the participating disks.
-	servers: IDs of the participating servers.
 	'''
 
-@JsonObject(rename=maybe(PlacementGroupName), addServers=set([ServerId]), addDisks=set([DiskId]), rmServers=set([ServerId]), rmDisks=set([DiskId]))
+@JsonObject(rename=maybe(PlacementGroupName), addDisks=set([DiskId]), rmDisks=set([DiskId]))
 class PlacementGroupUpdateDesc(object):
 	'''
 	rename: The new name of the placement group.
-	addServers: IDs of the servers to add to this group. (This will add all the accessible disks of these servers)
 	addDisks: IDs of the disks to add to this group.
-	rmServers: IDs of the servers to be removed from this group.
 	rmDisks: IDs of the disks to be removed from this group.
 	'''
 
+
+### FAULT SETS ###
+@JsonObject(name=FaultSetName, servers=set([ServerId]))
+class FaultSet(object):
+	'''
+	servers: List of servers in one fault set
+	'''
 
 ### VOLUME and SNAPSHOT ###
 @JsonObject(bw=Bandwidth, iops=IOPS)
@@ -495,9 +504,9 @@ class VolumeLimits(object):
 
 @JsonObject(id=internal(long), parentName=eitherOr(SnapshotName, ""), templateName=eitherOr(VolumeTemplateName, ""),
 	size=VolumeSize, replication=VolumeReplication,
-	placeAll=PlacementGroupName, placeTail=PlacementGroupName,
+	placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName,
 	parentVolumeId=internal(long), originalParentVolumeId=internal(long), visibleVolumeId=long, templateId=internal(long),
-	objectsCount=int, creationTimestamp=long, flags=internal(int))
+	objectsCount=int, creationTimestamp=long, flags=internal(int), tags=maybe({VolumeTagName: VolumeTagValue}))
 class VolumeSummaryBase(VolumeLimits):
 	'''
 	parentName: The volume/snapshot's parent snapshot.
@@ -506,10 +515,12 @@ class VolumeSummaryBase(VolumeLimits):
 	replication: The number of copies/replicas kept.
 	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
 	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+	placeHead: The name of a placement group which describes the disks to be used for the first replica.
 	parentVolumeId: The ID of the parent snapshot.
 	visibleVolumeId: The ID by which the volume/snapshot was created.
 	objectsCount: The number of objects that the volume/snapshot is comprised of.
 	creationTimestamp: The volume's creation timestamp (UNIX timestamp)
+	tags: Arbitrary short name/value pairs stored with the volume.
 	'''
 
 @JsonObject(name=VolumeName)
@@ -519,7 +530,7 @@ class VolumeSummary(VolumeSummaryBase):
 	'''
 
 @JsonObject(name=SnapshotName, onVolume=VolumeName,
-	autoName=bool, bound=bool, deleted=bool, transient=bool)
+	autoName=bool, bound=bool, deleted=bool, transient=bool, targetDeleteDate=maybe(int), globalId=GlobalVolumeId)
 class SnapshotSummary(VolumeSummaryBase):
 	'''
 	name: The name of this snapshot
@@ -528,6 +539,8 @@ class SnapshotSummary(VolumeSummaryBase):
 	bound: Is this a bound snapshot. Bound snapshots are garbage-collected as soon as they remain childless and are no longer attached.
 	deleted: Is this snapshot currently being deleted.
 	transient: Is this a transient snapshot. Transient snapshots are internally created when cloning a volume. They cannot be attached as they may be garbage-collected at any time.
+	targetDeleteDate: Scheduled date for the snapshot to be deleted. Unix timestamp
+	globalId: The global snapshot identifier.
 	'''
 
 @JsonObject(storedSize=long, spaceUsed=long)
@@ -563,7 +576,8 @@ class SnapshotInfo(SnapshotSummary):
 @JsonObject(name=either(VolumeName, SnapshotName), size=VolumeSize, replication=VolumeReplication,
 	status=oneOf("VolumeCurentStatus", "up", "up soon", "data lost", "down"), snapshot=bool, migrating=bool, decreasedRedundancy=bool, balancerBlocked=bool,
 	storedSize=int, onDiskSize=int, syncingDataBytes=int, syncingMetaObjects=int, downBytes=int,
-	downDrives=[DiskId], missingDrives=[DiskId], missingTargetDrives=[DiskId], softEjectingDrives=[DiskId])
+	downDrives=[DiskId], missingDrives=[DiskId], missingTargetDrives=[DiskId], softEjectingDrives=[DiskId],
+	tags=maybe({VolumeTagName: VolumeTagValue}))
 class VolumeStatus(object):
 	'''
 	name: The volume's name.
@@ -581,6 +595,7 @@ class VolumeStatus(object):
 	downBytes: The number of bytes of the volume that are not accessible at the moment.
 	downDrives: The IDs of the drives that are not accessible at the moment but needed by this volume. The volume will be in the 'down' status until all or some of these drives reappear.
 	missingDrives: The IDs of the drives that are not accessible at the moment. The volume has all the needed data on the rest of the disks and can continue serving requests but it is in the 'degraded' status.
+	tags: Arbitrary short name/value pairs stored with the volume.
 	'''
 
 
@@ -598,14 +613,17 @@ class Volume(VolumeSummary):
 	objects: Where each object is actually stored.
 	'''
 
-@JsonObject(placeAll=maybe(PlacementGroupName), placeTail=maybe(PlacementGroupName), replication=maybe(VolumeReplication), bw=maybe(Bandwidth), iops=maybe(IOPS))
+@JsonObject(placeAll=maybe(PlacementGroupName), placeTail=maybe(PlacementGroupName), placeHead=maybe(PlacementGroupName),replication=maybe(VolumeReplication), bw=maybe(Bandwidth), iops=maybe(IOPS), reuseServer=maybe(bool), tags=maybe({VolumeTagName: VolumeTagValue}))
 class VolumePolicyDesc(object):
 	'''
 	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
 	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+	placeHead: The name of a placement group which describes the disks to be used for the first replica.
 	bw: Bandwidth limit in KB.
 	iops: iops limit.
 	replication: The number of copies/replicas kept.
+	reuseServer: allow placement of replicas on same server.
+	tags: Optional name=value tags.
 	'''
 
 @JsonObject(name=VolumeName, size=maybe(VolumeSize), parent=maybe(SnapshotName), template=maybe(VolumeTemplateName), baseOn=maybe(VolumeName))
@@ -627,18 +645,24 @@ class VolumeUpdateDesc(VolumePolicyDesc):
 	template: The new template that the volume's settings should be based on.
 	'''
 
-@JsonObject(name=maybe(VolumeName), bind=maybe(bool))
+@JsonObject(name=maybe(VolumeName), bind=maybe(bool), targetDeleteDate=maybe(int), deleteAfter=maybe(int), tags=maybe({VolumeTagName: VolumeTagValue}))
 class VolumeSnapshotDesc(object):
 	'''
 	name: The name of the newly created snapshot. If not specified, a name will be auto-generated by the StorPool management service.
 	bind: If true, the lifetime of the newly created snapshot will be bound to the lifetime of its children. As soon as it remains childless the snapshot will be garbage-collected.
+	targetDeleteDate: If not 0 set absolute targetDeleteDate for the new snapshot. Unix timestamp. targetDeleteDate can not be set in the past
+	deleteAfter: If not 0 set targetDeleteDate relative to the current time on the mgmt node. This value will be added to the current time as seconds and set as targetDeleteDate.
+	tags: Arbitrary short name/value pairs stored with the snapshot.
 	'''
 
-@JsonObject(rename=maybe(VolumeName), bind=maybe(bool))
+@JsonObject(rename=maybe(VolumeName), bind=maybe(bool), targetDeleteDate=maybe(int), deleteAfter=maybe(int), tags=maybe({VolumeTagName: VolumeTagValue}))
 class SnapshotUpdateDesc(VolumePolicyDesc):
 	'''
 	rename: The new name to be set.
 	bind: When true bind this snapshot, when false - unbind it. If not set or missing - no change.
+	targetDeleteDate: set absolute targetDeleteDate, or 0 to disable automatic deleting. Unix timestamp. targetDeleteDate can not be set in the past
+	deleteAfter: set targetDeleteDate relative to the current time on the mgmt node. If not 0 this value will be added to the current time as seconds and set as targetDeleteDate. If 0 it will discard previous targetDeleteDate
+	tags: Arbitrary short name/value pairs stored with the snapshot.
 	'''
 
 @JsonObject(parentName=maybe(SnapshotName))
@@ -653,6 +677,12 @@ class AbandonDiskDesc(object):
 	diskId: the disk to abandon.
 	'''
 
+@JsonObject(targetDeleteDate=maybe(int), deleteAfter=maybe(int))
+class VolumeFreezeDesc(object):
+	'''
+	targetDeleteDate: If not 0 set absolute targetDeleteDate for the freezed snapshot. Unix timestamp. targetDeleteDate can not be set in the past
+	deleteAfter: If not 0 set targetDeleteDate relative to the current time on the mgmt node. This value will be added as to the current time as seconds and set as targetDeleteDate.
+	'''
 
 ### VOLUME RIGHTS ###
 DetachClientsList = eitherOr([ClientId], "all")
@@ -696,16 +726,18 @@ class AttachmentDesc(object):
 
 
 ### VOLUME TEMPLATES ###
-@JsonObject(id=internal(int), name=VolumeTemplateName, parentName=eitherOr(SnapshotName, ""), placeAll=PlacementGroupName, placeTail=PlacementGroupName,
-	size=eitherOr(VolumeSize, "-"), replication=eitherOr(VolumeReplication, "-"))
+@JsonObject(id=internal(int), name=VolumeTemplateName, parentName=eitherOr(SnapshotName, ""), placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName,
+	size=eitherOr(VolumeSize, "-"), replication=eitherOr(VolumeReplication, "-"), reuseServer=maybe(bool))
 class VolumeTemplateDesc(VolumeLimits):
 	'''
 	name: The name of the template.
 	parentName: The name of the snapshot on which volumes will be based.
 	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
 	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+	placeHead: The name of a placement group which describes the disks to be used for the first replica.
 	size: A default size for the volumes (in bytes).
 	replication: A default number of copies to be kept by StorPool.
+	reuseServer: allow placement of replicas on same server.
 	'''
 
 @JsonObject(u1=int, u2=int, u3=int)
@@ -719,23 +751,25 @@ class VolumeTemplateSpaceEstEntry(object):
 	free: Estimated free space remaining.
 	'''
 
-@JsonObject(placeAll=VolumeTemplateSpaceEstEntry, placeTail=VolumeTemplateSpaceEstEntry)
+@JsonObject(placeAll=VolumeTemplateSpaceEstEntry, placeTail=VolumeTemplateSpaceEstEntry, placeHead=VolumeTemplateSpaceEstEntry)
 class VolumeTemplateSpaceEst(VolumeTemplateSpaceEstEntry):
 	'''
 	placeAll: placeAll placement group estimations.
 	placeTail: placeTail placement group estimations.
+	placeHead: placeHead placement group estimations.
 	'''
 
-@JsonObject(id=internal(int), name=VolumeTemplateName, placeAll=PlacementGroupName, placeTail=PlacementGroupName, replication=eitherOr(VolumeReplication, "-"),
+@JsonObject(id=internal(int), name=VolumeTemplateName, placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName, replication=eitherOr(VolumeReplication, "-"),
 	volumesCount=int, snapshotsCount=int, removingSnapshotsCount=int,
 	size=eitherOr(VolumeSize, 0), totalSize=eitherOr(VolumeSize, 0), onDiskSize=long, storedSize=long,
-	availablePlaceAll=long, availablePlaceTail=long, capacityPlaceAll=long, capacityPlaceTail=long,
+	availablePlaceAll=long, availablePlaceTail=long, availablePlaceHead=long, capacityPlaceAll=long, capacityPlaceTail=long, capacityPlaceHead=long,
 	stored=VolumeTemplateSpaceEst)
 class VolumeTemplateStatusDesc(object):
 	'''
 	name: The name of the template.
 	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
 	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+	placeHead: The name of a placement group which describes the disks to be used for the first replica.
 	replication: The number of copies to be kept by StorPool if defined for this template, otherwise "-".
 	volumesCount: The number of volumes based on this template.
 	snapshotsCount: The number of snapshots based on this template (incl. snapshots currently being deleted).
@@ -746,8 +780,10 @@ class VolumeTemplateStatusDesc(object):
 	onDiskSize: The actual on-disk number of bytes occupied by all the volumes based on this template.
 	availablePlaceAll: An estimate of the available space on all the disks in this template's placeAll placement group.
 	availablePlaceTail: An estimate of the available space on all the disks in this template's placeTail placement group.
+	availablePlaceHead: An estimate of the available space on all the disks in this template's placeHead placement group.
 	capacityPlaceAll: An estimate of the total physical space on all the disks in this template's placeAll placement group.
 	capacityPlaceTail: An estimate of the total physical space on all the disks in this template's placeTail placement group.
+	capacityPlaceHead: An estimate of the total physical space on all the disks in this template's placeHead placement group.
 	stored: Estimated client data capacity and free space.
 	'''
 
@@ -791,7 +827,7 @@ class VolumeBalancerCommand(object):
 	'''
 
 @JsonObject(name=either(VolumeName, SnapshotName),
-	placeAll=PlacementGroupName, placeTail=PlacementGroupName, replication=VolumeReplication,
+	placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName, replication=VolumeReplication,
 	size=long, objectsCount=int,
 	snapshot=bool, reallocated=bool, blocked=bool)
 class VolumeBalancerVolumeStatus(object):
@@ -801,6 +837,7 @@ class VolumeBalancerVolumeStatus(object):
 	replication: The number of copies/replicas kept.
 	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
 	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+	placeHead: The name of a placement group which describes the disks to be used for the first replica.
 	objectsCount: The number of objects that the volume/snapshot is comprised of.
 	snapshot: True if this response describes a snapshot instead of a volume.
 	reallocated: is this volume/snapshot going to reallocated by the balancing procedure.
@@ -854,11 +891,11 @@ class VolumeBalancerSlot(object):
 	objectsCount: Number of objects on the corresponding disk set.
 	'''
 
-@JsonObject(placeAll=PlacementGroupName, placeTail=PlacementGroupName, replication=VolumeReplication,
+@JsonObject(placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName, replication=VolumeReplication,
 	feasible=bool, blocked=bool,
 	size=int, storedSize=int, objectsCount=int,
 	root=either(VolumeName, SnapshotName), volumes=[either(VolumeName, SnapshotName)],
-	targetDiskSets=[[DiskId]], slots=[VolumeBalancerSlot])
+	targetDiskSets=[[DiskId]], slots=[VolumeBalancerSlot], reuseServer=maybe(bool))
 class VolumeBalancerAllocationGroup(object):
 	'''
 	root: The name of this group's root volume or snapshot
@@ -869,8 +906,321 @@ class VolumeBalancerAllocationGroup(object):
 	replication: The number of copies/replicas kept.
 	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
 	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+	placeHead: The name of a placement group which describes the disks to be used for the first replica.
 	feasible: Can new volumes be allocated with the current placement policy and redundancy constraints.
 	blocked: Can this volume be rebalanced, or is rebalancing impossible with the current placement policy due to for example missing or soft-ejecting drives.
 	targetDiskSets: The current sets of disks that the volume's data should be stored on.
 	slots: Statistics about each of the current disk sets.
+	reuseServer: allow placement of replicas on same server
+	'''
+
+@JsonObject(remoteLocation=RemoteLocationName, remoteId=GlobalVolumeId, name = maybe(VolumeName), placeAll=maybe(PlacementGroupName), placeTail=maybe(PlacementGroupName), placeHead=maybe(PlacementGroupName), replication=maybe(VolumeReplication), template=maybe(VolumeTemplateName), export=maybe(bool), tags=maybe({VolumeTagName: VolumeTagValue}))
+class SnapshotFromRemoteDesc(object):
+	'''
+	remoteLocation: The name of the remote location to fetch the snapshot from.
+	remoteId: The global snapshot identifier.
+	name: The name of the new snapshot.
+	placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
+	placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+	placeHead: The name of a placement group which describes the disks to be used for the first replica.
+	export: Auto-export the snapshot after creating it. e.g. for backup.
+	tags: Arbitrary short name/value pairs stored with the snapshot.
+	'''
+
+@JsonObject(snapshot=SnapshotName, location=RemoteLocationName)
+class SnapshotExportDesc(object):
+	'''
+	snapshot: The name of the snapshot.
+	location: The name of the remote location to grant access to.
+	'''
+
+@JsonObject(snapshot=SnapshotName, location=maybe(RemoteLocationName), all=maybe(bool), force=maybe(bool))
+class SnapshotUnexportDesc(object):
+	'''
+	snapshot: The name of the snapshot.
+	location: The name of the remote location to revoke access from.
+	all: Revoke access from all locations.
+	force: Don't check if the snapshot is still recovering in the remote location.
+	'''
+
+@JsonObject(volume=VolumeName, location=RemoteLocationName, tags=maybe({VolumeTagName: VolumeTagValue}))
+class VolumeBackupDesc(object):
+	'''
+	volume: The name of the volume to backup.
+	location: The remote location to backup to.
+	tags: Arbitrary short name/value pairs stored with the volume.
+	'''
+
+@JsonObject(remoteId=GlobalVolumeId)
+class VolumesGroupBackupSingle(object):
+	'''
+	remoteId: the globally unique id of the backup.
+	'''
+
+@JsonObject(location=RemoteLocationName, volumes=[VolumeName], tags=maybe({VolumeTagName: VolumeTagValue}))
+class VolumesGroupBackupDesc(object):
+	'''
+	volumes: The names of the volumes to backup.
+	location: The remote location to backup to.
+	tags: Arbitrary short name/value pairs stored with the volume.
+	'''
+
+@JsonObject(name=VolumeName, location=RemoteLocationName, creationTimestamp=long, size=VolumeSize, remoteId=GlobalVolumeId, onVolume=maybe(VolumeName), localSnapshot=maybe(SnapshotName))
+class RemoteSnapshot(object):
+	'''
+	name: The name of the snapshot.
+	location: Where the snapshot is located.
+	creationTimestamp: The snapshot's creation timestamp (UNIX timestamp).
+	size: The snapshots's size in bytes.
+	remoteId: The global snapshot identifier.
+	onVolume: The name of the local volume (if any) on which the snapshot was created.
+	localSnapshot: The name of the local snapshot (if any) which is a copy of the remote snapshot.
+	'''
+
+@JsonObject(id=LocationId, name=RemoteLocationName)
+class RemoteLocation(object):
+	'''
+	id: A StorPool-provided unique location id.
+	name: The human-readable location name.
+	'''
+
+@JsonObject(snapshot=SnapshotName, location=RemoteLocationName, globalId=GlobalVolumeId, backingUp=maybe(bool), volumeId=internal(long), visibleVolumeId=internal(long))
+class Export(object):
+	'''
+	snapshot: The name of the snapshot.
+	location: Name of the location the snapshot is exported to
+	globalId: The global snapshot identifier.
+	backingUp: Is this a backup in making
+	'''
+
+@JsonObject(location=RemoteLocationName, globalSnapshotId=GlobalVolumeId, targetDeleteDate=maybe(int), deleteAfter=maybe(int))
+class SnapshotRemoteUnexportDesc(object):
+	'''
+	location: name of the location to unexport from
+	globalSnapshotId: the id of the snapshot to be unexported
+	targetDeleteDate: if not 0 instruct the remote location to delete the snapshot at the specified date. Remote side may not allow this due to configuration or the snapshot beeeing used
+	deleteAfter: same as targetDeleteDate, but time in secs relative to current time on the mgmt node
+	'''
+
+@JsonObject(remoteSnapshots=[SnapshotRemoteUnexportDesc])
+class SnapshotsRemoteUnexport(object):
+	'''
+	remoteSnapshots: list of SnapshotRemoteUnexportDesc
+	'''
+
+@JsonObject(volume=VolumeName, name=maybe(SnapshotName))
+class GroupSnapshotSpec(object):
+	'''
+	volume: The name of the volume to create a snapshot of.
+	name: The name of the snapshot to create.
+	'''
+		
+@JsonObject(volumes=[GroupSnapshotSpec])
+class GroupSnapshotsSpec(object):
+	'''
+	volumes: The volumes to create snapshots of.
+	'''
+
+@JsonObject(volume=VolumeName, snapshot=maybe(SnapshotName), remoteId=GlobalVolumeId)
+class GroupSnapshotResult(object):
+	'''
+	volume: The name of the source volume.
+	snapshot: The name of the created snapshot.
+	remoteId: The globally unique id of the created snapshot.
+	'''
+		
+@JsonObject(volumes=[GroupSnapshotResult])
+class GroupSnapshotsResult(object):
+	'''
+	volumes: The volumes to create snapshots of.
+	'''
+
+@JsonObject(portalGroup=iSCSIPGName, target=iSCSIName)
+class iSCSIExport(object):
+	'''
+	portalGroup: The portal group exporting this volume.
+	target: The target exporting this volume.
+	'''
+
+@JsonObject(name=iSCSIName, username=str, secret=str, nets=[str], exports=[iSCSIExport])
+class iSCSIInitiator(object):
+	'''
+	name: The iSCSI initiator's IQN.
+	user: The username to authenticate the initiator by.
+	secret: The password to authenticate the initiator with.
+	nets: The networks this initiator will contact the iSCSI cluster on.
+	'''
+
+@JsonObject(address=str, prefix=int)
+class iSCSIPGNetwork(object):
+	'''
+	address: The dotted-quad network address.
+	prefix: The network's CIDR prefix length.
+	'''
+
+@JsonObject(controller=iSCSIId, ip=str, port=str)
+class iSCSIPortal(object):
+	'''
+	controller: The StorPool iSCSI target service handling this portal.
+	ip: The IP address for the portal.
+	port: The TCP port for the portal.
+	'''
+
+@JsonObject(name=iSCSIPGName, networks=[iSCSIPGNetwork], portals=[iSCSIPortal])
+class iSCSIPortalGroup(object):
+	'''
+	name: The iSCSI portal group name.
+	networks: The networks this portal group is accessible on.
+	portals: The list of portals defined in this group.
+	'''
+
+@JsonObject(currentControllerId=int, name=iSCSIName, volume=VolumeName)
+class iSCSITarget(object):
+	'''
+	currentControllerId: the StorPool iSCSI target service handling this target.
+	name: The iSCSI name that the target is exposed as.
+	volume: The name of the StorPool volume being exposed.
+	'''
+
+@JsonObject(baseName=iSCSIName, initiators={iSCSIId:iSCSIInitiator}, portalGroups={int:iSCSIPortalGroup}, targets={int:iSCSITarget})
+class iSCSIConfigData(object):
+	'''
+	baseName: The StorPool cluster's iSCSI base name.
+	initiators: The iSCSI initiators allowed to access the cluster.
+	portalGroups: The iSCSI portal groups defined for the cluster.
+	'''
+
+@JsonObject(iscsi=iSCSIConfigData)
+class iSCSIConfig(object):
+	'''
+	iscsi: The actual configuration data
+	'''
+
+@JsonObject(name=iSCSIName)
+class iSCSICommandSetBaseName(object):
+	'''
+	name: The new StorPool cluster iSCSI base name.
+	'''
+
+@JsonObject(name=iSCSIPGName)
+class iSCSICommandCreatePortalGroup(object):
+	'''
+	name: The name of the iSCSI portal group to create.
+	'''
+
+@JsonObject(name=iSCSIPGName)
+class iSCSICommandDeletePortalGroup(object):
+	'''
+	name: The name of the iSCSI portal group to delete.
+	'''
+
+@JsonObject(portalGroup=iSCSIPGName, net=str)
+class iSCSICommandPortalGroupAddNetwork(object):
+	'''
+	portalGroup: The name of the iSCSI portal group to modify.
+	net: the x.x.x.x/n CIDR definition of the network to add.
+	'''
+
+@JsonObject(portalGroup=iSCSIPGName, controller=iSCSIId, ip=str, port=maybe(int))
+class iSCSICommandCreatePortal(object):
+	'''
+	portalGroup: The name of the iSCSI portal group to modify.
+	controller: the StorPool iSCSI target service to handle this portal.
+	ip: The IP address for the portal.
+	port: The TCP port for the portal (default: 3260).
+	'''
+
+@JsonObject(ip=str, port=maybe(int))
+class iSCSICommandDeletePortal(object):
+	'''
+	ip: The IP address for the portal to remove.
+	port: The TCP port for the portal (default: 3260).
+	'''
+
+@JsonObject(volumeName=VolumeName)
+class iSCSICommandCreateTarget(object):
+	'''
+	volumeName: The StorPool volume name to create an iSCSI target for.
+	'''
+
+@JsonObject(volumeName=VolumeName)
+class iSCSICommandDeleteTarget(object):
+	'''
+	volumeName: The StorPool volume name to delete the iSCSI target for.
+	'''
+
+@JsonObject(name=iSCSIName, username=str, secret=str)
+class iSCSICommandCreateInitiator(object):
+	'''
+	name: The name the initiator will use to connect.
+	username: The username the initiator will authenticate as.
+	secret: The password the initiator will authenticate with.
+	'''
+
+@JsonObject(name=iSCSIName)
+class iSCSICommandDeleteInitiator(object):
+	'''
+	name: The name of the iSCSI initiator to delete.
+	'''
+
+@JsonObject(initiator=iSCSIName, net=str)
+class iSCSICommandInitiatorAddNetwork(object):
+	'''
+	initiator: The name of the iSCSI initiator to modify.
+	net: The CIDR x.x.x.x/n definition of the network to add.
+	'''
+
+@JsonObject(initiator=iSCSIName, portalGroup=iSCSIPGName, volumeName=VolumeName)
+class iSCSICommandExport(object):
+	'''
+	initiator: The name of the iSCSI initiator to allow access to the volume.
+	portalGroup: The name of the iSCSI portal group to export the volume in.
+	volumeName: The name of the volume to export.
+	'''
+
+@JsonObject(initiator=iSCSIName, portalGroup=iSCSIPGName, volumeName=VolumeName)
+class iSCSICommandExportDelete(object):
+	'''
+	initiator: The name of the iSCSI initiator to revoke access to the volume from.
+	portalGroup: The name of the iSCSI portal group to stop exporting the volume in.
+	volumeName: The name of the volume to export.
+	'''
+
+# TODO: figure out a way to validate that exactly one property is set
+@JsonObject(
+	setBaseName=maybe(iSCSICommandSetBaseName),
+	createPortalGroup=maybe(iSCSICommandCreatePortalGroup),
+	deletePortalGroup=maybe(iSCSICommandDeletePortalGroup),
+	portalGroupAddNetwork=maybe(iSCSICommandPortalGroupAddNetwork),
+	createPortal=maybe(iSCSICommandCreatePortal),
+	deletePortal=maybe(iSCSICommandDeletePortal),
+	createTarget=maybe(iSCSICommandCreateTarget),
+	deleteTarget=maybe(iSCSICommandDeleteTarget),
+	createInitiator=maybe(iSCSICommandCreateInitiator),
+	deleteInitiator=maybe(iSCSICommandDeleteInitiator),
+	initiatorAddNetwork=maybe(iSCSICommandInitiatorAddNetwork),
+	export=maybe(iSCSICommandExport),
+	exportDelete=maybe(iSCSICommandExportDelete),
+	)
+class iSCSIConfigCommand(object):
+	'''
+	setBaseName: Set the StorPool cluster's iSCSI base name.
+	createPortalGroup: Create an iSCSI portal group.
+	deletePortalGroup: Delete a previously created iSCSI portal group.
+	portalGroupAddNetwork: Add a CIDR network specification to a portal group.
+	createPortal: Create an iSCSI portal.
+	deletePortal: Delete a previously created iSCSI portal.
+	createTarget: Create an iSCSI target for a StorPool volume.
+	deleteTarget: Delete the iSCSI target for a StorPool volume.
+	createInitiator: Define an iSCSI initiator that will connect to the cluster.
+	deleteInitiator: Delete an iSCSI initiator definition.
+	initiatorAddNetwork: Define a network that an iSCSI initiator will connect to the cluster on.
+	export: Export a StorPool volume (with an already created target) via iSCSI.
+	exportDelete: Stop exporting a StorPool volume via iSCSI.
+	'''
+
+@JsonObject(commands=[iSCSIConfigCommand])
+class iSCSIConfigChange(object):
+	'''
+	commands: The actual iSCSI configuration commands.
 	'''

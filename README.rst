@@ -19,6 +19,105 @@ and act as a compute node.
 Version history
 ===============
 
+4.0.0
+-----
+
+- drop support for the removed StorPool AoE target
+- drop support for servers in volume placement groups
+- add support for StorPool remote snapshots, volumes, and backups:
+    - API methods:
+        - exportsList()
+        - locationsList()
+        - snapshotDeleteById()
+        - snapshotExport()
+        - snapshotFromRemote()
+        - snapshotRemoteList()
+        - snapshotUnexport()
+        - snapshotsRemoteList()
+        - snapshotsRemoteUnexport()
+        - volumeBackup()
+        - volumesGroupBackup()
+    - types:
+        - BridgeId
+        - BridgeStatus
+        - GlobalVolumeId
+        - LocationId
+        - RemoteLocationName
+    - classes:
+        - ApiOkVolumeBackup
+        - ApiOkVolumesGroupBackup
+        - Bridge
+        - Export
+        - SnapshotExportDesc
+        - SnapshotFromRemoteDesc
+        - SnapshotRemoteUnexportDesc
+        - SnapshotUnexportDesc
+        - SnapshotsRemoteUnexport
+        - RemoteLocation
+        - RemoteSnapshot
+        - VolumeBackupDesc
+        - VolumeFreezeDesc
+        - VolumesGroupBackupSingle
+        - VolumesGroupBackupDesc
+    - class members:
+        - SnapshotSummary.globalId
+        - SnapshotSummary.targetDeleteDate
+        - SnapshotUpdateDesc.targetDeleteDate
+        - SnapshotUpdateDesc.deleteAfter
+        - VolumeSnapshotDesc.targetDeleteDate
+        - VolumeSnapshotDesc.deleteAfter
+- add support for StorPool transport over InfiniBand:
+    - types:
+        - GUID
+        - RdmaState
+    - classes:
+        - RdmaDesc
+    - members:
+        - PeerDesc.networks
+        - PeerDesc.rdma
+- drop the bandwidth and iops members of the DiskWbcStats class
+- add the journaled member to the UpDiskSummary class
+- add support for creating a set of consistent snapshots for
+  a group of volumes:
+    - API methods:
+        - snapshotCreateGroup()
+    - classes:
+        - GroupSnapshotSpec
+        - GroupSnapshotsSpec
+        - GroupSnapshotResult
+        - GroupSnapshotsResult
+- add support for listing the server fault sets:
+    - API methods:
+        - faultSetsList()
+    - types:
+        - FaultSetName
+    - classes:
+        - FaultSet
+- add support for placeHead:
+    - members:
+        - SnapshotFromRemoteDesc.placeHead
+        - VolumeBalancerAllocationGroup.placeHead
+        - VolumeBalancerVolumeStatus.placeHead
+        - VolumePolicyDesc.placeHead
+        - VolumeSummaryBase.placeHead
+        - VolumeTemplateDesc.placeHead
+        - VolumeTemplateSpaceEst.placeHead
+        - VolumeTemplateStatusDesc.availablePlaceHead
+        - VolumeTemplateStatusDesc.capacityPlaceHead
+        - VolumeTemplateStatusDesc.placeHead
+- add the Api.fromConfig() method to configure a new Api object by
+  reading the standard StorPool configuration files
+- let the requests to the StorPool API succeed and return partial data
+  even if the API returns JSON data that does not represent valid
+  expected objects
+- fix the regular expression for the remote location name
+- note that this documents version 18.01 of the StorPool API
+- add support for reuseServer:
+    - members:
+        - VolumePolicyDesc.reuseServer
+        - VolumeTemplateDesc.reuseServer
+        - VolumeBalancerAllocationGroup.reuseServer
+
 3.0.1
 -----
 

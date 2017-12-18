@@ -59,7 +59,7 @@ class BuildPyCommand(build_py.build_py):
 
 setuptools.setup(
 	name = 'storpool',
-	version = '3.0.1',
+	version = '4.0.0',
 	packages = ('storpool',),
 	namespace_packages = ('storpool',),
 

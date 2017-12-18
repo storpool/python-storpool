@@ -24,7 +24,8 @@ from errno import ECONNREFUSED, ECONNRESET
 import spjson as js
 import sptypes as sp
 
-from sputils import msec, sec, pathPollWait, spType, either, const, maybe
+from spconfig import SPConfig
+from sputils import InvalidArgumentException, msec, sec, pathPollWait, spType, either, const, maybe
 from spdoc import ApiDoc, ApiCallDoc
 
 
@@ -40,11 +41,11 @@ class _API_ARG(object):
 DiskId = _API_ARG('diskId', sp.DiskId)
 ServerId = _API_ARG('serverId', sp.ServerId)
 ClientId = _API_ARG('clientId', sp.ClientId)
-AoeTargetId = _API_ARG('aoeTargetId', sp.AoeTargetId)
 VolumeName = _API_ARG('volumeName', sp.VolumeName)
 SnapshotName = _API_ARG('snapshotName', sp.SnapshotName)
 PlacementGroupName = _API_ARG('placementGroupName', sp.PlacementGroupName)
 VolumeTemplateName = _API_ARG('templateName', sp.VolumeTemplateName)
+GlobalVolumeId = _API_ARG('globalVolumeId', sp.GlobalVolumeId)
 
 
 class _API_METHOD(object):
@@ -84,10 +85,17 @@ class _API_METHOD(object):
 		
 #		ftext += '    print "Query: {0}".format(path)\n'
 		ftext += '    res = self("{method}", path, {json})\n'.format(method=method, json=None if json is None else 'json')
-		ftext += '    return returns(res)'
+		ftext += '    try:\n'
+		ftext += '        return returns(res)\n'
+		ftext += '    except InvalidArgumentException as e:\n'
+		ftext += '        if e.partial is not None:\n'
+		ftext += '            return e.partial\n'
+		ftext += '        else:\n'
+		ftext += '            raise\n'
 #		print ftext
 		
 		globalz = dict(("_validate_{0}".format(arg._name), arg._type.handleVal) for arg in args)
+		globalz['InvalidArgumentException'] = InvalidArgumentException
 		globalz['returns'] = returns.handleVal
 		
 		exec ftext in globalz
@@ -135,6 +143,18 @@ class ApiOkVolumeCreate(ApiOk):
 	autoName: The name of the transient snapshot used during the creation of the volume.
 	'''
 
+@js.JsonObject(remoteId=sp.maybe(sp.GlobalVolumeId))
+class ApiOkVolumeBackup(ApiOkVolumeCreate):
+	'''
+	remoteId: The globally unique id of the backup
+	'''
+
+@js.JsonObject(backups={sp.VolumeName: sp.VolumesGroupBackupSingle})
+class ApiOkVolumesGroupBackup(ApiOk):
+	'''
+    backups: The mapping of volume names to backup id.
+	'''
+
 class ApiError(Exception):
 	def __init__(self, status, json):
 		super(ApiError, self).__init__()
@@ -167,7 +187,7 @@ class Api(object):
 		"""
 		Copyright (c) 2014 - 2016  StorPool. All rights reserved.
 		
-		This reference document describes the StorPool API version 16.01 and
+		This reference document describes the StorPool API version 18.01 and
 		the supported API calls.
 		"""
 	)
@@ -181,6 +201,12 @@ class Api(object):
 		self._transientSleep = transientSleep
 		self._authHeader = {"Authorization": "Storpool v1:" + str(auth)}
 	
+	@classmethod
+	def fromConfig(klass, cfg = None, **kwargs):
+		if cfg is None:
+			cfg = SPConfig()
+		return klass(host=cfg['SP_API_HTTP_HOST'], port=int(cfg['SP_API_HTTP_PORT']), auth=cfg['SP_AUTH_TOKEN'], **kwargs)
+
 	def __call__(self, method, path, json=None):
 		if json is not None:
 			json = js.dumps(json)
@@ -246,9 +272,19 @@ Api.spDocSection("General",
 	Python programs may use the API by importing the Python StorPool bindings (use 'pypi install storpool' to install them):
 	
 	```
+	# Use the default StorPool configuration settings
+
 	>>>import spapi
-	>>>api=spapi.Api('192.168.0.5', 80, '1556560560218011653')
-	>>>a.peersList()
+	>>>api=spapi.Api.fromConfig()
+
+	# Use an already-created spconfig.SPConfig object
+	>>>api=spapi.Api.fromConfig(cfg=cfg)
+
+	# Explicitly specify the hostname, port, and authentication string
+	>>>api=spapi.Api(host='192.168.0.5', port=80, auth='1556560560218011653')
+
+	# Use the created API access object
+	>>>api.peersList()
 	
 	{
 	  1: {
@@ -356,39 +392,6 @@ Api.clientActiveRequests = GET('ClientActiveRequests/{clientId}', ClientId, retu
 	"""
 	)
 
-Api.spDocSection("AoE Targets", """ """)
-Api.aoeStatus = GET('AoeStatus', returns=[sp.AoeExport]).doc("Display AoE status",
-	"""
-	List the StorPool volumes and snapshots exported over AoE.
-	"""
-	)
-Api.aoeExportVolume = POST('AoeExportVolume/{volumeName}', VolumeName).doc("Export a volume",
-	"""
-	Export the specified volume over AoE.
-	"""
-	)
-Api.aoeExportSnapshot = POST('AoeExportSnapshot/{snapshotName}', SnapshotName).doc("Unexport a volume",
-	"""
-	Export the specified snapshot over AoE.
-	"""
-	)
-Api.aoeUnexportVolume = POST('AoeUnexportVolume/{volumeName}', VolumeName).doc("Export a snapshot",
-	"""
-	Stop exporting the specified volume over AoE.
-	"""
-	)
-Api.aoeUnexportSnapshot = POST('AoeUnexportSnapshot/{snapshotName}', SnapshotName).doc("Unexport a snaphot",
-	"""
-	Stop exporting the specified snapshot over AoE.
-	"""
-	)
-Api.aoeTargetActiveRequests = GET('AoeTargetActiveRequests/{aoeTargetId}', AoeTargetId, returns=sp.AoeTargetActiveRequests).doc("List all active requests on an AoE target",
-	"""
-	List detailed information about the requests being currently processed on
-	the given AoE target
-	"""
-	)
-
 Api.spDocSection("Disks", """ """)
 Api.disksList = GET('DisksList', returns={sp.DiskId: sp.DiskSummary}).doc("List all disks", """ """)
 Api.diskDescribe = GET('DiskDescribe/{diskId}', DiskId, returns=sp.Disk).doc("Describe a disk",
@@ -469,7 +472,7 @@ Api.volumeCreate = POST('VolumeCreate', json=sp.VolumeCreateDesc, returns=ApiOkV
 Api.volumeUpdate = POST('VolumeUpdate/{volumeName}', VolumeName, json=sp.VolumeUpdateDesc).doc("Update a volume",
 	""" Alter the configuration of an existing volume. """
 	)
-Api.volumeFreeze = POST('VolumeFreeze/{volumeName}', VolumeName).doc("Freeze a volume",
+Api.volumeFreeze = POST('VolumeFreeze/{volumeName}', VolumeName, json=maybe(sp.VolumeFreezeDesc)).doc("Freeze a volume",
 	""" Convert the volume to a snapshot """
 	)
 Api.volumeRebase = POST('VolumeRebase/{volumeName}', VolumeName, json=sp.VolumeRebaseDesc).doc("Rebase a volume",
@@ -483,6 +486,14 @@ Api.volumeAbandonDisk = POST('VolumeAbandonDisk/{volumeName}', VolumeName, json=
 	"""
 	)
 Api.volumeDelete = POST('VolumeDelete/{volumeName}', VolumeName).doc("Delete a volume", """ """)
+Api.volumeBackup = POST('VolumeBackup', json=sp.VolumeBackupDesc, returns=ApiOkVolumeBackup).doc("Backup a volume to a remote location",
+	"""
+	"""
+	)
+Api.volumesGroupBackup = POST('VolumesGroupBackup', json=sp.VolumesGroupBackupDesc, returns=ApiOkVolumesGroupBackup).doc("Backup a group of volumes to a remote location",
+    """
+	"""
+	)
 
 Api.spDocSection("Snapshots",
 	"""
@@ -539,6 +550,41 @@ Api.snapshotAbandonDisk = POST('VolumeAbandonDisk/{snapshotName}', SnapshotName,
 	)
 Api.snapshotDelete = POST('SnapshotDelete/{snapshotName}', SnapshotName).doc("Delete a snapshot", """ """)
 
+Api.snapshotDeleteById = POST('SnapshotDeleteById/{globalVolumeId}', GlobalVolumeId).doc("Delete a snapshot by global id", """ """)
+
+Api.snapshotCreateGroup = POST('VolumesGroupSnapshot', json=sp.GroupSnapshotsSpec, returns=sp.GroupSnapshotsResult).doc("Create consistent snapshots of a group of volumes",
+	"""
+	"""
+	)
+
+Api.snapshotFromRemote = POST('SnapshotFromRemote', json=sp.SnapshotFromRemoteDesc).doc("Copy a snapshot from a remote location",
+	"""
+	"""
+	)
+Api.snapshotExport = POST('SnapshotExport', json=sp.SnapshotExportDesc).doc("Allow a remote location to access a local snapshot",
+	"""
+	"""
+	)
+Api.snapshotUnexport = POST('SnapshotUnexport', json=sp.SnapshotUnexportDesc).doc("Revoke a remote location's access to a local snapshot",
+	"""
+	"""
+	)
+
+Api.exportsList = GET('ExportsList', returns={'exports':[sp.Export]}).doc("List exported snapshots",
+	"""
+	"""
+	)
+
+Api.snapshotsRemoteList = GET('SnapshotsRemoteList', returns={'snapshots':[sp.RemoteSnapshot]}).doc("List the available remote snapshots",
+	"""
+	"""
+	)
+
+Api.snapshotsRemoteUnexport = POST('SnapshotsRemoteUnexport', json=sp.SnapshotsRemoteUnexport).doc("Instruct the remote location that we will no longer use those snapshots",
+	"""
+	"""
+	)
+
 Api.spDocSection("Attachments", """""")
 Api.attachmentsList = GET('AttachmentsList', returns=[sp.AttachmentDesc]).doc("List all attachments",
 	"""
@@ -572,6 +618,9 @@ Api.placementGroupUpdate = POST('PlacementGroupUpdate/{placementGroupName}', Pla
 	"""
 	)
 Api.placementGroupDelete = POST('PlacementGroupDelete/{placementGroupName}', PlacementGroupName).doc("Delete a placement group", """ """)
+
+Api.faultSetsList = GET('FaultSetsList', returns={sp.FaultSetName: sp.FaultSet}).doc("List all fault sets", """ """)
+
 
 Api.spDocSection("Volume Templates",
 	""" Templates are a set of rules used for creating many similar volumes. """
@@ -619,3 +668,12 @@ Api.volumeBalancerSnapshotDisks = GET('VolumeBalancerSnapshotDisks/{snapshotName
 Api.volumeBalancerVolumeDiskSets = GET('VolumeBalancerVolumeDiskSets/{volumeName}', VolumeName, returns=sp.VolumeBalancerVolumeDiskSets).doc("Get the disk sets computed by the balancer for a given volume", """ """)
 Api.volumeBalancerSnapshotDiskSets = GET('VolumeBalancerSnapshotDiskSets/{snapshotName}', SnapshotName, returns=sp.VolumeBalancerVolumeDiskSets).doc("Get the disk sets computed by the balancer for a given snapshot", """ """)
 Api.volumeBalancerGroups = GET('VolumeBalancerGroups', returns=[sp.VolumeBalancerAllocationGroup]).doc("List balancer allocation groups", """ """)
+
+Api.spDocSection("iSCSI", "")
+
+Api.iSCSIConfig = GET('iSCSIConfig', returns=sp.iSCSIConfig).doc("Get the StorPool iSCSI configuration", """ """)
+Api.iSCSIConfigChange = POST('iSCSIConfig', json=sp.iSCSIConfigChange).doc("Modify the StorPool iSCSI configuration", """ """)
+
+Api.spDocSection("Remote", "")
+
+Api.locationsList = GET("LocationsList", returns={'locations':[sp.RemoteLocation]}).doc("List the registered remote locations", "")
