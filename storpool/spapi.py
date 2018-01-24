@@ -187,7 +187,7 @@ class Api(object):
 		"""
 		Copyright (c) 2014 - 2018  StorPool. All rights reserved.
 		
-		This reference document describes the StorPool API version 18.01 and
+		This reference document describes the StorPool API version 18.02 and
 		the supported API calls.
 		"""
 	)
