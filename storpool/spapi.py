@@ -274,7 +274,7 @@ Api.spDocSection("General",
 	```
 	# Use the default StorPool configuration settings
 
-	>>>import spapi
+	>>>from storpool import spapi
 	>>>api=spapi.Api.fromConfig()
 
 	# Use an already-created spconfig.SPConfig object
@@ -311,7 +311,17 @@ Api.spDocSection("General",
 	}
 	```
 	
-	The calls that may be used may be found in the file spapi.py
+	The calls that may be used may be found in the file spapi.py.  As a rule of
+	thumb, the name of the call is the name of the HTTP query with the first
+	letter in lowercase (as above: "peersList()" for the "PeersList" query).
+	To view them all once the StorPool bindings are installed, run a Python
+	interpreter and then:
+
+
+	```
+	>>> from storpool import spapi
+	>>> help(spapi)
+	```
 	
 	Note: Requests will sometimes use GET instead of POST and consequently,
 	will not require JSON. Responses on the other hand always produce JSON content.
