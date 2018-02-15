@@ -274,17 +274,17 @@ Api.spDocSection("General",
 	```
 	# Use the default StorPool configuration settings
 
-	>>>from storpool import spapi
-	>>>api=spapi.Api.fromConfig()
+	>>> from storpool import spapi
+	>>> api=spapi.Api.fromConfig()
 
 	# Use an already-created spconfig.SPConfig object
-	>>>api=spapi.Api.fromConfig(cfg=cfg)
+	>>> api=spapi.Api.fromConfig(cfg=cfg)
 
 	# Explicitly specify the hostname, port, and authentication string
-	>>>api=spapi.Api(host='192.168.0.5', port=80, auth='1556560560218011653')
+	>>> api=spapi.Api(host='192.168.0.5', port=80, auth='1556560560218011653')
 
 	# Use the created API access object
-	>>>api.peersList()
+	>>> api.peersList()
 	
 	{
 	  1: {
