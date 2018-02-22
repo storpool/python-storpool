@@ -530,7 +530,8 @@ class VolumeSummary(VolumeSummaryBase):
 	'''
 
 @JsonObject(name=SnapshotName, onVolume=VolumeName,
-	autoName=bool, bound=bool, deleted=bool, transient=bool, targetDeleteDate=maybe(int), globalId=GlobalVolumeId)
+	autoName=bool, bound=bool, deleted=bool, transient=bool, targetDeleteDate=maybe(int), globalId=GlobalVolumeId,
+	recoveringFromRemote=bool)
 class SnapshotSummary(VolumeSummaryBase):
 	'''
 	name: The name of this snapshot
@@ -541,6 +542,7 @@ class SnapshotSummary(VolumeSummaryBase):
 	transient: Is this a transient snapshot. Transient snapshots are internally created when cloning a volume. They cannot be attached as they may be garbage-collected at any time.
 	targetDeleteDate: Scheduled date for the snapshot to be deleted. Unix timestamp
 	globalId: The global snapshot identifier.
+	recoveringFromRemote: Is this snapshot's data currently being transferred from a remote location.
 	'''
 
 @JsonObject(storedSize=long, spaceUsed=long)
