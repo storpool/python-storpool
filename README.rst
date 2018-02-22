@@ -19,6 +19,12 @@ and act as a compute node.
 Version history
 ===============
 
+4.1.0
+-----
+
+- fix the documentation example for instantiating an Api object
+- add the SnapshotSummary.recoveringFromRemote member
+
 4.0.0
 -----
 
