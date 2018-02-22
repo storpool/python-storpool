@@ -1,6 +1,6 @@
 #
 #-
-# Copyright (c) 2014 - 2017  StorPool.
+# Copyright (c) 2014 - 2018  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
