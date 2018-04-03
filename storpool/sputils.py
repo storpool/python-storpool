@@ -128,7 +128,7 @@ def spCaught(exc, name, partial):
 		exc[1].partial = partial
 		raise exc[0], exc[1], exc[2]
 	else:
-		raise InvalidArgumentException(fmt='{name}: {msg}', name=name, msg=exc[1].message, partial=partial)
+		raise InvalidArgumentException(fmt='{name}: {msg}', name=name, msg=str(exc[1]), partial=partial)
 	
 def spList(lst):
 	assert len(lst) == 1, "SpList :: [subType]"
