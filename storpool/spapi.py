@@ -751,3 +751,5 @@ Api.locationsList = GET("LocationsList", returns={'locations': [sp.RemoteLocatio
 
 Api.iSCSISessionsInfo = GET('iSCSISessionsInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.iSCSISessionsInfo).doc("query iSCSI controllers for active sessions", """ """)
 Api.iSCSInterfacesInfo = GET('iSCSInterfacesInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.ISCSIControllersIntefacesInfo).doc("query iSCSI controllers for interfaces state", """ """)
+
+Api.AllPeersActiveRequests = GET('AllPeersActiveRequests', json=maybe(sp.AllPeersActiveRequestsQuery), returns=sp.AllPeersActiveRequests).doc("query all peers for there status and active requests", """ """)

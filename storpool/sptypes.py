@@ -1471,3 +1471,52 @@ class ISCSIControllerIntefacesInfo(object):
 class ISCSIControllersIntefacesInfo(object):
     '''
     '''
+
+
+@JsonObject(type=str, id=str)
+class AllPeersActiveRequestsServiceDesc(object):
+    '''
+    '''
+
+
+@JsonObject(status=str, peerId=int, service=AllPeersActiveRequestsServiceDesc)
+class AllPeersActiveRequestsSimpleStats(object):
+    '''
+    '''
+
+
+@JsonObject(status="diskExpected", peerId=int, service=AllPeersActiveRequestsServiceDesc, diskId=int, lastState=str)
+class AllPeersActiveRequestsDiskExpected(object):
+    '''
+    '''
+
+
+@JsonObject(status="diskState", peerId=int, service=AllPeersActiveRequestsServiceDesc, diskId=int, diskState=str, objectsWaitingForVersion=int, objectsOutdated=int, objectsOutdatedRemote=int)
+class AllPeersActiveRequestsDiskStatus(object):
+    '''
+    '''
+
+
+@JsonObject(diskId=int, peerId=int, service=maybe(AllPeersActiveRequestsServiceDesc))
+class AllPeersActiveRequestsRequestPeer(object):
+    '''
+    '''
+
+
+@JsonObject(status="request", peerId=int, service=AllPeersActiveRequestsServiceDesc, diskId=int, requestIdx=int, requestId=str, volumeId=int, volume=maybe(str), address=int, size=int, usecActive=int, state=str, prevState=str, drOp=maybe(str), op=str, peers=[AllPeersActiveRequestsRequestPeer])
+class AllPeersActiveRequestsRequest(object):
+    '''
+    '''
+
+
+@JsonObject(requests=[either(AllPeersActiveRequestsDiskExpected, AllPeersActiveRequestsDiskStatus, AllPeersActiveRequestsRequest, AllPeersActiveRequestsSimpleStats)])
+class AllPeersActiveRequests(object):
+    '''
+    '''
+
+
+@JsonObject(msecsTimeout=maybe(int))
+class AllPeersActiveRequestsQuery(object):
+    '''
+    msecsTimeout: 0 is no timeout
+    '''
