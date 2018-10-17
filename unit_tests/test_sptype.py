@@ -13,13 +13,13 @@ import pytest
 from storpool import sputils, sptypes
 
 
-List = sputils.spType([int])
-ListList = sputils.spType([List])
-Set = sputils.spType(set([int]))
-Dict = sputils.spType({int: float})
+List = sputils.spType([int])            # pylint: disable=invalid-name
+ListList = sputils.spType([List])       # pylint: disable=invalid-name
+Set = sputils.spType(set([int]))        # pylint: disable=invalid-name
+Dict = sputils.spType({int: float})     # pylint: disable=invalid-name
 
 
-testSimple = [
+TEST_SIMPLE = [
     (
         'list-ok',
         ListList,
@@ -102,7 +102,7 @@ testSimple = [
 ]
 
 
-testObject = [
+TEST_OBJECT = [
     (
         'rdma-desc-list-ok',
         sputils.spType([sptypes.RdmaDesc]),
@@ -141,7 +141,7 @@ class TestSpType(unittest.TestCase):
     # pylint: disable=no-self-use
     """ Test that spType.handleVal() converts data or raises errors. """
 
-    @ddt.data(*testSimple)
+    @ddt.data(*TEST_SIMPLE)
     @ddt.unpack
     def test_simple(self, _name, dtype, args, exp, exp_error):
         """ Test with simple types: dictionaries, lists, etc. """
@@ -152,7 +152,7 @@ class TestSpType(unittest.TestCase):
                 dtype.handleVal(args)
             assert err.value.partial == exp
 
-    @ddt.data(*testObject)
+    @ddt.data(*TEST_OBJECT)
     @ddt.unpack
     def test_object(self, _name, dtype, args, exp, exp_error):
         """ Test with some object types defined in storpool.sptypes. """
