@@ -5,6 +5,9 @@ vice versa that takes place behind the scenes in the Python bindings for
 the StorPool API.
 """
 
+import unittest
+
+import ddt
 import pytest
 
 from storpool import sputils, sptypes
@@ -17,145 +20,147 @@ Dict = sputils.spType({int: float})
 
 
 testSimple = [
-    {
-        'type': ListList,
-        'name': 'list-ok',
-        'args': [[6, 5], [4, 3], [2, 1]],
-        'res': ([[6, 5], [4, 3], [2, 1]], None),
-    },
+    (
+        'list-ok',
+        ListList,
+        [[6, 5], [4, 3], [2, 1]],
+        [[6, 5], [4, 3], [2, 1]],
+        None,
+    ),
 
-    {
-        'type': ListList,
-        'name': 'list-fail',
-        'args': [[1, 2], [3, 'meow', 4], [5, 6]],
-        'res': ([[1, 2], [3, 4], [5, 6]], sputils.InvalidArgumentException),
-    },
+    (
+        'list-fail',
+        ListList,
+        [[1, 2], [3, 'meow', 4], [5, 6]],
+        [[1, 2], [3, 4], [5, 6]],
+        sputils.InvalidArgumentException,
+    ),
 
-    {
-        'type': Set,
-        'name': 'set-ok',
-        'args': set([1, 2, 4]),
-        'res': (set([4, 2, 1]), None),
-    },
+    (
+        'set-ok',
+        Set,
+        set([1, 2, 4]),
+        set([4, 2, 1]),
+        None,
+    ),
 
-    {
-        'type': Set,
-        'name': 'set-fail',
-        'args': set([1, 2, 'meow', 4]),
-        'res': (set([4, 2, 1]), sputils.InvalidArgumentException),
-    },
+    (
+        'set-fail',
+        Set,
+        set([1, 2, 'meow', 4]),
+        set([4, 2, 1]),
+        sputils.InvalidArgumentException,
+    ),
 
-    {
-        'type': Dict,
-        'name': 'dict-ok',
-        'args': {1: 1.5, 2: 2.5, 3: 3.5, 4: 4.5, 5: 5.5},
-        'res': ({2: 2.5, 5: 5.5, 3: 3.5, 1: 1.5, 4: 4.5}, None),
-    },
+    (
+        'dict-ok',
+        Dict,
+        {1: 1.5, 2: 2.5, 3: 3.5, 4: 4.5, 5: 5.5},
+        {2: 2.5, 5: 5.5, 3: 3.5, 1: 1.5, 4: 4.5},
+        None,
+    ),
 
-    {
-        'type': Dict,
-        'name': 'dict-fail',
-        'args': {1: 1.5, 2: 2.5, 'three': 3.5, 4: 'four point five', 5: 5.5},
-        'res': (
-            {2: 2.5, 5: 5.5, 4: None, 1: 1.5},
-            sputils.InvalidArgumentException
-        ),
-    },
+    (
+        'dict-fail',
+        Dict,
+        {1: 1.5, 2: 2.5, 'three': 3.5, 4: 'four point five', 5: 5.5},
+        {2: 2.5, 5: 5.5, 4: None, 1: 1.5},
+        sputils.InvalidArgumentException,
+    ),
 
-    {
-        'type': sputils.spType([sptypes.MacAddr]),
-        'name': 'mac-list-ok',
-        'args': ['00:11:22:33:44:55'],
-        'res': (['00:11:22:33:44:55'], None),
-    },
+    (
+        'mac-list-ok',
+        sputils.spType([sptypes.MacAddr]),
+        ['00:11:22:33:44:55'],
+        ['00:11:22:33:44:55'],
+        None,
+    ),
 
-    {
-        'type': sputils.spType([sptypes.MacAddr]),
-        'name': 'mac-list-fail',
-        'args': ['00:11:22:33:44:55', 'xx'],
-        'res': (['00:11:22:33:44:55'], sputils.InvalidArgumentException),
-    },
+    (
+        'mac-list-fail',
+        sputils.spType([sptypes.MacAddr]),
+        ['00:11:22:33:44:55', 'xx'],
+        ['00:11:22:33:44:55'],
+        sputils.InvalidArgumentException,
+    ),
 
-    {
-        'type': sputils.spType([sptypes.PeerStatus]),
-        'name': 'peer-status-list-ok',
-        'args': ['up', 'down', 'up'],
-        'res': (['up', 'down', 'up'], None),
-    },
+    (
+        'peer-status-list-ok',
+        sputils.spType([sptypes.PeerStatus]),
+        ['up', 'down', 'up'],
+        ['up', 'down', 'up'],
+        None,
+    ),
 
-    {
-        'type': sputils.spType([sptypes.PeerStatus]),
-        'name': 'peer-status-list-fail',
-        'args': ['up', 'meow', 'down', 'meowmeow', 'up'],
-        'res': (['up', 'down', 'up'], sputils.InvalidArgumentException),
-    },
+    (
+        'peer-status-list-fail',
+        sputils.spType([sptypes.PeerStatus]),
+        ['up', 'meow', 'down', 'meowmeow', 'up'],
+        ['up', 'down', 'up'],
+        sputils.InvalidArgumentException,
+    ),
 ]
 
 
 testObject = [
-    {
-        'type': sputils.spType([sptypes.RdmaDesc]),
-        'name': 'rdma-desc-list-ok',
-        'args': [
+    (
+        'rdma-desc-list-ok',
+        sputils.spType([sptypes.RdmaDesc]),
+        [
             {'guid': '0xdead', 'state': 'Connected'},
             {'guid': '0xbeef', 'state': 'Idle'},
         ],
-        'res': (
-            [
-                {'guid': '0xdead', 'state': 'Connected'},
-                {'guid': '0xbeef', 'state': 'Idle'},
-            ],
-            None
-        ),
-    },
+        [
+            {'guid': '0xdead', 'state': 'Connected'},
+            {'guid': '0xbeef', 'state': 'Idle'},
+        ],
+        None
+    ),
 
-    {
-        'type': sputils.spType([sptypes.RdmaDesc]),
-        'name': 'rdma-desc-list-fail',
-        'args': [
+    (
+        'rdma-desc-list-fail',
+        sputils.spType([sptypes.RdmaDesc]),
+        [
             {'guid': '0xxx', 'state': 'Idle'},
             'pfth',
             {'guid': '0xdead', 'state': 'Connected'},
             {'guid': '0xbeef', 'state': 'Idle'},
         ],
-        'res': (
-            [
-                {'guid': None, 'state': 'Idle'},
-                {'guid': '0xdead', 'state': 'Connected'},
-                {'guid': '0xbeef', 'state': 'Idle'},
-            ],
-            sputils.InvalidArgumentException
-        ),
-    },
+        [
+            {'guid': None, 'state': 'Idle'},
+            {'guid': '0xdead', 'state': 'Connected'},
+            {'guid': '0xbeef', 'state': 'Idle'},
+        ],
+        sputils.InvalidArgumentException
+    ),
 ]
 
 
-class TestSpType(object):
+@ddt.ddt
+class TestSpType(unittest.TestCase):
     # pylint: disable=no-self-use
     """ Test that spType.handleVal() converts data or raises errors. """
 
-    def test_simple(self):
+    @ddt.data(*testSimple)
+    @ddt.unpack
+    def test_simple(self, _name, dtype, args, exp, exp_error):
         """ Test with simple types: dictionaries, lists, etc. """
-        for stuff in testSimple:
-            exp, exp_error = stuff['res']
-            tp, args = stuff['type'], stuff['args']
-            if exp_error is None:
-                assert tp.handleVal(args) == exp
-            else:
-                with pytest.raises(exp_error) as err:
-                    tp.handleVal(args)
-                assert err.value.partial == exp
+        if exp_error is None:
+            assert dtype.handleVal(args) == exp
+        else:
+            with pytest.raises(exp_error) as err:
+                dtype.handleVal(args)
+            assert err.value.partial == exp
 
-    def test_object(self):
+    @ddt.data(*testObject)
+    @ddt.unpack
+    def test_object(self, _name, dtype, args, exp, exp_error):
         """ Test with some object types defined in storpool.sptypes. """
-        for stuff in testObject:
-            exp, exp_error = stuff['res']
-            tp, args = stuff['type'], stuff['args']
-            if exp_error is None:
-                res = [obj.toJson() for obj in tp.handleVal(args)]
-                assert res == exp
-            else:
-                with pytest.raises(exp_error) as err:
-                    tp.handleVal(args)
-                res = [obj.toJson() for obj in err.value.partial]
-                assert res == exp
+        if exp_error is None:
+            res = [obj.toJson() for obj in dtype.handleVal(args)]
+            assert res == exp
+        else:
+            with pytest.raises(exp_error) as err:
+                dtype.handleVal(args)
+            res = [obj.toJson() for obj in err.value.partial]
+            assert res == exp
