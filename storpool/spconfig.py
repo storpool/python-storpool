@@ -1,5 +1,4 @@
 #
-#-
 # Copyright (c) 2014 - 2016  StorPool.
 # All rights reserved.
 #
@@ -16,6 +15,8 @@
 # limitations under the License.
 #
 """ StorPool configuration file parser """
+
+
 import os
 import subprocess
 
@@ -25,6 +26,9 @@ import feature_check
 class SPConfigException(Exception):
     """ An error that occurred during the StorPool configuration parsing. """
 
+    pass
+
+
 class SPConfig(object):
     def __init__(self, confget='/usr/sbin/storpool_confget', section=None):
         self._confget = confget
@@ -33,16 +37,25 @@ class SPConfig(object):
         self.confget()
 
     def confget(self):
-        args = (self._confget,) if self._section is None else (self._confget, '-s', self._section)
+        args = (self._confget,) \
+            if self._section is None \
+            else (self._confget, '-s', self._section)
         confget = str.join(' ', args)
         try:
-            p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=4096)
+            p = subprocess.Popen(
+                args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                bufsize=4096)
             out = p.communicate()
             wres = p.wait()
         except OSError as ose:
-            raise SPConfigException('Could not read the StorPool configuration using {c}: {e}'.format(c=confget, e=ose.strerror))
+            raise SPConfigException(
+                'Could not read the StorPool configuration using {c}: {e}'
+                .format(c=confget, e=ose.strerror))
         except Exception as e:
-            raise SPConfigException('Could not read the StorPool configuration using {c}: unexpected exception {t}: {e}'.format(c=confget, t=type(e).__name__, e=e))
+            raise SPConfigException(
+                'Could not read the StorPool configuration using {c}: '
+                'unexpected exception {t}: {e}'
+                .format(c=confget, t=type(e).__name__, e=e))
 
         if out[1]:
             out = out[1]
@@ -55,16 +68,30 @@ class SPConfig(object):
 
         if wres > 0:
             if err:
-                raise SPConfigException('The StorPool configuration helper {c} exited with non-zero code {r}, error messages: {out}'.format(c=confget, r=wres, out=out))
+                raise SPConfigException(
+                    'The StorPool configuration helper {c} exited with '
+                    'non-zero code {r}, error messages: {out}'
+                    .format(c=confget, r=wres, out=out))
             else:
-                raise SPConfigException('The StorPool configuration helper {c} exited with non-zero code {r}'.format(c=confget, r=wres))
+                raise SPConfigException(
+                    'The StorPool configuration helper {c} exited with '
+                    'non-zero code {r}'
+                    .format(c=confget, r=wres))
         elif wres < 0:
             if err:
-                raise SPConfigException('The StorPool configuration helper {c} was killed by signal {s}, error messages: {out}'.format(c=confget, s=-wres, out=out))
+                raise SPConfigException(
+                    'The StorPool configuration helper {c} was killed by '
+                    'signal {s}, error messages: {out}'
+                    .format(c=confget, s=-wres, out=out))
             else:
-                raise SPConfigException('The StorPool configuration helper {c} was killed by signal {s}'.format(c=confget, s=-wres))
+                raise SPConfigException(
+                    'The StorPool configuration helper {c} was killed by '
+                    'signal {s}'
+                    .format(c=confget, s=-wres))
         elif err:
-            raise SPConfigException('The StorPool configuration helper {c} reported errors: {out}'.format(c=confget, out=out))
+            raise SPConfigException(
+                'The StorPool configuration helper {c} reported errors: {out}'
+                .format(c=confget, out=out))
 
         d = {}
         for s in out:

@@ -1,5 +1,4 @@
 #
-#-
 # Copyright (c) 2014, 2015  StorPool.
 # All rights reserved.
 #
@@ -15,115 +14,148 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-try:
-	import simplejson as js
-except ImportError:
-	from sys import stderr
-	print >> stderr, 'simplejson unavailable, fall-back to standard python json'
-	import json as js
 
-from collections import defaultdict
+from __future__ import print_function
+
+import collections
+import sys
+
+
+try:
+    import simplejson as js
+except ImportError:
+    print('simplejson unavailable, fall-back to standard python json',
+          file=sys.stderr)
+    import json as js
+
+
 import sputils as sp
 import spdoc as dc
+
 
 sort_keys = False
 indent = None
 separators = (',', ':')
 
-load  = js.load
+load = js.load
 loads = js.loads
 
-dump  = lambda obj, fp: js.dump(obj, fp, cls=JsonEncoder, sort_keys=sort_keys, indent=indent, separators=separators)
-dumps = lambda obj: js.dumps(obj, cls=JsonEncoder, sort_keys=sort_keys, indent=indent, separators=separators)
+
+def dump(obj, fp):
+    return js.dump(obj, fp, cls=JsonEncoder, sort_keys=sort_keys,
+                   indent=indent, separators=separators)
+
+
+def dumps(obj):
+    return js.dumps(obj, cls=JsonEncoder, sort_keys=sort_keys,
+                    indent=indent, separators=separators)
 
 
 class JsonEncoder(js.JSONEncoder):
-	def default(self, o):
-		if isinstance(o, JsonObjectImpl):
-			return o.toJson()
-		elif isinstance(o, set):
-			return list(o)
-		else:
-			return super(JsonEncoder, self).default(o)
+    def default(self, o):
+        if isinstance(o, JsonObjectImpl):
+            return o.toJson()
+        elif isinstance(o, set):
+            return list(o)
+        else:
+            return super(JsonEncoder, self).default(o)
 
 
 class JsonObjectImpl(object):
-	def __new__(cls, json={}, **kwargs):
-		if isinstance(json, cls):
-			assert not kwargs, "Unsupported update on already contructed object"
-			return json
-		else:
-			j = dict(json)
-			j.update(kwargs)
-			
-			self = super(JsonObjectImpl, cls).__new__(cls)
-			object.__setattr__(self, '__jsonAttrs__', {})
-			
-			exc = None
-			for attr, attrDef in self.__jsonAttrDefs__.iteritems():
-				data = []
-				exc = sp.spCatch(
-					lambda tx: data.append(tx),
-					lambda: attrDef.handleVal(j[attr]) if attr in j else attrDef.defaultVal(),
-					exc)
-				if data:
-					self.__jsonAttrs__[attr] = data[0]
-				else:
-					self.__jsonAttrs__[attr] = None
-			sp.spCaught(exc, self.__class__.__name__, self)
-			
-			return self
-	
-	def __getattr__(self, attr):
-		return self.__jsonAttrs__[attr]
-	
-	def __setattr__(self, attr, value):
-		if attr not in self.__jsonAttrDefs__:
-			error = "'{cls}' has no attribute '{attr}'".format(cls=self.__class__.__name__, attr=attr)
-			raise AttributeError(error)
-		
-		self.__jsonAttrs__[attr] = self.__jsonAttrDefs__[attr].handleVal(value)
-	
-	def toJson(self):
-		return dict((attr, getattr(self, attr)) for attr in self.__jsonAttrDefs__)
-	
-	def __iter__(self):
-		return self.toJson().iteritems()
-	
-	_asdict = toJson
-	__str__ = __repr__ = lambda self: str(self.toJson())
+    def __new__(cls, json={}, **kwargs):
+        if isinstance(json, cls):
+            assert not kwargs, \
+                "Unsupported update on already contructed object"
+            return json
+        else:
+            j = dict(json)
+            j.update(kwargs)
+
+            self = super(JsonObjectImpl, cls).__new__(cls)
+            object.__setattr__(self, '__jsonAttrs__', {})
+
+            exc = None
+            for attr, attrDef in self.__jsonAttrDefs__.iteritems():
+                data = []
+                exc = sp.spCatch(
+                    lambda tx: data.append(tx),
+                    lambda: attrDef.handleVal(j[attr]) if attr in j
+                    else attrDef.defaultVal(),
+                    exc)
+                if data:
+                    self.__jsonAttrs__[attr] = data[0]
+                else:
+                    self.__jsonAttrs__[attr] = None
+            sp.spCaught(exc, self.__class__.__name__, self)
+
+            return self
+
+    def __getattr__(self, attr):
+        return self.__jsonAttrs__[attr]
+
+    def __setattr__(self, attr, value):
+        if attr not in self.__jsonAttrDefs__:
+            error = "'{cls}' has no attribute '{attr}'".format(
+                cls=self.__class__.__name__, attr=attr)
+            raise AttributeError(error)
+
+        self.__jsonAttrs__[attr] = self.__jsonAttrDefs__[attr].handleVal(value)
+
+    def toJson(self):
+        return dict(
+            (attr, getattr(self, attr)) for attr in self.__jsonAttrDefs__)
+
+    def __iter__(self):
+        return self.toJson().iteritems()
+
+    _asdict = toJson
+    __str__ = __repr__ = lambda self: str(self.toJson())
 
 
 class JsonObject(object):
-	def __init__(self, **kwargs):
-		self.attrDefs = dict((argName, sp.spType(argVal)) for argName, argVal in kwargs.iteritems())
-	
-	def __call__(self, cls):
-		if issubclass(cls, JsonObjectImpl):
-			attrDefs = dict(cls.__jsonAttrDefs__)
-			attrDefs.update(self.attrDefs)
-			docDescs = defaultdict(lambda: "", dict((attrName, attrDesc) for attrName, (attrType, attrDesc) in cls.spDoc.attrs.iteritems()))
-		else:
-			attrDefs = self.attrDefs
-			docDescs = defaultdict(lambda: "")
-		
-		doc = ""
-		if cls.__doc__ is not None:
-			doc += cls.__doc__
-		else:
-			doc += "{0}.{1}".format(cls.__module__, cls.__name__)
-		doc += "\n\n"
-		doc += "    JSON attributes:\n"
-		for attrName, attrType in sorted(attrDefs.iteritems()):
-			doc += "        {name}: {type}\n".format(name=attrName, type=attrType.name)
-		doc += "\n"
-		
-		if cls.__doc__ is not None:
-			docDescs.update((k.strip(), v.strip()) for k, v in (m for m in (line.split(':') for line in cls.__doc__.split('\n')) if len(m) == 2))
-		
-		spDoc = dc.JsonObjectDoc(cls.__name__, cls.__doc__ or "XXX {0}.{1} not documented.".format(cls.__module__, cls.__name__), dict(
-			(attrName, (attrType.spDoc, docDescs[attrName])) for attrName, attrType in attrDefs.iteritems()
-		))
-		
-		return type(cls.__name__, (cls, JsonObjectImpl), dict(__jsonAttrDefs__=attrDefs, __module__=cls.__module__, __doc__=doc, spDoc=spDoc))
+    def __init__(self, **kwargs):
+        self.attrDefs = dict(
+            (argName, sp.spType(argVal))
+            for argName, argVal in kwargs.iteritems())
 
+    def __call__(self, cls):
+        if issubclass(cls, JsonObjectImpl):
+            attrDefs = dict(cls.__jsonAttrDefs__)
+            attrDefs.update(self.attrDefs)
+            docDescs = collections.defaultdict(lambda: "", dict(
+                (attrName, attrDesc) for attrName, (attrType, attrDesc) in
+                cls.spDoc.attrs.iteritems()))
+        else:
+            attrDefs = self.attrDefs
+            docDescs = collections.defaultdict(lambda: "")
+
+        doc = ""
+        if cls.__doc__ is not None:
+            doc += cls.__doc__
+        else:
+            doc += "{0}.{1}".format(cls.__module__, cls.__name__)
+        doc += "\n\n"
+        doc += "    JSON attributes:\n"
+        for attrName, attrType in sorted(attrDefs.iteritems()):
+            doc += "        {name}: {type}\n".format(
+                name=attrName, type=attrType.name)
+        doc += "\n"
+
+        if cls.__doc__ is not None:
+            docDescs.update(
+                (k.strip(), v.strip())
+                for k, v in (
+                    m for m in (
+                        line.split(':') for line in cls.__doc__.split('\n')
+                    ) if len(m) == 2))
+
+        spDoc = dc.JsonObjectDoc(
+            cls.__name__,
+            cls.__doc__ or "XXX {0}.{1} not documented.".format(
+                cls.__module__, cls.__name__),
+            dict((attrName, (attrType.spDoc, docDescs[attrName]))
+                 for attrName, attrType in attrDefs.iteritems()))
+
+        return type(cls.__name__, (cls, JsonObjectImpl),
+                    dict(__jsonAttrDefs__=attrDefs, __module__=cls.__module__,
+                         __doc__=doc, spDoc=spDoc))
