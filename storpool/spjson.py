@@ -19,7 +19,7 @@ try:
 	import simplejson as js
 except ImportError:
 	from sys import stderr
-	print >> stderr, 'simplejson unavailable, fall-back to standart python json'
+	print >> stderr, 'simplejson unavailable, fall-back to standard python json'
 	import json as js
 
 from collections import defaultdict
