@@ -19,6 +19,8 @@
 import os
 import subprocess
 
+import feature_check
+
 
 class SPConfigException(Exception):
     """ An error that occurred during the StorPool configuration parsing. """
@@ -90,3 +92,28 @@ class SPConfig(object):
 
     def iterkeys(self):
         return self._dict.iterkeys()
+
+    @staticmethod
+    def _fallback_get_all_sections():
+        res = subprocess.check_output([
+            '/usr/lib/storpool/confget', '-f', '/etc/storpool.conf',
+            '-q', 'sections'
+        ], shell=False).decode('UTF-8').split('\n')
+        return sorted([line for line in res if line])
+
+    @staticmethod
+    def get_all_sections():
+        fallback = False
+        try:
+            data = feature_check.obtain_features('/usr/sbin/storpool_confget')
+            fallback = 'query-sections' not in data
+        except Exception:
+            fallback = True
+
+        if fallback:
+            return SPConfig._fallback_get_all_sections()
+
+        res = subprocess.check_output([
+            '/usr/sbin/storpool_confget', '-q', 'sections'
+        ], shell=False).decode('UTF-8').split('\n')
+        return sorted([line for line in res if line])

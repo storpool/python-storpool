@@ -70,6 +70,10 @@ setuptools.setup(
 	keywords = 'storpool StorPool',
 	url = 'http://www.storpool.com/',
 
+	install_requires = [
+		'feature_check',
+	],
+
 	zip_safe = True,
 
 	cmdclass = {
