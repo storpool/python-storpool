@@ -1102,7 +1102,7 @@ class GroupSnapshotSpec(object):
     '''
 
 
-@JsonObject(volumes=[GroupSnapshotSpec])
+@JsonObject(volumes=[GroupSnapshotSpec], tags=maybe({VolumeTagName: VolumeTagValue}))
 class GroupSnapshotsSpec(object):
     '''
     volumes: The volumes to create snapshots of.
