@@ -95,8 +95,13 @@ class SPConfig(object):
 
     @staticmethod
     def _fallback_get_all_sections():
+        for confget in ('/usr/lib/storpool/confget', '/usr/bin/confget'):
+            if os.path.isfile(confget):
+                break
+        else:
+            return []
         res = subprocess.check_output([
-            '/usr/lib/storpool/confget', '-f', '/etc/storpool.conf',
+            confget, '-f', '/etc/storpool.conf',
             '-q', 'sections'
         ], shell=False).decode('UTF-8').split('\n')
         return sorted([line for line in res if line])
