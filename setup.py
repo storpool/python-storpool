@@ -36,12 +36,12 @@ class APIDocCommand(cmd.Command):
 		pass
 
 	def run(self):
-		command = (sys.executable, 'spdoc.py')
+		command = (sys.executable, '-m', 'storpool.spdocbuild')
 		apifile = 'storpool/apidoc.html'
 
 		with open(apifile, 'w') as apidoc:
 			try:
-				subprocess.check_call(command, cwd='storpool', stdout=apidoc)
+				subprocess.check_call(command, stdout=apidoc)
 			except subprocess.CalledProcessError:
 				try:
 					os.unlink(apifile)

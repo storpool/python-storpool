@@ -359,17 +359,3 @@ class ApiDoc(DocSection):
             sect.build(html)
 
         TypeDoc.buildTypes(html)
-
-
-if __name__ == '__main__':
-    from spapi import Api
-
-    html = Html()
-    Api.spDoc.build(html)
-
-    with open('ApiDoc.html.template') as tmpl:
-        for line in tmpl.read().split('\n'):
-            if line == '__DOC__':
-                print html
-            else:
-                print line
