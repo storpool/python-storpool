@@ -17,7 +17,6 @@
 
 from __future__ import print_function
 
-import collections
 import sys
 
 
@@ -29,8 +28,7 @@ except ImportError:
     import json as js
 
 
-import sputils as sp
-import spdoc as dc
+from . import sputils
 
 
 sort_keys = False
@@ -77,7 +75,7 @@ class JsonObjectImpl(object):
             exc = None
             for attr, attrDef in self.__jsonAttrDefs__.iteritems():
                 data = []
-                exc = sp.spCatch(
+                exc = sputils.spCatch(
                     lambda tx: data.append(tx),
                     lambda: attrDef.handleVal(j[attr]) if attr in j
                     else attrDef.defaultVal(),
@@ -86,7 +84,7 @@ class JsonObjectImpl(object):
                     self.__jsonAttrs__[attr] = data[0]
                 else:
                     self.__jsonAttrs__[attr] = None
-            sp.spCaught(exc, self.__class__.__name__, self)
+            sputils.spCaught(exc, self.__class__.__name__, self)
 
             return self
 
@@ -110,52 +108,3 @@ class JsonObjectImpl(object):
 
     _asdict = toJson
     __str__ = __repr__ = lambda self: str(self.toJson())
-
-
-class JsonObject(object):
-    def __init__(self, **kwargs):
-        self.attrDefs = dict(
-            (argName, sp.spType(argVal))
-            for argName, argVal in kwargs.iteritems())
-
-    def __call__(self, cls):
-        if issubclass(cls, JsonObjectImpl):
-            attrDefs = dict(cls.__jsonAttrDefs__)
-            attrDefs.update(self.attrDefs)
-            docDescs = collections.defaultdict(lambda: "", dict(
-                (attrName, attrDesc) for attrName, (attrType, attrDesc) in
-                cls.spDoc.attrs.iteritems()))
-        else:
-            attrDefs = self.attrDefs
-            docDescs = collections.defaultdict(lambda: "")
-
-        doc = ""
-        if cls.__doc__ is not None:
-            doc += cls.__doc__
-        else:
-            doc += "{0}.{1}".format(cls.__module__, cls.__name__)
-        doc += "\n\n"
-        doc += "    JSON attributes:\n"
-        for attrName, attrType in sorted(attrDefs.iteritems()):
-            doc += "        {name}: {type}\n".format(
-                name=attrName, type=attrType.name)
-        doc += "\n"
-
-        if cls.__doc__ is not None:
-            docDescs.update(
-                (k.strip(), v.strip())
-                for k, v in (
-                    m for m in (
-                        line.split(':') for line in cls.__doc__.split('\n')
-                    ) if len(m) == 2))
-
-        spDoc = dc.JsonObjectDoc(
-            cls.__name__,
-            cls.__doc__ or "XXX {0}.{1} not documented.".format(
-                cls.__module__, cls.__name__),
-            dict((attrName, (attrType.spDoc, docDescs[attrName]))
-                 for attrName, attrType in attrDefs.iteritems()))
-
-        return type(cls.__name__, (cls, JsonObjectImpl),
-                    dict(__jsonAttrDefs__=attrDefs, __module__=cls.__module__,
-                         __doc__=doc, spDoc=spDoc))

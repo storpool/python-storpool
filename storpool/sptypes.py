@@ -17,8 +17,9 @@
 #
 import re
 import time
-from sputils import error, spTypeFun, maybe, const, either, eitherOr, internal
-from spjson import JsonObject, dumps
+from .sptype import JsonObject, spTypeFun, maybe, const, either, eitherOr, internal
+from .sputils import error
+from .spjson import dumps
 
 
 ### Simple validator functions ###

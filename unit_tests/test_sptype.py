@@ -10,13 +10,13 @@ import unittest
 import ddt
 import pytest
 
-from storpool import sputils, sptypes
+from storpool import sputils, sptype, sptypes
 
 
-List = sputils.spType([int])            # pylint: disable=invalid-name
-ListList = sputils.spType([List])       # pylint: disable=invalid-name
-Set = sputils.spType(set([int]))        # pylint: disable=invalid-name
-Dict = sputils.spType({int: float})     # pylint: disable=invalid-name
+List = sptype.spType([int])            # pylint: disable=invalid-name
+ListList = sptype.spType([List])       # pylint: disable=invalid-name
+Set = sptype.spType(set([int]))        # pylint: disable=invalid-name
+Dict = sptype.spType({int: float})     # pylint: disable=invalid-name
 
 
 TEST_SIMPLE = [
@@ -70,7 +70,7 @@ TEST_SIMPLE = [
 
     (
         'mac-list-ok',
-        sputils.spType([sptypes.MacAddr]),
+        sptype.spType([sptypes.MacAddr]),
         ['00:11:22:33:44:55'],
         ['00:11:22:33:44:55'],
         None,
@@ -78,7 +78,7 @@ TEST_SIMPLE = [
 
     (
         'mac-list-fail',
-        sputils.spType([sptypes.MacAddr]),
+        sptype.spType([sptypes.MacAddr]),
         ['00:11:22:33:44:55', 'xx'],
         ['00:11:22:33:44:55'],
         sputils.InvalidArgumentException,
@@ -86,7 +86,7 @@ TEST_SIMPLE = [
 
     (
         'peer-status-list-ok',
-        sputils.spType([sptypes.PeerStatus]),
+        sptype.spType([sptypes.PeerStatus]),
         ['up', 'down', 'up'],
         ['up', 'down', 'up'],
         None,
@@ -94,7 +94,7 @@ TEST_SIMPLE = [
 
     (
         'peer-status-list-fail',
-        sputils.spType([sptypes.PeerStatus]),
+        sptype.spType([sptypes.PeerStatus]),
         ['up', 'meow', 'down', 'meowmeow', 'up'],
         ['up', 'down', 'up'],
         sputils.InvalidArgumentException,
@@ -105,7 +105,7 @@ TEST_SIMPLE = [
 TEST_OBJECT = [
     (
         'rdma-desc-list-ok',
-        sputils.spType([sptypes.RdmaDesc]),
+        sptype.spType([sptypes.RdmaDesc]),
         [
             {'guid': '0xdead', 'state': 'Connected'},
             {'guid': '0xbeef', 'state': 'Idle'},
@@ -119,7 +119,7 @@ TEST_OBJECT = [
 
     (
         'rdma-desc-list-fail',
-        sputils.spType([sptypes.RdmaDesc]),
+        sptype.spType([sptypes.RdmaDesc]),
         [
             {'guid': '0xxx', 'state': 'Idle'},
             'pfth',

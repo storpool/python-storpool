@@ -21,12 +21,13 @@ import socket as sock
 import time as time
 from errno import ECONNREFUSED, ECONNRESET
 
-import spjson as js
-import sptypes as sp
+from . import spjson as js
+from . import sptypes as sp
 
-from spconfig import SPConfig
-from sputils import InvalidArgumentException, msec, sec, pathPollWait, spType, either, const, maybe
-from spdoc import ApiDoc, ApiCallDoc
+from .spconfig import SPConfig
+from .sptype import JsonObject, spType, either, const, maybe
+from .sputils import InvalidArgumentException, msec, sec, pathPollWait
+from .spdoc import ApiDoc, ApiCallDoc
 
 
 SP_DEV_PATH   = '/dev/storpool/'
@@ -129,7 +130,7 @@ def POST(query, *args, **kwargs):
 	return _API_METHOD('POST', query, args, kwargs.get('json', None), kwargs.get('returns', ApiOk))
 
 
-@js.JsonObject(ok=const(True), generation=long, info=maybe(str))
+@JsonObject(ok=const(True), generation=long, info=maybe(str))
 class ApiOk(object):
 	'''
 	ok: Always returns true. If something goes wrong, an ApiError is returned instead.
@@ -137,19 +138,19 @@ class ApiOk(object):
 	info: May contain additional information about the request.
 	'''
 
-@js.JsonObject(autoName=sp.maybe(sp.SnapshotName))
+@JsonObject(autoName=sp.maybe(sp.SnapshotName))
 class ApiOkVolumeCreate(ApiOk):
 	'''
 	autoName: The name of the transient snapshot used during the creation of the volume.
 	'''
 
-@js.JsonObject(remoteId=sp.maybe(sp.GlobalVolumeId))
+@JsonObject(remoteId=sp.maybe(sp.GlobalVolumeId))
 class ApiOkVolumeBackup(ApiOkVolumeCreate):
 	'''
 	remoteId: The globally unique id of the backup
 	'''
 
-@js.JsonObject(backups={sp.VolumeName: sp.VolumesGroupBackupSingle})
+@JsonObject(backups={sp.VolumeName: sp.VolumesGroupBackupSingle})
 class ApiOkVolumesGroupBackup(ApiOk):
 	'''
     backups: The mapping of volume names to backup id.
