@@ -94,17 +94,46 @@ class SPConfig(object):
         return self._dict.iterkeys()
 
     @staticmethod
+    def _get_output_lines(cmd):
+        explist = [IOError, OSError]
+        if hasattr(subprocess, 'CalledProcessError'):
+            explist.append(subprocess.CalledProcessError)
+        expected = tuple(explist)
+
+        cmdstr = ' '.join(cmd)
+        try:
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=False)
+            output = proc.communicate()
+            code = proc.returncode
+        except expected as exp:
+            raise SPConfigException(
+                'Could not run "{cmd}": {exp}'
+                .format(cmd=cmdstr, exp=exp))
+        except Exception as unexp:
+            raise SPConfigException(
+                'Could not run "{cmd}": unexpected error: {unexp}'
+                .format(cmd=cmdstr, unexp=unexp))
+        if code != 0:
+            raise SPConfigException(
+                'Could not run "{cmd}": it exited with code {code}'
+                .format(cmd=cmdstr, code=code))
+
+        decoded = output[0].decode('UTF-8')
+        if decoded.endswith('\n'):
+            decoded = decoded[:-1]
+        return decoded.split('\n')
+
+    @staticmethod
     def _fallback_get_all_sections():
         for confget in ('/usr/lib/storpool/confget', '/usr/bin/confget'):
             if os.path.isfile(confget):
                 break
         else:
             return []
-        res = subprocess.check_output([
+        return sorted(SPConfig._get_output_lines([
             confget, '-f', '/etc/storpool.conf',
             '-q', 'sections'
-        ], shell=False).decode('UTF-8').split('\n')
-        return sorted([line for line in res if line])
+        ]))
 
     @staticmethod
     def get_all_sections():
@@ -118,7 +147,6 @@ class SPConfig(object):
         if fallback:
             return SPConfig._fallback_get_all_sections()
 
-        res = subprocess.check_output([
+        return sorted(SPConfig._get_output_lines([
             '/usr/sbin/storpool_confget', '-q', 'sections'
-        ], shell=False).decode('UTF-8').split('\n')
-        return sorted([line for line in res if line])
+        ]))
