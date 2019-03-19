@@ -91,7 +91,10 @@ class TestConfig(unittest.TestCase):
                 mock_popen.communicate.side_effect = \
                     raisers[data['popen']['comm_raise']]
             else:
-                mock_popen.communicate.return_value = data['popen']['return']
+                mock_popen.communicate.return_value = tuple([
+                    item.encode('UTF-8') if item is not None else None
+                    for item in data['popen']['return']
+                ])
                 mock_popen.wait.return_value = data['popen']['code']
 
         with pytest.raises(spconfig.SPConfigException) as err:
@@ -115,7 +118,10 @@ class TestConfig(unittest.TestCase):
         mock_popen.wait.return_value = 0
         popen.return_value = mock_popen
 
-        mock_popen.communicate.return_value = ('a=1\nb=2\nc=3\na=4', None)
+        mock_popen.communicate.return_value = (
+            'a=1\nb=2\nc=3\na=4'.encode('UTF-8'),
+            None,
+        )
         cfg = spconfig.SPConfig()
 
         assert cfg['b'] == '2'

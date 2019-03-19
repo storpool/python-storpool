@@ -63,7 +63,7 @@ class SPConfig(object):
         else:
             out = out[0]
             err = False
-        out = out.replace("\\\n", "")
+        out = out.decode('UTF-8').replace("\\\n", "")
         out = filter(lambda s: len(s) > 0, out.split("\n"))
 
         if wres > 0:
@@ -106,7 +106,7 @@ class SPConfig(object):
         return self._dict.get(key, defval)
 
     def __iter__(self):
-        return self.iterkeys()
+        return iter(self._dict)
 
     def items(self):
         return self._dict.items()
@@ -115,10 +115,16 @@ class SPConfig(object):
         return self._dict.keys()
 
     def iteritems(self):
-        return self._dict.iteritems()
+        if hasattr(self._dict, 'iteritems'):
+            return self._dict.iteritems()
+        else:
+            return iter(self._dict.items())
 
     def iterkeys(self):
-        return self._dict.iterkeys()
+        if hasattr(self._dict, 'iterkeys'):
+            return self._dict.iterkeys()
+        else:
+            return iter(self._dict.keys())
 
     @staticmethod
     def _get_output_lines(cmd):
