@@ -17,8 +17,8 @@
 #
 import re
 import time
+from .spcatch import error
 from .sptype import JsonObject, spTypeFun, maybe, const, either, eitherOr, internal
-from .sputils import error
 from .spjson import dumps
 
 

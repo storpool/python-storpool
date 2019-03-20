@@ -7,9 +7,9 @@ import functools
 import inspect
 import sys
 
+from . import spcatch
 from . import spdoc as doc
 from . import spjson as js
-from . import sputils
 
 
 SpType = collections.namedtuple('SpType', [
@@ -31,13 +31,13 @@ def spList(lst):
     def buildList(xs):
         lst = []
         exc = functools.reduce(
-            lambda exc, x: sputils.spCatch(
+            lambda exc, x: spcatch.sp_catch(
                 lambda tx: lst.append(tx),
                 lambda: valT(x),
                 exc),
             xs,
             None)
-        sputils.spCaught(exc, name, lst)
+        spcatch.sp_caught(exc, name, lst)
         return lst
 
     return SpType(name, buildList, lambda: [], _doc)
@@ -54,13 +54,13 @@ def spSet(st):
     def buildSet(xs):
         st = set()
         exc = functools.reduce(
-            lambda exc, x: sputils.spCatch(
+            lambda exc, x: spcatch.sp_catch(
                 lambda tx: st.add(tx),
                 lambda: valT(x),
                 exc),
             xs,
             None)
-        sputils.spCaught(exc, name, st)
+        spcatch.sp_caught(exc, name, st)
         return st
 
     return SpType(name, buildSet, lambda: set(), _doc)
@@ -81,12 +81,12 @@ def spDict(dct):
         exc = None
         for key, val in xs.iteritems():
             data = []
-            exc = sputils.spCatch(
+            exc = spcatch.sp_catch(
                 lambda tx: data.append(tx),
                 lambda: keyT(key),
                 exc)
             if len(data) == 1:
-                exc = sputils.spCatch(
+                exc = spcatch.sp_catch(
                     lambda tx: data.append(tx),
                     lambda: valT(val),
                     exc)
@@ -94,7 +94,7 @@ def spDict(dct):
                     d[data[0]] = data[1]
                 else:
                     d[data[0]] = None
-        sputils.spCaught(exc, name, d)
+        spcatch.sp_caught(exc, name, d)
         return d
 
     return SpType(name, buildDict, lambda: {}, _doc)
@@ -129,7 +129,7 @@ def const(constVal):
     _doc = doc.TypeDoc(name, "The constant value {0}.".format(name))
     return SpType(name,
                   lambda val: val if val == constVal
-                  else sputils.error("Trying to assign a value to const val"),
+                  else spcatch.error("Trying to assign a value to const val"),
                   lambda: constVal, _doc)
 
 
@@ -150,10 +150,10 @@ def either(*types):
             except Exception:
                 pass
         else:
-            sputils.error("The value does not match any type")
+            spcatch.error("The value does not match any type")
 
     return SpType(name, handleVal,
-                  lambda: sputils.error("No default value for either type"),
+                  lambda: spcatch.error("No default value for either type"),
                   _doc)
 
 
@@ -194,7 +194,7 @@ def spTypeVal(val):
 
 def spTypeFun(argName, validator, argDoc):
     return SpType(argName, validator,
-                  lambda: sputils.error("No default value for {argName}",
+                  lambda: spcatch.error("No default value for {argName}",
                                         argName=argName),
                   doc.TypeDoc(argName, argDoc))
 
@@ -207,7 +207,7 @@ def spType(tp):
         if _doc is None:
             _doc = tp.spDoc
         return SpType(tp.__name__, tp,
-                      lambda: sputils.error("No default value for {type}",
+                      lambda: spcatch.error("No default value for {type}",
                                             type=tp.__name__),
                       _doc)
     else:

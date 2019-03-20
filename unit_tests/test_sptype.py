@@ -1,5 +1,5 @@
 """
-Test some basic functionality of the storpool.sputils.spType() class.
+Test some basic functionality of the storpool.sptype.spType() class.
 It is the base of all the conversions from Python objects to JSON and
 vice versa that takes place behind the scenes in the Python bindings for
 the StorPool API.
@@ -10,7 +10,7 @@ import unittest
 import ddt
 import pytest
 
-from storpool import sputils, sptype, sptypes
+from storpool import spcatch, sptype, sptypes
 
 
 List = sptype.spType([int])            # pylint: disable=invalid-name
@@ -33,7 +33,7 @@ TEST_SIMPLE = [
         ListList,
         [[1, 2], [3, 'meow', 4], [5, 6]],
         [[1, 2], [3, 4], [5, 6]],
-        sputils.InvalidArgumentException,
+        spcatch.InvalidArgumentError,
     ),
 
     (
@@ -49,7 +49,7 @@ TEST_SIMPLE = [
         Set,
         set([1, 2, 'meow', 4]),
         set([4, 2, 1]),
-        sputils.InvalidArgumentException,
+        spcatch.InvalidArgumentError,
     ),
 
     (
@@ -65,7 +65,7 @@ TEST_SIMPLE = [
         Dict,
         {1: 1.5, 2: 2.5, 'three': 3.5, 4: 'four point five', 5: 5.5},
         {2: 2.5, 5: 5.5, 4: None, 1: 1.5},
-        sputils.InvalidArgumentException,
+        spcatch.InvalidArgumentError,
     ),
 
     (
@@ -81,7 +81,7 @@ TEST_SIMPLE = [
         sptype.spType([sptypes.MacAddr]),
         ['00:11:22:33:44:55', 'xx'],
         ['00:11:22:33:44:55'],
-        sputils.InvalidArgumentException,
+        spcatch.InvalidArgumentError,
     ),
 
     (
@@ -97,7 +97,7 @@ TEST_SIMPLE = [
         sptype.spType([sptypes.PeerStatus]),
         ['up', 'meow', 'down', 'meowmeow', 'up'],
         ['up', 'down', 'up'],
-        sputils.InvalidArgumentException,
+        spcatch.InvalidArgumentError,
     ),
 ]
 
@@ -131,7 +131,7 @@ TEST_OBJECT = [
             {'guid': '0xdead', 'state': 'Connected'},
             {'guid': '0xbeef', 'state': 'Idle'},
         ],
-        sputils.InvalidArgumentException
+        spcatch.InvalidArgumentError,
     ),
 ]
 

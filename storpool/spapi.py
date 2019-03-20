@@ -24,9 +24,10 @@ from errno import ECONNREFUSED, ECONNRESET
 from . import spjson as js
 from . import sptypes as sp
 
+from .spcatch import InvalidArgumentError
 from .spconfig import SPConfig
 from .sptype import JsonObject, spType, either, const, maybe
-from .sputils import InvalidArgumentException, msec, sec, pathPollWait
+from .sputils import msec, sec, pathPollWait
 from .spdoc import ApiDoc, ApiCallDoc
 
 
@@ -88,7 +89,7 @@ class _API_METHOD(object):
 		ftext += '    res = self("{method}", path, {json})\n'.format(method=method, json=None if json is None else 'json')
 		ftext += '    try:\n'
 		ftext += '        return returns(res)\n'
-		ftext += '    except InvalidArgumentException as e:\n'
+		ftext += '    except InvalidArgumentError as e:\n'
 		ftext += '        if e.partial is not None:\n'
 		ftext += '            return e.partial\n'
 		ftext += '        else:\n'
@@ -96,7 +97,7 @@ class _API_METHOD(object):
 #		print ftext
 		
 		globalz = dict(("_validate_{0}".format(arg._name), arg._type.handleVal) for arg in args)
-		globalz['InvalidArgumentException'] = InvalidArgumentException
+		globalz['InvalidArgumentError'] = InvalidArgumentError
 		globalz['returns'] = returns.handleVal
 		
 		exec ftext in globalz

@@ -28,7 +28,7 @@ except ImportError:
     import json as js
 
 
-from . import sputils
+from . import spcatch
 
 
 sort_keys = False
@@ -75,7 +75,7 @@ class JsonObjectImpl(object):
             exc = None
             for attr, attrDef in self.__jsonAttrDefs__.iteritems():
                 data = []
-                exc = sputils.spCatch(
+                exc = spcatch.sp_catch(
                     lambda tx: data.append(tx),
                     lambda: attrDef.handleVal(j[attr]) if attr in j
                     else attrDef.defaultVal(),
@@ -84,7 +84,7 @@ class JsonObjectImpl(object):
                     self.__jsonAttrs__[attr] = data[0]
                 else:
                     self.__jsonAttrs__[attr] = None
-            sputils.spCaught(exc, self.__class__.__name__, self)
+            spcatch.sp_caught(exc, self.__class__.__name__, self)
 
             return self
 

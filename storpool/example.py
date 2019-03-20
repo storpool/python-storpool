@@ -18,7 +18,8 @@
 ''' Simple StorPool API example script '''
 from os import environ
 
-from sputils import GB, InvalidArgumentException
+from spcatch import InvalidArgumentError
+from sputils import GB
 from spapi import Api, ApiError
 from sptypes import VolumeCreateDesc
 
@@ -49,7 +50,7 @@ desc = VolumeCreateDesc()
 desc.name = 'myTestVol2'
 try:
 	desc.size = 1234
-except InvalidArgumentException as e:
+except InvalidArgumentError as e:
 	print "Invalid argument:", e
 	desc.size = 10 * GB
 desc.replication = 2

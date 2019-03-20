@@ -1,13 +1,13 @@
 """
 Tests for the storpool.spjson.JsonEncoder and
-the storpool.sputils.JsonObject classes.
+the storpool.sptype.JsonObject classes.
 """
 
 import pytest
 
+from storpool import spcatch
 from storpool import spjson
 from storpool import sptype
-from storpool import sputils
 
 
 @sptype.JsonObject(
@@ -58,7 +58,7 @@ class TestJsonEncoder(object):
             'flags': None,
         }
 
-        with pytest.raises(sputils.InvalidArgumentException) as err:
+        with pytest.raises(spcatch.InvalidArgumentError) as err:
             obj = TrivialClass({
                 'number': 3,
                 'flags': [False, True, False],
