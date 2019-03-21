@@ -15,10 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import re
+import sys
 import time
+
 from .spcatch import error
-from .sptype import JsonObject, spTypeFun, maybe, const, either, eitherOr, internal
+from .sptype import JsonObject, spTypeFun, maybe, const, either, eitherOr, internal, longType
 from .spjson import dumps
 
 
@@ -181,6 +184,11 @@ MAX_BRIDGE_ID = MAX_PEERS_PER_SUBTYPE
 MAX_CLIENT_ID = MAX_PEERS_PER_SUBTYPE
 MAX_MGMT_ID = MAX_PEERS_PER_SUBTYPE
 
+if sys.version_info[0] > 2:
+    GENERATION_NONE = -1
+else:
+    GENERATION_NONE = long(-1)
+
 
 ### Simple type validators ###
 MacAddr = regex('MAC Address', r'^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$')
@@ -315,7 +323,7 @@ class ClusterStatus(object):
 
 
 ### CLIENT ###
-@JsonObject(id=ClientId, generation=long, clientGeneration=long, configStatus=oneOf("client status", 'ok', 'updating', 'down'), delay=int)
+@JsonObject(id=ClientId, generation=longType, clientGeneration=longType, configStatus=oneOf("client status", 'ok', 'updating', 'down'), delay=int)
 class ClientConfigStatus(object):
 	'''
 	generation: The cluster generation based on the number of configuration changes since the cluster was created.
@@ -326,7 +334,7 @@ class ClientConfigStatus(object):
 
 
 ### TASK ###
-@JsonObject(diskId=DiskId, transactionId=long, allObjects=int, completedObjects=int, dispatchedObjects=int, unresolvedObjects=internal(int))
+@JsonObject(diskId=DiskId, transactionId=longType, allObjects=int, completedObjects=int, dispatchedObjects=int, unresolvedObjects=internal(int))
 class Task(object):
 	'''
 	diskId: The disk ID this task is on.
@@ -338,8 +346,8 @@ class Task(object):
 
 
 ### DISK ###
-@JsonObject(objectId=internal(int), generation=long, version=long, volume=str, parentVolume=str, onDiskSize=int, storedSize=int, state=ObjectState,
-	volumeId=internal(long))
+@JsonObject(objectId=internal(int), generation=longType, version=longType, volume=str, parentVolume=str, onDiskSize=int, storedSize=int, state=ObjectState,
+	volumeId=internal(longType))
 class DiskObject(object):
 	'''
 	parentVolume: The name of the parent snapshot.
@@ -353,7 +361,7 @@ class DiskObject(object):
 	def ok(self):
 		return self.state == OBJECT_OK
 
-@JsonObject(name=str, storedSize=long, onDiskSize=long, objectsCount=long, objectStates={ObjectState:int})
+@JsonObject(name=str, storedSize=longType, onDiskSize=longType, objectsCount=longType, objectStates={ObjectState:int})
 class DiskVolumeInfo(object):
 	'''
 	objectsCount: The number of objects of the volume stored on this disk.
@@ -370,7 +378,7 @@ class DiskWbcStats(object):
 class DiskAggregateScores(object):
 	pass
 
-@JsonObject(id=DiskId, serverId=ServerId, ssd=bool, generationLeft=long, model=str, serial=str, description=DiskDescription, softEject=oneOf('DiskSoftEjectStatus', "on", "off", "paused"))
+@JsonObject(id=DiskId, serverId=ServerId, ssd=bool, generationLeft=longType, model=str, serial=str, description=DiskDescription, softEject=oneOf('DiskSoftEjectStatus', "on", "off", "paused"))
 class DiskSummaryBase(object):
 	'''
 	id: The ID of this disk. It is set when the disk is formatted to work with StorPool.
@@ -387,10 +395,10 @@ class DiskSummaryBase(object):
 class DownDiskSummary(DiskSummaryBase):
 	up = False
 
-@JsonObject(generationLeft=const(-1L), sectorsCount=long, empty=bool, noFua=bool, noFlush=bool, noTrim=bool, isWbc=bool, journaled=bool, device=str,
+@JsonObject(generationLeft=const(GENERATION_NONE), sectorsCount=longType, empty=bool, noFua=bool, noFlush=bool, noTrim=bool, isWbc=bool, journaled=bool, device=str,
 	agCount=internal(int), agAllocated=internal(int), agFree=internal(int), agFull=internal(int), agPartial=internal(int), agFreeing=internal(int), agMaxSizeFull=internal(int), agMaxSizePartial=internal(int),
 	entriesCount=int, entriesAllocated=int, entriesFree=int,
-	objectsCount=int, objectsAllocated=int, objectsFree=int, objectsOnDiskSize=long,
+	objectsCount=int, objectsAllocated=int, objectsFree=int, objectsOnDiskSize=longType,
 	wbc=internal(eitherOr(DiskWbcStats, None)), aggregateScore=internal(DiskAggregateScores),
 	scrubbingStartedBefore=int, scrubbedBytes=int, scrubbingBW=int, scrubbingFinishAfter=int,
 	scrubbingPausedFor=int, scrubbingPaused=bool, lastScrubCompleted=int)
@@ -445,7 +453,7 @@ class DiskDescUpdate(object):
 
 
 ### ACTIVE REQUESTS ###
-@JsonObject(requestId=str, requestIdx=int, volume=either(VolumeName, SnapshotName), address=long, size=int,
+@JsonObject(requestId=str, requestIdx=int, volume=either(VolumeName, SnapshotName), address=longType, size=int,
 	op=oneOf('RequestOp', "read", "write", "merge", "system", "entries flush", "#bad_state", "#bad_drOp"), state=internal(str), prevState=internal(str), drOp=internal(str), msecActive=int)
 class ActiveRequestDesc(object):
 	'''
@@ -503,11 +511,11 @@ class VolumeLimits(object):
 	iops: iops limit.
 	'''
 
-@JsonObject(id=internal(long), parentName=eitherOr(SnapshotName, ""), templateName=eitherOr(VolumeTemplateName, ""),
+@JsonObject(id=internal(longType), parentName=eitherOr(SnapshotName, ""), templateName=eitherOr(VolumeTemplateName, ""),
 	size=VolumeSize, replication=VolumeReplication,
 	placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName,
-	parentVolumeId=internal(long), originalParentVolumeId=internal(long), visibleVolumeId=long, templateId=internal(long),
-	objectsCount=int, creationTimestamp=long, flags=internal(int), tags=maybe({VolumeTagName: VolumeTagValue}))
+	parentVolumeId=internal(longType), originalParentVolumeId=internal(longType), visibleVolumeId=longType, templateId=internal(longType),
+	objectsCount=int, creationTimestamp=longType, flags=internal(int), tags=maybe({VolumeTagName: VolumeTagValue}))
 class VolumeSummaryBase(VolumeLimits):
 	'''
 	parentName: The volume/snapshot's parent snapshot.
@@ -546,14 +554,14 @@ class SnapshotSummary(VolumeSummaryBase):
 	recoveringFromRemote: Is this snapshot's data currently being transferred from a remote location.
 	'''
 
-@JsonObject(storedSize=long, spaceUsed=long)
+@JsonObject(storedSize=longType, spaceUsed=longType)
 class SnapshotSpace(SnapshotSummary):
 	'''
 	storedSize: The number of bytes of client data on this snapshot. This does not take into account the StorPool replication and overhead, thus it is never larger than the volume size.
 	spaceUsed: The number of bytes of client data that will be freed if this snapshot is deleted.
 	'''
 
-@JsonObject(storedSize=long, spaceUsed=long)
+@JsonObject(storedSize=longType, spaceUsed=longType)
 class VolumeSpace(VolumeSummary):
 	'''
 	storedSize: The number of bytes of client data on this volume. This does not take into account the StorPool replication and overhead, thus it is never larger than the volume size.
@@ -764,8 +772,8 @@ class VolumeTemplateSpaceEst(VolumeTemplateSpaceEstEntry):
 
 @JsonObject(id=internal(int), name=VolumeTemplateName, placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName, replication=eitherOr(VolumeReplication, "-"),
 	volumesCount=int, snapshotsCount=int, removingSnapshotsCount=int,
-	size=eitherOr(VolumeSize, 0), totalSize=eitherOr(VolumeSize, 0), onDiskSize=long, storedSize=long,
-	availablePlaceAll=long, availablePlaceTail=long, availablePlaceHead=long, capacityPlaceAll=long, capacityPlaceTail=long, capacityPlaceHead=long,
+	size=eitherOr(VolumeSize, 0), totalSize=eitherOr(VolumeSize, 0), onDiskSize=longType, storedSize=longType,
+	availablePlaceAll=longType, availablePlaceTail=longType, availablePlaceHead=longType, capacityPlaceAll=longType, capacityPlaceTail=longType, capacityPlaceHead=longType,
 	stored=VolumeTemplateSpaceEst)
 class VolumeTemplateStatusDesc(object):
 	'''
@@ -831,7 +839,7 @@ class VolumeBalancerCommand(object):
 
 @JsonObject(name=either(VolumeName, SnapshotName),
 	placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName, replication=VolumeReplication,
-	size=long, objectsCount=int,
+	size=longType, objectsCount=int,
 	snapshot=bool, reallocated=bool, blocked=bool)
 class VolumeBalancerVolumeStatus(object):
 	'''
@@ -863,7 +871,7 @@ class TargetDesc(object):
 	toRecover: The amount that will have to be recovered to get from the current to the target state.
 	'''
 
-@JsonObject(id=DiskId, serverId=ServerId, generationLeft=long)
+@JsonObject(id=DiskId, serverId=ServerId, generationLeft=longType)
 class DownDiskTarget(object):
 	'''
 	id: The ID of this disk.
@@ -871,7 +879,7 @@ class DownDiskTarget(object):
 	generationLeft: The last cluster generation when the disk was active on a running server.
 	'''
 
-@JsonObject(id=DiskId, serverId=ServerId, generationLeft=const(-1L),
+@JsonObject(id=DiskId, serverId=ServerId, generationLeft=const(GENERATION_NONE),
 	objectsAllocated=TargetDesc, objectsCount=int,
 	storedSize=TargetDesc, onDiskSize=TargetDesc)
 class UpDiskTarget(object):
@@ -968,7 +976,7 @@ class VolumesGroupBackupDesc(object):
 	tags: Arbitrary short name/value pairs stored with the volume.
 	'''
 
-@JsonObject(name=VolumeName, location=RemoteLocationName, creationTimestamp=long, size=VolumeSize, remoteId=GlobalVolumeId, onVolume=maybe(VolumeName), localSnapshot=maybe(SnapshotName))
+@JsonObject(name=VolumeName, location=RemoteLocationName, creationTimestamp=longType, size=VolumeSize, remoteId=GlobalVolumeId, onVolume=maybe(VolumeName), localSnapshot=maybe(SnapshotName))
 class RemoteSnapshot(object):
 	'''
 	name: The name of the snapshot.
@@ -987,7 +995,7 @@ class RemoteLocation(object):
 	name: The human-readable location name.
 	'''
 
-@JsonObject(snapshot=SnapshotName, location=RemoteLocationName, globalId=GlobalVolumeId, backingUp=maybe(bool), volumeId=internal(long), visibleVolumeId=internal(long))
+@JsonObject(snapshot=SnapshotName, location=RemoteLocationName, globalId=GlobalVolumeId, backingUp=maybe(bool), volumeId=internal(longType), visibleVolumeId=internal(longType))
 class Export(object):
 	'''
 	snapshot: The name of the snapshot.

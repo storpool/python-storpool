@@ -1,6 +1,6 @@
 #
 #-
-# Copyright (c) 2014 - 2016  StorPool.
+# Copyright (c) 2014 - 2019  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,8 +27,7 @@ from os.path import exists, islink
 from subprocess import Popen, PIPE
 from time import sleep
 
-import spdoc as doc
-import spjson as js
+from . import spdoc as doc
 
 
 sec  = 1.0

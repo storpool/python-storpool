@@ -17,6 +17,8 @@ Helper classes for creating the HTML documetation of the StorPool API.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+
 
 class Html(object):
     escapeTable = {
@@ -32,7 +34,7 @@ class Html(object):
 
     def add(self, fmt, *args, **kwargs):
         args = map(self.escape, args)
-        kwargs = dict((k, self.escape(v)) for k, v in kwargs.iteritems())
+        kwargs = dict((k, self.escape(v)) for k, v in six.iteritems(kwargs))
         self.buf += fmt.format(*args, **kwargs)
         return self
 
@@ -61,7 +63,7 @@ class TypeDoc(Doc):
     def buildTypes(cls, html):
         html.add('<h2 id="types">Data Types</h2>\n')
         html.add('<table>\n')
-        for name, doc in sorted(TypeDoc.types.iteritems()):
+        for name, doc in sorted(TypeDoc.types.items()):
             html.add('<tr id="{n}"><td><strong>{n}</strong>:'
                      '</td><td>{d}</td></tr>\n',
                      n=name, d=doc.desc)
@@ -162,7 +164,7 @@ class JsonObjectDoc(Doc):
 
     def _attrList(self, html):
         html.add('<ul>\n')
-        for attrName, (attrType, attrDesc) in sorted(self.attrs.iteritems()):
+        for attrName, (attrType, attrDesc) in sorted(self.attrs.items()):
             html.add('<li class="attribute">{0}: ', attrName)
             if type(attrType) is TypeDoc:
                 html.add(' (')
@@ -183,7 +185,7 @@ class JsonObjectDoc(Doc):
 
     def toJson(self, html, pad):
         html.add('{{\n')
-        for attrName, (attrType, attrDesc) in sorted(self.attrs.iteritems()):
+        for attrName, (attrType, attrDesc) in sorted(self.attrs.items()):
             html.add('{pad}"{attr}": ', pad=' ' * (pad + 2), attr=attrName)
             attrType.toJson(html, pad + 2)
             html.add(',\n')
@@ -235,7 +237,7 @@ class ApiCallDoc(Doc):
         html.add('<li>Arguments: ')
         if self.args:
             html.add('\n<ul>\n')
-            for argName, argType in sorted(self.args.iteritems()):
+            for argName, argType in sorted(self.args.items()):
                 html.add('<li>{0} - <strong>{1}</strong>: <em>{2}</em></li>\n',
                          argName, argType.name, argType.desc)
             html.add('</ul>\n')

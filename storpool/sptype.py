@@ -7,6 +7,8 @@ import functools
 import inspect
 import sys
 
+import six
+
 from . import spcatch
 from . import spdoc as doc
 from . import spjson as js
@@ -68,7 +70,8 @@ def spSet(st):
 
 def spDict(dct):
     assert len(dct) == 1, "SpDict :: {keyType: valueType}"
-    keySt, valSt = map(spType, dct.items()[0])
+    firstItem = list(dct.items())[0]
+    keySt, valSt = spType(firstItem[0]), spType(firstItem[1])
     keyT, valT = keySt.handleVal, valSt.handleVal
     name = "{{{0}: {1}}}".format(keySt.name, valSt.name)
     _doc = doc.DictDoc(
@@ -79,7 +82,7 @@ def spDict(dct):
     def buildDict(xs):
         d = dict()
         exc = None
-        for key, val in xs.iteritems():
+        for key, val in six.iteritems(xs):
             data = []
             exc = spcatch.sp_catch(
                 lambda tx: data.append(tx),
@@ -134,7 +137,7 @@ def const(constVal):
 
 
 def either(*types):
-    types = map(spType, types)
+    types = [spType(tp) for tp in types]
     tpNames = ", ".join(t.name for t in types)
     name = "Either({0})".format(tpNames)
     _doc = doc.EitherDoc(
@@ -211,7 +214,7 @@ def spType(tp):
                                             type=tp.__name__),
                       _doc)
     else:
-        for _type, _spType in spTypes.iteritems():
+        for _type, _spType in six.iteritems(spTypes):
             if isinstance(tp, _type):
                 return _spType(tp)
         else:
@@ -222,7 +225,7 @@ class JsonObject(object):
     def __init__(self, **kwargs):
         self.attrDefs = dict(
             (argName, spType(argVal))
-            for argName, argVal in kwargs.iteritems())
+            for argName, argVal in six.iteritems(kwargs))
 
     def __call__(self, cls):
         if issubclass(cls, js.JsonObjectImpl):
@@ -230,7 +233,7 @@ class JsonObject(object):
             attrDefs.update(self.attrDefs)
             docDescs = collections.defaultdict(lambda: "", dict(
                 (attrName, attrDesc) for attrName, (attrType, attrDesc) in
-                cls.spDoc.attrs.iteritems()))
+                six.iteritems(cls.spDoc.attrs)))
         else:
             attrDefs = self.attrDefs
             docDescs = collections.defaultdict(lambda: "")
@@ -242,7 +245,7 @@ class JsonObject(object):
             _doc += "{0}.{1}".format(cls.__module__, cls.__name__)
         _doc += "\n\n"
         _doc += "    JSON attributes:\n"
-        for attrName, attrType in sorted(attrDefs.iteritems()):
+        for attrName, attrType in sorted(six.iteritems(attrDefs)):
             _doc += "        {name}: {type}\n".format(
                 name=attrName, type=attrType.name)
         _doc += "\n"
@@ -260,7 +263,7 @@ class JsonObject(object):
             cls.__doc__ or "XXX {0}.{1} not documented.".format(
                 cls.__module__, cls.__name__),
             dict((attrName, (attrType.spDoc, docDescs[attrName]))
-                 for attrName, attrType in attrDefs.iteritems()))
+                 for attrName, attrType in six.iteritems(attrDefs)))
 
         return type(cls.__name__, (cls, js.JsonObjectImpl),
                     dict(__jsonAttrDefs__=attrDefs, __module__=cls.__module__,

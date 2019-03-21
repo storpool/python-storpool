@@ -19,6 +19,8 @@ from __future__ import print_function
 
 import sys
 
+import six
+
 
 try:
     import simplejson as js
@@ -73,7 +75,7 @@ class JsonObjectImpl(object):
             object.__setattr__(self, '__jsonAttrs__', {})
 
             exc = None
-            for attr, attrDef in self.__jsonAttrDefs__.iteritems():
+            for attr, attrDef in six.iteritems(self.__jsonAttrDefs__):
                 data = []
                 exc = spcatch.sp_catch(
                     lambda tx: data.append(tx),
@@ -104,7 +106,7 @@ class JsonObjectImpl(object):
             (attr, getattr(self, attr)) for attr in self.__jsonAttrDefs__)
 
     def __iter__(self):
-        return self.toJson().iteritems()
+        return six.iteritems(self.toJson())
 
     _asdict = toJson
     __str__ = __repr__ = lambda self: str(self.toJson())
