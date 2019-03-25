@@ -1,5 +1,4 @@
 #
-#-
 # Copyright (c) 2014  StorPool.
 # All rights reserved.
 #

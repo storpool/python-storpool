@@ -1,5 +1,3 @@
-#
-#-
 # Copyright (c) 2014 - 2019  StorPool.
 # All rights reserved.
 #
@@ -17,20 +15,13 @@
 
 from __future__ import print_function
 
-import gc
-import re
-import sys
+import os.path
+import time
 
-from collections import Iterable, namedtuple
-from inspect import isfunction, isclass
-from os.path import exists, islink
-from subprocess import Popen, PIPE
-from time import sleep
-
-from . import spdoc as doc
+import six.moves
 
 
-sec  = 1.0
+sec = 1.0
 msec = 1.0e-3 * sec
 usec = 1e-6 * sec
 
@@ -41,20 +32,20 @@ TB = 1024 ** 4
 
 
 def pr(x):
-	print(x)
-	return x
+    print(x)
+    return x
 
 
 def pathPollWait(path, shouldExist, isLink, pollTime, maxTime):
-	''' poll/listen for path to appear/disappear '''
-	for i in xrange(int(maxTime / pollTime)):
-		pathExists = exists(path)
-		if pathExists and isLink:
-			assert islink(devName)
-		
-		if pathExists == shouldExist:
-			return True
-		else:
-			sleep(pollTime)
-	else:
-		return False
+    ''' poll/listen for path to appear/disappear '''
+    for i in six.moves.range(int(maxTime / pollTime)):
+        pathExists = os.path.exists(path)
+        if pathExists and isLink:
+            assert os.path.islink(devName)
+
+        if pathExists == shouldExist:
+            return True
+        else:
+            time.sleep(pollTime)
+    else:
+        return False
