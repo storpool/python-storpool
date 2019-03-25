@@ -41,7 +41,7 @@ def pathPollWait(path, shouldExist, isLink, pollTime, maxTime):
     for i in six.moves.range(int(maxTime / pollTime)):
         pathExists = os.path.exists(path)
         if pathExists and isLink:
-            assert os.path.islink(devName)
+            assert os.path.islink(path)
 
         if pathExists == shouldExist:
             return True
