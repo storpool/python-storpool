@@ -27,10 +27,15 @@ import feature_check.obtain
 class SPConfigException(Exception):
     """ An error that occurred during the StorPool configuration parsing. """
 
-    pass
-
 
 class SPConfig(object):
+    """ A representation of the StorPool configuration settings.
+
+    When constructed, an object of this class will invoke the StorPool
+    configuration parser utility (`/usr/sbin/storpool_confget` by default)
+    and store the obtained variables and values into its internal dictionary.
+    The object may later be accessed as a dictionary. """
+
     def __init__(self, confget='/usr/sbin/storpool_confget', section=None):
         self._confget = confget
         self._dict = dict()
@@ -38,25 +43,26 @@ class SPConfig(object):
         self.confget()
 
     def confget(self):
+        """ Invoke the StorPool configuration parser utility. """
         args = (self._confget,) \
             if self._section is None \
             else (self._confget, '-s', self._section)
         confget = str.join(' ', args)
         try:
-            p = subprocess.Popen(
+            proc = subprocess.Popen(
                 args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 bufsize=4096)
-            out = p.communicate()
-            wres = p.wait()
+            out = proc.communicate()
+            wres = proc.wait()
         except OSError as ose:
             raise SPConfigException(
                 'Could not read the StorPool configuration using {c}: {e}'
                 .format(c=confget, e=ose.strerror))
-        except Exception as e:
+        except Exception as exc:
             raise SPConfigException(
                 'Could not read the StorPool configuration using {c}: '
                 'unexpected exception {t}: {e}'
-                .format(c=confget, t=type(e).__name__, e=e))
+                .format(c=confget, t=type(exc).__name__, e=exc))
 
         if out[1]:
             out = out[1]
@@ -73,59 +79,60 @@ class SPConfig(object):
                     'The StorPool configuration helper {c} exited with '
                     'non-zero code {r}, error messages: {out}'
                     .format(c=confget, r=wres, out=out))
-            else:
-                raise SPConfigException(
-                    'The StorPool configuration helper {c} exited with '
-                    'non-zero code {r}'
-                    .format(c=confget, r=wres))
-        elif wres < 0:
+            raise SPConfigException(
+                'The StorPool configuration helper {c} exited with '
+                'non-zero code {r}'
+                .format(c=confget, r=wres))
+        if wres < 0:
             if err:
                 raise SPConfigException(
                     'The StorPool configuration helper {c} was killed by '
                     'signal {s}, error messages: {out}'
                     .format(c=confget, s=-wres, out=out))
-            else:
-                raise SPConfigException(
-                    'The StorPool configuration helper {c} was killed by '
-                    'signal {s}'
-                    .format(c=confget, s=-wres))
-        elif err:
+            raise SPConfigException(
+                'The StorPool configuration helper {c} was killed by '
+                'signal {s}'
+                .format(c=confget, s=-wres))
+        if err:
             raise SPConfigException(
                 'The StorPool configuration helper {c} reported errors: {out}'
                 .format(c=confget, out=out))
 
-        d = {}
-        for s in out:
-            (key, val) = s.split('=', 1)
-            d[key] = val
-        self._dict = d
+        res = {}
+        for line in out:
+            key, val = line.split('=', 1)
+            res[key] = val
+        self._dict = res
 
     def __getitem__(self, key):
         return self._dict[key]
 
     def get(self, key, defval):
+        """ Return value of the specified configuration variable. """
         return self._dict.get(key, defval)
 
     def __iter__(self):
         return iter(self._dict)
 
     def items(self):
+        """ Return a list of the configuration var/value pairs. """
         return self._dict.items()
 
     def keys(self):
+        """ Return a list of the configuration variable names. """
         return self._dict.keys()
 
     def iteritems(self):
+        """ Return an iterator over the configuration var/value pairs. """
         if hasattr(self._dict, 'iteritems'):
-            return self._dict.iteritems()
-        else:
-            return iter(self._dict.items())
+            return self._dict.iteritems()  # pylint: disable=no-member
+        return iter(self._dict.items())
 
     def iterkeys(self):
+        """ Return an iterator over the configuration variable names. """
         if hasattr(self._dict, 'iterkeys'):
-            return self._dict.iterkeys()
-        else:
-            return iter(self._dict.keys())
+            return self._dict.iterkeys()  # pylint: disable=no-member
+        return iter(self._dict.keys())
 
     @staticmethod
     def _get_output_lines(cmd):
@@ -166,6 +173,7 @@ class SPConfig(object):
 
     @staticmethod
     def get_all_sections():
+        """ Return all the section names in the StorPool config files. """
         fallback = False
         try:
             data = feature_check.obtain_features('/usr/sbin/storpool_confget')
