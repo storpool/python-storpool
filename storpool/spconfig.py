@@ -129,17 +129,12 @@ class SPConfig(object):
 
     @staticmethod
     def _get_output_lines(cmd):
-        explist = [IOError, OSError]
-        if hasattr(subprocess, 'CalledProcessError'):
-            explist.append(subprocess.CalledProcessError)
-        expected = tuple(explist)
-
         cmdstr = ' '.join(cmd)
         try:
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=False)
             output = proc.communicate()
             code = proc.returncode
-        except expected as exp:
+        except (IOError, OSError, subprocess.CalledProcessError) as exp:
             raise SPConfigException(
                 'Could not run "{cmd}": {exp}'
                 .format(cmd=cmdstr, exp=exp))
