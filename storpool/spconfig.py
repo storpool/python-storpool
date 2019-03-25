@@ -21,6 +21,7 @@ import os
 import subprocess
 
 import feature_check
+import feature_check.obtain
 
 
 class SPConfigException(Exception):
@@ -174,7 +175,7 @@ class SPConfig(object):
         try:
             data = feature_check.obtain_features('/usr/sbin/storpool_confget')
             fallback = 'query-sections' not in data
-        except Exception:
+        except feature_check.obtain.ObtainError:
             fallback = True
 
         if fallback:
