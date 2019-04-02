@@ -91,6 +91,11 @@ class JsonObjectImpl(object):
             return self
 
     def __getattr__(self, attr):
+        if attr not in self.__jsonAttrs__:
+            error = "'{cls}' has no attribute '{attr}'".format(
+                cls=self.__class__.__name__, attr=attr)
+            raise AttributeError(error)
+
         return self.__jsonAttrs__[attr]
 
     def __setattr__(self, attr, value):
