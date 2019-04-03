@@ -364,13 +364,11 @@ Api.serversListBlocked = GET('ServersListBlocked', returns=sp.ClusterStatus).doc
     """)
 
 Api.spDocSection("Servers", """ """)
-# TODO: uncomment this one!
-# Api.serversList = GET('ServersList', returns=sp.ClusterStatus).doc("List all Storpool servers",
-#    """
-#    Returns the the same output as ServicesList but ommits clients. Returns
-#    an error if the whole cluster is not operational.
-#    """
-#    )
+Api.serversList = GET('ServersList', returns=sp.ClusterStatus).doc("List all Storpool servers",
+   """
+   Returns the the same output as ServicesList but ommits clients. Returns
+   an error if the whole cluster is not operational.
+   """)
 Api.serverDisksList = GET('ServerDisksList/{serverId}', ServerId, returns={sp.DiskId: sp.DiskSummary}).doc("List all disks on a server",
     """
     Return detailed information about each disk on the given server.
