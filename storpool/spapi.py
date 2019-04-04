@@ -179,10 +179,10 @@ class ApiError(Exception):
 
 class ApiMeta(type):
     def spDocSection(cls, name, desc):
-        cls.spDoc.addSection(name, desc)
+        cls.spDoc.add_section(name, desc)
 
     def __setattr__(cls, name, func):
-        cls.spDoc.addCall(func.spDoc)
+        cls.spDoc.add_call(func.spDoc)
 
         func = func.compile()
         func.__name__ = func.func_name = name

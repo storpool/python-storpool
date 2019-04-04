@@ -21,7 +21,7 @@ import six
 
 
 class Html(object):
-    escapeTable = {
+    escape_table = {
         "&": "&amp;",
         '"': "&quot;",
         "'": "&apos;",
@@ -43,7 +43,7 @@ class Html(object):
         return self
 
     def escape(self, text):
-        return "".join(self.escapeTable.get(c, c) for c in text)
+        return "".join(self.escape_table.get(c, c) for c in text)
 
     def __str__(self):
         return self.buf
@@ -60,7 +60,7 @@ class TypeDoc(Doc):
     types = {}
 
     @classmethod
-    def buildTypes(cls, html):
+    def build_types(cls, html):
         html.add('<h2 id="types">Data Types</h2>\n')
         html.add('<table>\n')
         for name, doc in sorted(TypeDoc.types.items()):
@@ -76,7 +76,7 @@ class TypeDoc(Doc):
         if not self.deps and self.name not in TypeDoc.types:
             TypeDoc.types[self.name] = self
 
-    def attrList(self, html):
+    def attr_list(self, html):
         if self.deps:
             assert len(self.deps) == 1
             dep = self.deps[0]
@@ -87,68 +87,68 @@ class TypeDoc(Doc):
             html.add('<strong><a href="#{name}">{name}</a></strong>',
                      name=self.name)
 
-    def toJson(self, html, pad):
+    def to_json(self, html, pad):
         if self.deps:
             assert len(self.deps) == 1
             dep = self.deps[0]
-            dep.toJson(html, pad)
+            dep.to_json(html, pad)
             html.add(' <span class="opt">/* {0} */</span>', self.name)
         else:
             html.add('<var>{0}</var>', self.name)
 
 
 class EitherDoc(TypeDoc):
-    def attrList(self, html):
+    def attr_list(self, html):
         html.add("{0}\n", self.desc)
         html.add('<ul><em>Subtypes:</em>\n')
-        for st in self.deps:
+        for val_type in self.deps:
             html.add('<li>')
-            st.attrList(html)
+            val_type.attr_list(html)
             html.add('</li>\n')
         html.add('</ul>\n')
 
-    def toJson(self, html, pad):
+    def to_json(self, html, pad):
         html.add('Either(')
-        for st in self.deps:
-            st.toJson(html, pad)
+        for val_type in self.deps:
+            val_type.to_json(html, pad)
             html.add(', ')
         html.back(2).add(')')
 
 
 class ListDoc(TypeDoc):
-    def attrList(self, html):
-        valT, = self.deps
+    def attr_list(self, html):
+        val_type, = self.deps
         html.add('<ul>Element type: ')
-        valT.attrList(html)
+        val_type.attr_list(html)
         html.add('\n</li></ul>\n')
 
-    def toJson(self, html, pad):
-        valT, = self.deps
+    def to_json(self, html, pad):
+        val_type, = self.deps
         html.add('[')
-        valT.toJson(html, pad)
+        val_type.to_json(html, pad)
         html.add(', ...]')
 
 
 class DictDoc(TypeDoc):
-    def attrList(self, html):
-        keySt, valSt = self.deps
+    def attr_list(self, html):
+        key_type, val_type = self.deps
         html.add("{0}\n", self.desc)
         html.add('<ul>\n')
         html.add('<li>Key type: ')
-        keySt.attrList(html)
+        key_type.attr_list(html)
         html.add('</li>\n')
         html.add('<li>Value type: ')
-        valSt.attrList(html)
+        val_type.attr_list(html)
         html.add('</li>\n')
         html.add('</ul>\n')
 
-    def toJson(self, html, pad):
-        keySt, valSt = self.deps
+    def to_json(self, html, pad):
+        key_type, val_type = self.deps
         html.add('{{\n')
         html.add('{pad}"', pad=' ' * (pad + 2))
-        keySt.toJson(html, pad + 2)
+        key_type.to_json(html, pad + 2)
         html.add('": ')
-        valSt.toJson(html, pad + 2)
+        val_type.to_json(html, pad + 2)
         html.add(', ...\n')
         html.add('{pad}}}', pad=' ' * (pad))
 
@@ -158,36 +158,36 @@ class JsonObjectDoc(Doc):
         super(JsonObjectDoc, self).__init__(name, desc)
         self.attrs = attrs
 
-    def attrList(self, html):
+    def attr_list(self, html):
         html.add('<strong>{name}</strong>', name=self.name)
-        self._attrList(html)
+        self._attr_list(html)
 
-    def _attrList(self, html):
+    def _attr_list(self, html):
         html.add('<ul>\n')
-        for attrName, (attrType, attrDesc) in sorted(self.attrs.items()):
-            html.add('<li class="attribute">{0}: ', attrName)
-            if type(attrType) is TypeDoc:
+        for attr_name, (attr_type, attr_desc) in sorted(self.attrs.items()):
+            html.add('<li class="attribute">{0}: ', attr_name)
+            if type(attr_type) is TypeDoc:
                 html.add(' (')
-                attrType.attrList(html)
+                attr_type.attr_list(html)
                 html.add(')')
-                if attrDesc:
-                    html.add(': {0}', attrDesc)
+                if attr_desc:
+                    html.add(': {0}', attr_desc)
             else:
-                if attrDesc:
-                    html.add(' {0}', attrDesc)
-                if type(attrType) is JsonObjectDoc:
-                    attrType._attrList(html)
+                if attr_desc:
+                    html.add(' {0}', attr_desc)
+                if type(attr_type) is JsonObjectDoc:
+                    attr_type._attr_list(html)
                 else:
-                    attrType.attrList(html)
+                    attr_type.attr_list(html)
 
             html.add('</li>')
         html.add('</ul>\n')
 
-    def toJson(self, html, pad):
+    def to_json(self, html, pad):
         html.add('{{\n')
-        for attrName, (attrType, attrDesc) in sorted(self.attrs.items()):
-            html.add('{pad}"{attr}": ', pad=' ' * (pad + 2), attr=attrName)
-            attrType.toJson(html, pad + 2)
+        for attr_name, (attr_type, attr_desc) in sorted(self.attrs.items()):
+            html.add('{pad}"{attr}": ', pad=' ' * (pad + 2), attr=attr_name)
+            attr_type.to_json(html, pad + 2)
             html.add(',\n')
         html.back(2).add('\n{pad}}}', pad=' ' * pad)
 
@@ -227,7 +227,7 @@ class ApiCallDoc(Doc):
         html.add('Content-Length: <var>LENGTH</var>\r\n')
         html.add('\r\n')
         if self.json:
-            self.json.toJson(html, 0)
+            self.json.to_json(html, 0)
         html.add('</code></pre>')
         html.add("</li>")
 
@@ -237,9 +237,9 @@ class ApiCallDoc(Doc):
         html.add('<li>Arguments: ')
         if self.args:
             html.add('\n<ul>\n')
-            for argName, argType in sorted(self.args.items()):
+            for arg_name, arg_type in sorted(self.args.items()):
                 html.add('<li>{0} - <strong>{1}</strong>: <em>{2}</em></li>\n',
-                         argName, argType.name, argType.desc)
+                         arg_name, arg_type.name, arg_type.desc)
             html.add('</ul>\n')
         else:
             html.add('<em>No arguments</em>')
@@ -247,7 +247,7 @@ class ApiCallDoc(Doc):
 
         html.add('<li>JSON: ')
         if self.json:
-            self.json.attrList(html)
+            self.json.attr_list(html)
         else:
             html.add('<em>Either no JSON or {{}}</em>')
         html.add('</li>\n')
@@ -267,13 +267,13 @@ class ApiCallDoc(Doc):
         html.add('{{\n')
         html.add('  "generation": <var>generation</var>,\n')
         html.add('  "data": ')
-        self.returns.toJson(html, 2)
+        self.returns.to_json(html, 2)
         html.add('\n}}\n')
         html.add('</code></pre>')
         html.add('</li>\n')
 
         html.add('<li>Response Data:\n')
-        self.returns.attrList(html)
+        self.returns.attr_list(html)
         html.add('</li>\n')
         html.add('</ul>\n')
         html.add('</li>\n')
@@ -283,39 +283,39 @@ class ApiCallDoc(Doc):
 
 class DocSection(Doc):
     """ Description for API and API sections"""
-    def buildDesc(self, html):
-        currentParagraph = []
-        isCode = False
-        preSpaces = 0
+    def build_desc(self, html):
+        current_para = []
+        is_code = False
+        pre_spaces = 0
         for line in self.desc.split('\n'):
-            if isCode:
+            if is_code:
                 if line and line.strip() == '```':
                     html.add('</code></pre>\n')
-                    isCode = False
+                    is_code = False
                 else:
-                    html.add('{0}\n', line[preSpaces:])
+                    html.add('{0}\n', line[pre_spaces:])
             else:
                 if line and line.strip() == '```':
-                    html.add('<p>{0}</p>\n', "\n".join(currentParagraph))
-                    currentParagraph = []
+                    html.add('<p>{0}</p>\n', "\n".join(current_para))
+                    current_para = []
                     html.add('<pre class="code"><code>')
-                    preSpaces = len(line) - 3
-                    isCode = True
+                    pre_spaces = len(line) - 3
+                    is_code = True
                 elif line.strip():
-                    currentParagraph.append(line.strip())
+                    current_para.append(line.strip())
                 else:
-                    html.add('<p>{0}</p>\n', "\n".join(currentParagraph))
-                    currentParagraph = []
-        if currentParagraph:
-            html.add('<p>{0}</p>\n', "\n".join(currentParagraph))
-            currentParagraph = []
+                    html.add('<p>{0}</p>\n', "\n".join(current_para))
+                    current_para = []
+        if current_para:
+            html.add('<p>{0}</p>\n', "\n".join(current_para))
+            current_para = []
 
 
 class ApiSectionDoc(DocSection):
     """ Doc. section for related API calls """
     def __init__(self, name, desc):
         super(ApiSectionDoc, self).__init__(name, desc)
-        self.id = name.replace(' ', '-')
+        self.id = name.replace(' ', '-')  # pylint: disable=invalid-name
         self.calls = []
 
     def index(self, html):
@@ -327,7 +327,7 @@ class ApiSectionDoc(DocSection):
 
     def build(self, html):
         html.add('<h2 id="{0}">{1}</h2>\n', self.id, self.name)
-        self.buildDesc(html)
+        self.build_desc(html)
 
         for call in self.calls:
             call.build(html)
@@ -338,18 +338,18 @@ class ApiDoc(DocSection):
     def __init__(self, title, desc):
         super(ApiDoc, self).__init__(title, desc)
         self.sections = []
-        self.currentSection = None
+        self.current_sect = None
 
-    def addSection(self, name, desc):
-        self.currentSection = ApiSectionDoc(name, desc)
-        self.sections.append(self.currentSection)
+    def add_section(self, name, desc):
+        self.current_sect = ApiSectionDoc(name, desc)
+        self.sections.append(self.current_sect)
 
-    def addCall(self, call):
-        self.currentSection.calls.append(call)
+    def add_call(self, call):
+        self.current_sect.calls.append(call)
 
     def build(self, html):
         html.add("<h1>{0}</h1>\n", self.name)
-        self.buildDesc(html)
+        self.build_desc(html)
 
         html.add('<ol>\n')
         for sect in self.sections:
@@ -360,4 +360,4 @@ class ApiDoc(DocSection):
         for sect in self.sections:
             sect.build(html)
 
-        TypeDoc.buildTypes(html)
+        TypeDoc.build_types(html)
