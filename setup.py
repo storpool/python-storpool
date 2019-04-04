@@ -81,5 +81,11 @@ setuptools.setup(
 		'build_py':	BuildPyCommand,
 	},
 
+    entry_points = {
+        'console_scripts': [
+            'storpool_req=storpool.spreq:main',
+        ],
+    },
+
 	data_files = [('/usr/share/doc/python-storpool', ['storpool/apidoc.html'])],
 )
