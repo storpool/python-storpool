@@ -1,5 +1,5 @@
-#
-#-
+""" Distribution definitions for the StorPool Python bindings. """
+
 # Copyright (c) 2014 - 2018  StorPool.
 # All rights reserved.
 #
@@ -18,74 +18,81 @@
 
 from distutils import cmd
 import os
-import setuptools
-from setuptools.command import build_py
 import subprocess
 import sys
 
+import setuptools
+
+from setuptools.command import build_py
+
+
 class APIDocCommand(cmd.Command):
-	"""A custom command to generate the StorPool API documentation."""
+    """A custom command to generate the StorPool API documentation."""
 
-	description = 'Generate the StorPool API documentation.'
-	user_options = []
+    description = 'Generate the StorPool API documentation.'
+    user_options = []
 
-	def initialize_options(self):
-		pass
+    def initialize_options(self):
+        """ No options to initialize. """
 
-	def finalize_options(self):
-		pass
+    def finalize_options(self):
+        """ No options to finalize. """
 
-	def run(self):
-		command = (sys.executable, '-m', 'storpool.spdocbuild')
-		apifile = 'storpool/apidoc.html'
+    def run(self):
+        # pylint: disable=no-self-use
+        """ Autogenerate the API documentation reference. """
+        command = (sys.executable, '-m', 'storpool.spdocbuild')
+        apifile = 'storpool/apidoc.html'
 
-		with open(apifile, 'w') as apidoc:
-			try:
-				subprocess.check_call(command, stdout=apidoc)
-			except subprocess.CalledProcessError:
-				try:
-					os.unlink(apifile)
-				except OSError as e:
-					if e.errno != 2:
-						raise
-				raise
+        with open(apifile, 'w') as apidoc:
+            try:
+                subprocess.check_call(command, stdout=apidoc)
+            except subprocess.CalledProcessError:
+                try:
+                    os.unlink(apifile)
+                except OSError as exc:
+                    if exc.errno != 2:
+                        raise
+                raise
+
 
 class BuildPyCommand(build_py.build_py):
-	"""Custom build command, also invoking 'apidoc'."""
-	
-	def run(self):
-		self.run_command('apidoc')
-		build_py.build_py.run(self)
+    """Custom build command, also invoking 'apidoc'."""
+
+    def run(self):
+        self.run_command('apidoc')
+        build_py.build_py.run(self)
+
 
 setuptools.setup(
-	name = 'storpool',
-	version = '4.1.0',
-	packages = ('storpool',),
-	namespace_packages = ('storpool',),
+    name='storpool',
+    version='4.1.0',
+    packages=('storpool',),
+    namespace_packages=('storpool',),
 
-	author = 'Peter Pentchev',
-	author_email = 'openstack-dev@storpool.com',
-	description = 'Bindings for the StorPool distributed storage API',
-	license = 'Apache License 2.0',
-	keywords = 'storpool StorPool',
-	url = 'http://www.storpool.com/',
+    author='Peter Pentchev',
+    author_email='openstack-dev@storpool.com',
+    description='Bindings for the StorPool distributed storage API',
+    license='Apache License 2.0',
+    keywords='storpool StorPool',
+    url='http://www.storpool.com/',
 
-	install_requires = [
-		'feature_check',
-	],
+    install_requires=[
+        'feature_check',
+    ],
 
-	zip_safe = True,
+    zip_safe=True,
 
-	cmdclass = {
-		'apidoc':	APIDocCommand,
-		'build_py':	BuildPyCommand,
-	},
+    cmdclass={
+        'apidoc':    APIDocCommand,
+        'build_py':    BuildPyCommand,
+    },
 
-    entry_points = {
+    entry_points={
         'console_scripts': [
             'storpool_req=storpool.spreq:main',
         ],
     },
 
-	data_files = [('/usr/share/doc/python-storpool', ['storpool/apidoc.html'])],
+    data_files=[('/usr/share/doc/python-storpool', ['storpool/apidoc.html'])],
 )
