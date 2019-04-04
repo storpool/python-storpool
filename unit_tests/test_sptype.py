@@ -157,10 +157,10 @@ class TestSpType(unittest.TestCase):
     def test_object(self, _name, dtype, args, exp, exp_error):
         """ Test with some object types defined in storpool.sptypes. """
         if exp_error is None:
-            res = [obj.toJson() for obj in dtype.handleVal(args)]
+            res = [obj.to_json() for obj in dtype.handleVal(args)]
             assert res == exp
         else:
             with pytest.raises(exp_error) as err:
                 dtype.handleVal(args)
-            res = [obj.toJson() for obj in err.value.partial]
+            res = [obj.to_json() for obj in err.value.partial]
             assert res == exp

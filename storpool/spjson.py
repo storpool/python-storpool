@@ -54,7 +54,7 @@ def dumps(obj):
 class JsonEncoder(js.JSONEncoder):
     def default(self, o):
         if isinstance(o, JsonObjectImpl):
-            return o.toJson()
+            return o.to_json()
         elif isinstance(o, set):
             return list(o)
         else:
@@ -106,12 +106,15 @@ class JsonObjectImpl(object):
 
         self.__jsonAttrs__[attr] = self.__jsonAttrDefs__[attr].handleVal(value)
 
-    def toJson(self):
+    def to_json(self):
         return dict(
             (attr, getattr(self, attr)) for attr in self.__jsonAttrDefs__)
 
     def __iter__(self):
-        return six.iteritems(self.toJson())
+        return six.iteritems(self.to_json())
 
-    _asdict = toJson
-    __str__ = __repr__ = lambda self: str(self.toJson())
+    # obsolete, will be deprecated and removed
+    toJson = to_json
+
+    _asdict = to_json
+    __str__ = __repr__ = lambda self: str(self.to_json())

@@ -290,18 +290,18 @@ class TestAPI(unittest.TestCase):
         assert sorted(res.keys()) == [616, 676]
 
         assert isinstance(res[616], sptypes.DownDiskSummary)
-        assert res[616].toJson()['id'] == 616
+        assert res[616].to_json()['id'] == 616
         assert not res[616].up
         assert not hasattr(res[616], 'agCount')
-        assert 'aggregateScore' not in res[616].toJson()
+        assert 'aggregateScore' not in res[616].to_json()
 
         assert isinstance(res[676], sptypes.UpDiskSummary)
         assert res[676].id == 676
         assert res[676].up
-        assert res[676].toJson()['serverId'] == 6
+        assert res[676].to_json()['serverId'] == 6
         assert res[676].agCount == 18
         assert isinstance(res[676].aggregateScore, sptypes.DiskAggregateScores)
-        assert isinstance(res[676].aggregateScore.toJson()['entries'], int)
+        assert isinstance(res[676].aggregateScore.to_json()['entries'], int)
 
     @mock.patch('six.moves.http_client.HTTPConnection', spec=['__call__'])
     def test_api_error(self, http):
