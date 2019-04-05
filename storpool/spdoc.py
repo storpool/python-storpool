@@ -21,6 +21,8 @@ import six
 
 
 class Html(object):
+    """ A buffer for building up an HTML document. """
+
     escape_table = {
         "&": "&amp;",
         '"': "&quot;",
@@ -30,19 +32,23 @@ class Html(object):
     }
 
     def __init__(self):
+        """ Initialize an Html object with an empty buffer. """
         self.buf = ""
 
     def add(self, fmt, *args, **kwargs):
+        """ Escape the arguments, format the string, add it to the buffer. """
         args = map(self.escape, args)
         kwargs = dict((k, self.escape(v)) for k, v in six.iteritems(kwargs))
         self.buf += fmt.format(*args, **kwargs)
         return self
 
     def back(self, count):
+        """ Cut the specified number of characters off the end. """
         self.buf = self.buf[:-count]
         return self
 
     def escape(self, text):
+        """ Escape the HTML entities in a string. """
         return "".join(self.escape_table.get(c, c) for c in text)
 
     def __str__(self):
@@ -50,17 +56,36 @@ class Html(object):
 
 
 class Doc(object):
+    # pylint: disable=too-few-public-methods
     """ Base documentation entity class """
     def __init__(self, name, desc):
         self.name = name.strip()
         self.desc = desc.strip()
 
 
-class TypeDoc(Doc):
+class ItemDoc(Doc):
+    """ Base class for simple entities, e.g. types. """
+
+    def attr_list(self, _html):
+        """ Build a foo. """
+        raise NotImplementedError(
+            'The {tname}.attr_list() method must be overridden'
+            .format(tname=type(self).__name__))
+
+    def to_json(self, _html, _pad):
+        """ Build a bar. """
+        raise NotImplementedError(
+            'The {tname}.to_json() method must be overridden'
+            .format(tname=type(self).__name__))
+
+
+class TypeDoc(ItemDoc):
+    """ Documentation for a data type, primitive or StorPool-defined. """
     types = {}
 
     @classmethod
     def build_types(cls, html):
+        """ Build the global section listing all the data types. """
         html.add('<h2 id="types">Data Types</h2>\n')
         html.add('<table>\n')
         for name, doc in sorted(TypeDoc.types.items()):
@@ -69,9 +94,9 @@ class TypeDoc(Doc):
                      n=name, d=doc.desc)
         html.add('</table>\n')
 
-    def __init__(self, name, desc, deps=[]):
+    def __init__(self, name, desc, deps=None):
         super(TypeDoc, self).__init__(name, desc)
-        self.deps = deps
+        self.deps = deps if deps is not None else []
 
         if not self.deps and self.name not in TypeDoc.types:
             TypeDoc.types[self.name] = self
@@ -98,6 +123,8 @@ class TypeDoc(Doc):
 
 
 class EitherDoc(TypeDoc):
+    """ Documentation for a union type. """
+
     def attr_list(self, html):
         html.add("{0}\n", self.desc)
         html.add('<ul><em>Subtypes:</em>\n')
@@ -116,6 +143,8 @@ class EitherDoc(TypeDoc):
 
 
 class ListDoc(TypeDoc):
+    """ Documentation for a list type. """
+
     def attr_list(self, html):
         val_type, = self.deps
         html.add('<ul>Element type: ')
@@ -130,17 +159,20 @@ class ListDoc(TypeDoc):
 
 
 class DictDoc(TypeDoc):
+    """ Documentation for a dictionary type. """
+
     def attr_list(self, html):
         key_type, val_type = self.deps
-        html.add("{0}\n", self.desc)
-        html.add('<ul>\n')
-        html.add('<li>Key type: ')
+        html.add('''{desc}
+<ul>
+<li>Key type: ''', desc=self.desc)
         key_type.attr_list(html)
-        html.add('</li>\n')
-        html.add('<li>Value type: ')
+        html.add('''</li>
+<li>Value type: ''')
         val_type.attr_list(html)
-        html.add('</li>\n')
-        html.add('</ul>\n')
+        html.add('''</li>
+</ul>
+''')
 
     def to_json(self, html, pad):
         key_type, val_type = self.deps
@@ -153,7 +185,9 @@ class DictDoc(TypeDoc):
         html.add('{pad}}}', pad=' ' * (pad))
 
 
-class JsonObjectDoc(Doc):
+class JsonObjectDoc(ItemDoc):
+    """ Documentation for a StorPool type derived from JsonObject. """
+
     def __init__(self, name, desc, attrs):
         super(JsonObjectDoc, self).__init__(name, desc)
         self.attrs = attrs
@@ -166,6 +200,7 @@ class JsonObjectDoc(Doc):
         html.add('<ul>\n')
         for attr_name, (attr_type, attr_desc) in sorted(self.attrs.items()):
             html.add('<li class="attribute">{0}: ', attr_name)
+            # pylint: disable=unidiomatic-typecheck
             if type(attr_type) is TypeDoc:
                 html.add(' (')
                 attr_type.attr_list(html)
@@ -175,7 +210,9 @@ class JsonObjectDoc(Doc):
             else:
                 if attr_desc:
                     html.add(' {0}', attr_desc)
-                if type(attr_type) is JsonObjectDoc:
+                if isinstance(attr_type, JsonObjectDoc):
+                    # pylint: disable=protected-access
+                    # (this is our own class)
                     attr_type._attr_list(html)
                 else:
                     attr_type.attr_list(html)
@@ -185,7 +222,7 @@ class JsonObjectDoc(Doc):
 
     def to_json(self, html, pad):
         html.add('{{\n')
-        for attr_name, (attr_type, attr_desc) in sorted(self.attrs.items()):
+        for attr_name, (attr_type, _attr_desc) in sorted(self.attrs.items()):
             html.add('{pad}"{attr}": ', pad=' ' * (pad + 2), attr=attr_name)
             attr_type.to_json(html, pad + 2)
             html.add(',\n')
@@ -193,7 +230,11 @@ class JsonObjectDoc(Doc):
 
 
 class ApiCallDoc(Doc):
+    """ Documentation for an API section full of calls. """
+
     def __init__(self, name, desc, method, path, args, json, returns):
+        # pylint: disable=too-many-arguments
+        """ Initialize an ApiCallDoc object with the specified parameters. """
         if not name:
             name = "XXX Missing title."
 
@@ -206,33 +247,31 @@ class ApiCallDoc(Doc):
         self.query = path.split("/")[3]
 
     def index(self, html):
+        """ Build an API call index entry. """
         html.add('<li><a href="#{query}">{name}</a></li>\n',
                  name=self.name, query=self.query)
 
     def build(self, html):
+        """ Build an API call description - a sample request and response. """
         html.add('<h3 id="{query}">{name} (<strong>{query}</strong>)</h3>\n',
                  name=self.name, query=self.query)
         if self.desc:
             html.add("<p>{0}</p>\n", self.desc)
 
-        html.add('<ol>')
-        html.add('<li>Request:\n')
-        html.add('<ul>')
-        html.add('<li>Example HTTP Request:\n')
-        html.add('<pre><code>')
-        html.add('{method} {path} HTTP/1.0\r\n',
-                 method=self.method, path=self.path)
-        html.add('Host: <var>SP_API_HOST</var>:<var>SP_API_PORT</var>\r\n')
-        html.add('Authorization: Storpool v1:<var>SP_AUTH_TOKEN</var>\r\n')
-        html.add('Content-Length: <var>LENGTH</var>\r\n')
-        html.add('\r\n')
+        html.add('''<ol>
+<li>Request:
+<ul><li>Example HTTP Request:
+<pre><code>{method} {path} HTTP/1.0
+Host: <var>SP_API_HOST</var>:<var>SP_API_PORT</var>
+Authorization: Storpool v1:<var>SP_AUTH_TOKEN</var>
+Content-Length: <var>LENGTH</var>
+''', method=self.method, path=self.path)
         if self.json:
             self.json.to_json(html, 0)
-        html.add('</code></pre>')
-        html.add("</li>")
-
-        html.add('<li>Method: <em>{method}</em></li>\n', method=self.method)
-        html.add('<li>Path: <em>{path}</em></li>\n', path=self.path)
+        html.add('''</code></pre></li>
+<li>Method: <em>{method}</em></li>
+<li>Path: <em>{path}</em></li>
+''', method=self.method, path=self.path)
 
         html.add('<li>Arguments: ')
         if self.args:
@@ -250,40 +289,43 @@ class ApiCallDoc(Doc):
             self.json.attr_list(html)
         else:
             html.add('<em>Either no JSON or {{}}</em>')
-        html.add('</li>\n')
-        html.add('</ul>\n')
-        html.add('</li>\n')
+        html.add('''</li>
+</ul>
+</li>''')
 
-        html.add('<li>Response:\n')
-        html.add('<ul>\n')
-        html.add('<li>Example HTTP Response:\n')
-        html.add('<pre><code>')
-        html.add('HTTP/1.0 200 OK\r\n')
-        html.add('Connection: close\r\n')
-        html.add('Content-Type: application/json\r\n')
-        html.add('Cache-control: private\r\n')
-        html.add('Content-Length: <var>LENGTH</var>\r\n')
-        html.add('\r\n')
-        html.add('{{\n')
-        html.add('  "generation": <var>generation</var>,\n')
-        html.add('  "data": ')
+        html.add('''<li>Response:
+<ul>
+<li>Example HTTP Response:
+<pre><code>HTTP/1.0 200 OK
+Connection: close
+Content-Type: application/json
+Cache-control: private
+Content-Length: <var>LENGTH</var>
+
+{{
+  "generation": <var>generation</var>,
+  "data": ''')
         self.returns.to_json(html, 2)
-        html.add('\n}}\n')
-        html.add('</code></pre>')
-        html.add('</li>\n')
+        html.add('''
+}}
+</code></pre></li>
+''')
 
         html.add('<li>Response Data:\n')
         self.returns.attr_list(html)
-        html.add('</li>\n')
-        html.add('</ul>\n')
-        html.add('</li>\n')
-
-        html.add('</ol>\n')
+        html.add('''</li>
+</ul>
+</li>
+</ol>
+''')
 
 
 class DocSection(Doc):
+    # pylint: disable=too-few-public-methods
     """ Description for API and API sections"""
     def build_desc(self, html):
+        """ Build an API section's description, formatting any code samples
+        appropriately. """
         current_para = []
         is_code = False
         pre_spaces = 0
@@ -314,11 +356,14 @@ class DocSection(Doc):
 class ApiSectionDoc(DocSection):
     """ Doc. section for related API calls """
     def __init__(self, name, desc):
+        """ Initialize an ApiSectionDoc object with the specified name and
+        description. """
         super(ApiSectionDoc, self).__init__(name, desc)
         self.id = name.replace(' ', '-')  # pylint: disable=invalid-name
         self.calls = []
 
     def index(self, html):
+        """ Build an index entry for the section and the calls within it. """
         html.add('<li><a href="#{0}">{1}</a></li>\n', self.id, self.name)
         html.add('<ol>\n')
         for call in self.calls:
@@ -326,6 +371,7 @@ class ApiSectionDoc(DocSection):
         html.add('</ol>\n')
 
     def build(self, html):
+        """ Build a section documentation: the description and the calls. """
         html.add('<h2 id="{0}">{1}</h2>\n', self.id, self.name)
         self.build_desc(html)
 
@@ -336,18 +382,23 @@ class ApiSectionDoc(DocSection):
 class ApiDoc(DocSection):
     """ API documentation holder """
     def __init__(self, title, desc):
+        """ Initialize the ApiDoc object with the specified title and
+        top-level description. """
         super(ApiDoc, self).__init__(title, desc)
         self.sections = []
         self.current_sect = None
 
     def add_section(self, name, desc):
+        """ Add a section to the API documentation. """
         self.current_sect = ApiSectionDoc(name, desc)
         self.sections.append(self.current_sect)
 
     def add_call(self, call):
+        """ Add an API call's documentation to the current section. """
         self.current_sect.calls.append(call)
 
     def build(self, html):
+        """ Build the full API documentation: sections, types, etc. """
         html.add("<h1>{0}</h1>\n", self.name)
         self.build_desc(html)
 
