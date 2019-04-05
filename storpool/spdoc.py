@@ -216,7 +216,7 @@ class ApiCallDoc(Doc):
             html.add("<p>{0}</p>\n", self.desc)
 
         html.add('<ol>')
-        html.add('<li>Request:\n', query=self.path.split("/")[3])
+        html.add('<li>Request:\n')
         html.add('<ul>')
         html.add('<li>Example HTTP Request:\n')
         html.add('<pre><code>')
