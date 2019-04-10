@@ -1,3 +1,4 @@
+""" Low-level helpers for the StorPool JsonObject implementation. """
 #
 # Copyright (c) 2014 - 2019  StorPool.
 # All rights reserved.
@@ -33,62 +34,75 @@ except ImportError:
 from . import spcatch
 
 
-sort_keys = False
-indent = None
-separators = (',', ':')
+SORT_KEYS = False
+INDENT = None
+SEPARATORS = (',', ':')
 
-load = js.load
-loads = js.loads
+load = js.load  # pylint: disable=invalid-name
+loads = js.loads  # pylint: disable=invalid-name
 
 
-def dump(obj, fp):
-    return js.dump(obj, fp, cls=JsonEncoder, sort_keys=sort_keys,
-                   indent=indent, separators=separators)
+def dump(obj, filep):
+    """ Serialize an object with reasonable default settings. """
+    return js.dump(obj, filep, cls=JsonEncoder, sort_keys=SORT_KEYS,
+                   indent=INDENT, separators=SEPARATORS)
 
 
 def dumps(obj):
-    return js.dumps(obj, cls=JsonEncoder, sort_keys=sort_keys,
-                    indent=indent, separators=separators)
+    """ Serialize an object to a string with reasonable default settings. """
+    return js.dumps(obj, cls=JsonEncoder, sort_keys=SORT_KEYS,
+                    indent=INDENT, separators=SEPARATORS)
 
 
 class JsonEncoder(js.JSONEncoder):
+    """ Help serialize a JsonObject instance. """
+
     def default(self, o):
+        """ Invoke a suitable serialization function. """
+        # pylint: disable=method-hidden
+        # (this is by design; see json.JSONEncoder.default())
         if isinstance(o, JsonObjectImpl):
             return o.to_json()
-        elif isinstance(o, set):
+        if isinstance(o, set):
             return list(o)
-        else:
-            return super(JsonEncoder, self).default(o)
+        return super(JsonEncoder, self).default(o)
 
 
 class JsonObjectImpl(object):
-    def __new__(cls, json={}, **kwargs):
+    """ Base class for a serializable value object; see JsonObject. """
+
+    def __new__(cls, json=None, **kwargs):
+        """ Construct a value object as per its __jsonAttrDefs__. """
+
         if isinstance(json, cls):
             assert not kwargs, \
                 "Unsupported update on already contructed object"
             return json
-        else:
-            j = dict(json)
-            j.update(kwargs)
 
-            self = super(JsonObjectImpl, cls).__new__(cls)
-            object.__setattr__(self, '__jsonAttrs__', {})
+        j = dict(json) if json is not None else {}
+        j.update(kwargs)
 
-            exc = None
-            for attr, attrDef in six.iteritems(self.__jsonAttrDefs__):
-                data = []
-                exc = spcatch.sp_catch(
-                    lambda tx: data.append(tx),
-                    lambda: attrDef.handleVal(j[attr]) if attr in j
-                    else attrDef.defaultVal(),
-                    exc)
-                if data:
-                    self.__jsonAttrs__[attr] = data[0]
-                else:
-                    self.__jsonAttrs__[attr] = None
-            spcatch.sp_caught(exc, self.__class__.__name__, self)
+        self = super(JsonObjectImpl, cls).__new__(cls)
+        object.__setattr__(self, '__jsonAttrs__', {})
 
-            return self
+        exc = None
+        for attr, attr_def in six.iteritems(self.__jsonAttrDefs__):
+            data = []
+            # pylint: disable=cell-var-from-loop
+            # (the "handle" and "func" arguments are always
+            #  evaluated immediately, never deferred)
+            exc = spcatch.sp_catch(
+                data.append,
+                lambda: attr_def.handleVal(j[attr]) if attr in j
+                else attr_def.defaultVal(),
+                exc)
+            if data:
+                self.__jsonAttrs__[attr] = data[0]
+            else:
+                self.__jsonAttrs__[attr] = None
+        spcatch.sp_caught(exc, self.__class__.__name__, self)
+
+        return self
 
     def __getattr__(self, attr):
         if attr not in self.__jsonAttrs__:
@@ -107,6 +121,7 @@ class JsonObjectImpl(object):
         self.__jsonAttrs__[attr] = self.__jsonAttrDefs__[attr].handleVal(value)
 
     def to_json(self):
+        """ Recursively store the member fields into a dictionary. """
         return dict(
             (attr, getattr(self, attr)) for attr in self.__jsonAttrDefs__)
 
