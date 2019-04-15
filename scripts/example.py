@@ -1,5 +1,4 @@
 #
-#-
 # Copyright (c) 2014  StorPool.
 # All rights reserved.
 #
@@ -16,43 +15,55 @@
 # limitations under the License.
 #
 ''' Simple StorPool API example script '''
+
+from __future__ import print_function
+
 from os import environ
 
-from storpool.spcatch import InvalidArgumentError
-from storpool.sputils import GB
-from storpool.spapi import Api, ApiError
-from storpool.sptypes import VolumeCreateDesc
+from storpool import spapi, spcatch, sptypes, sputils
 
 
-api = Api(
-		host=environ.get('SP_API_HTTP_HOST', "127.0.0.1"),
-		port=environ.get('SP_API_HTTP_PORT', 80),
-		auth=environ.get('SP_AUTH_TOKEN', "")
-	)
+api = spapi.Api(
+    host=environ.get('SP_API_HTTP_HOST', "127.0.0.1"),
+    port=environ.get('SP_API_HTTP_PORT', 80),
+    auth=environ.get('SP_AUTH_TOKEN', "")
+)
 
 
 for diskId, disk in api.disksList().iteritems():
-	assert disk.id == diskId
-	print "Disk {disk.id:3}: serverId={disk.serverId}, objectsCount={disk.objectsCount}".format(disk=disk)
+    assert disk.id == diskId
+    print("Disk {disk.id:3}: serverId={disk.serverId}, "
+          "objectsCount={disk.objectsCount}"
+          .format(disk=disk))
 
 for pgName, pgDesc in api.placementGroupsList().iteritems():
-	assert pgName == pgDesc.name
-	print "Placement group {pg.name}: servers={pg.servers}, disks={pg.disks}".format(pg=pgDesc)
+    assert pgName == pgDesc.name
+    print("Placement group {pg.name}: servers={pg.servers}, disks={pg.disks}"
+          .format(pg=pgDesc))
 
 for volume in api.volumesList():
-	print "Volume {volume.name}: size={volume.size}, replication={volume.replication}, objectsCount={volume.objectsCount}".format(volume=volume)
+    print("Volume {volume.name}: size={volume.size}, "
+          "replication={volume.replication}, "
+          "objectsCount={volume.objectsCount}"
+          .format(volume=volume))
 
 
-api.volumeCreate({ 'name': 'myTestVol1', 'size': 10 * GB, 'replication': 2, 'placeAll': 'hdd', 'placeTail': 'ssd' })
+api.volumeCreate({
+    'name': 'myTestVol1',
+    'size': 10 * sputils.GB,
+    'replication': 2,
+    'placeAll': 'hdd',
+    'placeTail': 'ssd',
+})
 api.volumeDelete('myTestVol1')
 
-desc = VolumeCreateDesc()
+desc = sptypes.VolumeCreateDesc()
 desc.name = 'myTestVol2'
 try:
-	desc.size = 1234
-except InvalidArgumentError as e:
-	print "Invalid argument:", e
-	desc.size = 10 * GB
+    desc.size = 1234
+except spcatch.InvalidArgumentError as e:
+    print("Invalid argument:", e)
+    desc.size = 10 * sputils.GB
 desc.replication = 2
 desc.placeAll = 'hdd'
 desc.placeTail = 'ssd'
@@ -72,8 +83,6 @@ assert vol.placeTail == desc.placeTail
 api.volumeDelete(desc.name)
 
 try:
-	vols = api.volumeList(desc.name)
-except ApiError as e:
-	print "API Error:", e
-
-
+    vols = api.volumeList(desc.name)
+except spapi.ApiError as e:
+    print("API Error:", e)
