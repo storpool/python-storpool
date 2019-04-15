@@ -300,9 +300,11 @@ def scrubbing():
 
 
 def remote():
-    if not api.locationsList()['locations']:
+    locations = api.locationsList()['locations']
+    if not locations:
         print("no remote location. skipping test")
         return
+    loc = locations[0]
 
     for vol in api.volumesList():
         if not sp_name_check(vol.name):
