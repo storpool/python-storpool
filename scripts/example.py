@@ -18,10 +18,10 @@
 ''' Simple StorPool API example script '''
 from os import environ
 
-from spcatch import InvalidArgumentError
-from sputils import GB
-from spapi import Api, ApiError
-from sptypes import VolumeCreateDesc
+from storpool.spcatch import InvalidArgumentError
+from storpool.sputils import GB
+from storpool.spapi import Api, ApiError
+from storpool.sptypes import VolumeCreateDesc
 
 
 api = Api(
