@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2015 - 2016  StorPool.
+# Copyright (c) 2015 - 2019  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-"""
-Basic sanity-checks for StorPool's API python bindings
+""" Basic sanity-checks for StorPool's API python bindings.
 
 We presuppose that there is a running cluster, with at least
 THREE servers and at least ONE SSD per server.
@@ -43,10 +42,12 @@ SP_TEST_PREFIX = "sptest_"
 
 
 def sp_name(fmt, *args, **kwargs):
+    """ Format a StorPool test volume's name. """
     return SP_TEST_PREFIX + fmt.format(*args, **kwargs)
 
 
 def sp_name_check(name):
+    """ Check whether a StorPool volume was created by us. """
     return name.startswith(SP_TEST_PREFIX)
 
 
@@ -64,6 +65,7 @@ reassignHandler = [
 
 
 def reassign(data):
+    """ Pick the (round-robin) next volume reassign parameter set. """
     global reassignIndex
     handler = reassignHandler[reassignIndex]
     reassignIndex = (reassignIndex + 1) % len(reassignHandler)
@@ -71,6 +73,7 @@ def reassign(data):
 
 
 def showState():
+    """ Display the current cluster state: servers, clients, volumes, etc. """
     ss = api.servicesList()
     print("CLUSTER STATUS:", ss.clusterStatus)
     print("SERVERS:", [sId for sId in ss.servers])
@@ -85,6 +88,7 @@ def showState():
 
 
 def cleanup():
+    """ Remove any volumes, snapshots, placement groups, ... created by us. """
     for vol in api.volumesList():
         if not sp_name_check(vol.name):
             continue
@@ -129,6 +133,7 @@ def cleanup():
 
 
 def setup(no_ssd=False):
+    """ Select disks and create placement groups and templates. """
     print('- disksList()')
     disks = api.disksList().values()
     print('- placementGroup create hdd')
@@ -218,7 +223,7 @@ def setup(no_ssd=False):
 
 
 def config():
-    """ Dump Storpool cluster and policy configuration info """
+    """ Dump Storpool cluster and policy configuration info. """
     print(api.peersList())
     print(api.servicesList())
     print(api.serversListBlocked())
@@ -250,7 +255,7 @@ def config():
 
 
 def volumes():
-    """ Dump Storpool Volumes and Snapshots info """
+    """ Dump Storpool volumes and snapshots info. """
     print(api.volumesStatus())
     print(api.snapshotsSpace())
 
@@ -273,7 +278,7 @@ def volumes():
 
 
 def relocator():
-    """ Dump relocator state info """
+    """ Dump relocator state info. """
     print(api.volumeRelocatorStatus())
     print(api.volumeRelocatorDisks())
 
@@ -285,6 +290,7 @@ def relocator():
 
 
 def scrubbing():
+    """ Test the start/stop/status of the disk scrubbing subsystem. """
     diskId = list(api.disksList().values())[0].id
 
     print(api.diskScrubPause(diskId))
@@ -300,6 +306,7 @@ def scrubbing():
 
 
 def remote():
+    """ Test the export and transfer of data between StorPool clusters. """
     locations = api.locationsList()['locations']
     if not locations:
         print("no remote location. skipping test")
@@ -339,6 +346,7 @@ def remote():
 
 
 def main():
+    """ Main program: parse the command line, run the test steps. """
     parser = argparse.ArgumentParser(
         prog='sptest',
         usage='''

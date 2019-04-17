@@ -1,8 +1,5 @@
-"""
-Build the StorPool API documentation.
-"""
 #
-# Copyright (c) 2014 - 2018  StorPool.
+# Copyright (c) 2014 - 2019  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +13,8 @@ Build the StorPool API documentation.
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+""" Build the StorPool API documentation.  """
 
 from __future__ import print_function
 

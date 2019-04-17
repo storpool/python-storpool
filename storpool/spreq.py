@@ -1,3 +1,19 @@
+#
+# Copyright (c) 2019  StorPool.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 """ A non-interactive command-line interface to the StorPool API. """
 
 from __future__ import print_function
@@ -27,10 +43,8 @@ def deep_to_json(data):
 
 
 def from_config_with_overrides(**kwargs):
-    """
-    Create an API object with access credentials taken from the StorPool
-    configuration files and overridden by environment variables.
-    """
+    """ Create an API object with access credentials taken from the StorPool
+    configuration files and overridden by environment variables. """
     cfg = spconfig.SPConfig()
     data = {}
     for name in ('SP_API_HTTP_HOST', 'SP_API_HTTP_PORT', 'SP_AUTH_TOKEN'):
@@ -46,9 +60,7 @@ def from_config_with_overrides(**kwargs):
 
 
 def err_exit(name, descr, **args):
-    """
-    Output an error in JSON form to the standard error stream and exit.
-    """
+    """ Output an error in JSON form to the standard error stream and exit. """
     err = {
         'error': {
             'transient': False,
@@ -61,11 +73,9 @@ def err_exit(name, descr, **args):
 
 
 def parse_args():
-    """
-    Parse the command-line arguments, going through some weird contortions to
-    not allow the ArgumentParser to output anything to the standard error
-    stream, since we want to report all errors in JSON form.
-    """
+    """ Parse the command-line arguments, going through some weird contortions
+    to not allow the ArgumentParser to output anything to the standard error
+    stream, since we want to report all errors in JSON form. """
     parser = argparse.ArgumentParser(
         prog='pycli',
         description='StorPool non-interactive CLI and stuff',
@@ -104,10 +114,9 @@ def parse_args():
 
 
 def get_api_method(args):
-    """
-    Find the API method with the specified name and HTTP method.
-    Validate the number of arguments passed.
-    """
+    """ Find the API method with the specified name and HTTP method.
+
+    Validate the number of arguments passed. """
     http_method = 'POST' if args.post else 'GET'
 
     try:

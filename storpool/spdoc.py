@@ -1,8 +1,5 @@
-"""
-Helper classes for creating the HTML documetation of the StorPool API.
-"""
 #
-# Copyright (c) 2014 - 2018  StorPool.
+# Copyright (c) 2014 - 2019  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +13,10 @@ Helper classes for creating the HTML documetation of the StorPool API.
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+"""
+Helper classes for creating the HTML documentation of the StorPool API.
+"""
 
 import six
 
@@ -57,7 +58,7 @@ class Html(object):
 
 class Doc(object):
     # pylint: disable=too-few-public-methods
-    """ Base documentation entity class """
+    """ Base documentation entity class. """
     def __init__(self, name, desc):
         self.name = name.strip()
         self.desc = desc.strip()
@@ -322,7 +323,8 @@ Content-Length: <var>LENGTH</var>
 
 class DocSection(Doc):
     # pylint: disable=too-few-public-methods
-    """ Description for API and API sections"""
+    """ Description for API and API sections. """
+
     def build_desc(self, html):
         """ Build an API section's description, formatting any code samples
         appropriately. """
@@ -354,7 +356,8 @@ class DocSection(Doc):
 
 
 class ApiSectionDoc(DocSection):
-    """ Doc. section for related API calls """
+    """ A documentation section for related API calls. """
+
     def __init__(self, name, desc):
         """ Initialize an ApiSectionDoc object with the specified name and
         description. """
@@ -380,7 +383,8 @@ class ApiSectionDoc(DocSection):
 
 
 class ApiDoc(DocSection):
-    """ API documentation holder """
+    """ API documentation holder. """
+
     def __init__(self, title, desc):
         """ Initialize the ApiDoc object with the specified title and
         top-level description. """

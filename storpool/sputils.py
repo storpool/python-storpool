@@ -1,3 +1,4 @@
+#
 # Copyright (c) 2014 - 2019  StorPool.
 # All rights reserved.
 #
@@ -12,6 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+""" Utility functions and constants for the StorPool API bindings. """
 
 from __future__ import print_function
 
@@ -32,12 +35,13 @@ TB = 1024 ** 4
 
 
 def pr(x):
+    """ Display a value and return it; useful for lambdas. """
     print(x)
     return x
 
 
 def pathPollWait(path, shouldExist, isLink, pollTime, maxTime):
-    ''' poll/listen for path to appear/disappear '''
+    """ Poll/listen for path to appear/disappear. """
     for i in six.moves.range(int(maxTime / pollTime)):
         pathExists = os.path.exists(path)
         if pathExists and isLink:

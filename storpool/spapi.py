@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014 - 2018  StorPool.
+# Copyright (c) 2014 - 2019  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+""" Classes for accessing the StorPool API over an HTTP connection.
+
+The Api class provides methods corresponding to the StorPool API calls.
+The most common way to initialize it is to use the Api.fromConfig()
+class method that will parse the StorPool configuration and set up
+the connection parameters; see the apidoc.html reference documentation
+for more information.
+"""
+
 import errno
 import socket as sock
 import time as time

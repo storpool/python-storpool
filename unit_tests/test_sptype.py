@@ -1,7 +1,24 @@
+#
+# Copyright (c) 2019  StorPool.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 """
 Test some basic functionality of the storpool.sptype.spType() class.
+
 It is the base of all the conversions from Python objects to JSON and
-vice versa that takes place behind the scenes in the Python bindings for
+vice versa that take place behind the scenes in the Python bindings for
 the StorPool API.
 """
 

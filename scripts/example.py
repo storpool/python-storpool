@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014  StorPool.
+# Copyright (c) 2014 - 2019  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-''' Simple StorPool API example script '''
+""" Simple StorPool API example script. """
 
 from __future__ import print_function
 

@@ -1,3 +1,4 @@
+#
 # Copyright (c) 2019  StorPool
 # All rights reserved.
 #
@@ -12,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#
 """ Return partially-constructed objects if the processing fails.
 
 This module allows the StorPool API binding classes to handle responses

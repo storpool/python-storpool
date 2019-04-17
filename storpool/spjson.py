@@ -1,4 +1,3 @@
-""" Low-level helpers for the StorPool JsonObject implementation. """
 #
 # Copyright (c) 2014 - 2019  StorPool.
 # All rights reserved.
@@ -15,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+""" Low-level helpers for the StorPool JsonObject implementation. """
 
 from __future__ import print_function
 
