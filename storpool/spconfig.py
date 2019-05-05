@@ -71,7 +71,7 @@ class SPConfig(object):
             out = out[0]
             err = False
         out = out.decode('UTF-8').replace("\\\n", "")
-        out = filter(lambda s: len(s) > 0, out.split("\n"))
+        out = [line for line in out.split('\n') if line]
 
         if wres > 0:
             if err:

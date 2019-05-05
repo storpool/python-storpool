@@ -67,14 +67,14 @@ class TestConfig(unittest.TestCase):
                 'return': ('', 'well hello there!'),
                 'code': 42,
             },
-            'errors': set(['fortytwo', 'errmsg']),
+            'errors': set(['fortytwo', 'errmsg', 'hello']),
         },
         {
             'popen': {
                 'return': ('', 'well hello there!'),
                 'code': 0,
             },
-            'errors': set(['report']),
+            'errors': set(['report', 'hello']),
         },
     )
     @mock.patch('subprocess.Popen')
@@ -120,6 +120,7 @@ class TestConfig(unittest.TestCase):
             'fortytwo': 'with non-zero code 42',
             'errmsg': ', error messages: ',
             'report': 'reported errors: ',
+            'hello': 'hello there',
         }
         errors = set([item[0] for item in error_defs.items()
                       if item[1] in as_str])
