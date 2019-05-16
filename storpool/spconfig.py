@@ -18,10 +18,9 @@
 
 
 import os
-import subprocess
+import platform
 
-import feature_check
-import feature_check.obtain
+import confget
 
 
 class SPConfigException(Exception):
@@ -31,77 +30,54 @@ class SPConfigException(Exception):
 class SPConfig(object):
     """ A representation of the StorPool configuration settings.
 
-    When constructed, an object of this class will invoke the StorPool
-    configuration parser utility (`/usr/sbin/storpool_confget` by default)
-    and store the obtained variables and values into its internal dictionary.
+    When constructed, an object of this class will look for the various
+    StorPool configuration files, parse them, and store the obtained
+    variables and values into its internal dictionary.
     The object may later be accessed as a dictionary. """
 
-    def __init__(self, confget='/usr/sbin/storpool_confget', section=None):
-        self._confget = confget
+    PATH_DEFAULTS = '/usr/lib/storpool/storpool-defaults.conf'
+    PATH_CONFIG = '/etc/storpool.conf'
+    PATH_CONFIG_DIR = '/etc/storpool.conf.d'
+
+    def __init__(self, section=None):
         self._dict = dict()
         self._section = section
-        self.confget()
+        self.run_confget()
 
-    def confget(self):
-        """ Invoke the StorPool configuration parser utility. """
-        args = (self._confget,) \
-            if self._section is None \
-            else (self._confget, '-s', self._section)
-        confget = str.join(' ', args)
-        try:
-            proc = subprocess.Popen(
-                args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                bufsize=4096)
-            out = proc.communicate()
-            wres = proc.wait()
-        except OSError as ose:
-            raise SPConfigException(
-                'Could not read the StorPool configuration using {c}: {e}'
-                .format(c=confget, e=ose.strerror))
-        except Exception as exc:
-            raise SPConfigException(
-                'Could not read the StorPool configuration using {c}: '
-                'unexpected exception {t}: {e}'
-                .format(c=confget, t=type(exc).__name__, e=exc))
+    @classmethod
+    def get_config_files(cls):
+        """ Return the StorPool configuration files present on the system. """
+        to_check = [cls.PATH_DEFAULTS, cls.PATH_CONFIG]
+        if os.path.isdir(cls.PATH_CONFIG_DIR):
+            to_check.extend([
+                os.path.join(cls.PATH_CONFIG_DIR, fname)
+                for fname in sorted(os.listdir(cls.PATH_CONFIG_DIR))
+            ])
+        return [path for path in to_check if os.path.isfile(path)]
 
-        if out[1]:
-            out = out[1]
-            err = True
+    def run_confget(self):
+        """ Parse the StorPool configuration files by ourselves. """
+        if self._section is not None:
+            section = self._section
         else:
-            out = out[0]
-            err = False
-        out = out.decode('UTF-8').replace("\\\n", "")
-        out = [line for line in out.split('\n') if line]
-
-        if wres > 0:
-            if err:
-                raise SPConfigException(
-                    'The StorPool configuration helper {c} exited with '
-                    'non-zero code {r}, error messages: {out}'
-                    .format(c=confget, r=wres, out=out))
-            raise SPConfigException(
-                'The StorPool configuration helper {c} exited with '
-                'non-zero code {r}'
-                .format(c=confget, r=wres))
-        if wres < 0:
-            if err:
-                raise SPConfigException(
-                    'The StorPool configuration helper {c} was killed by '
-                    'signal {s}, error messages: {out}'
-                    .format(c=confget, s=-wres, out=out))
-            raise SPConfigException(
-                'The StorPool configuration helper {c} was killed by '
-                'signal {s}'
-                .format(c=confget, s=-wres))
-        if err:
-            raise SPConfigException(
-                'The StorPool configuration helper {c} reported errors: {out}'
-                .format(c=confget, out=out))
-
+            section = platform.node()
+        sections = ['', section]
+        ini = confget.BACKENDS['ini']
         res = {}
-        for line in out:
-            key, val = line.split('=', 1)
-            res[key] = val
+
+        for fname in self.get_config_files():
+            try:
+                cfg = confget.Config([], filename=fname)
+                raw = ini(cfg).read_file()
+            except Exception as exc:
+                raise SPConfigException(
+                    'Could not parse the {fname} StorPool configuration '
+                    'file: {exc}'
+                    .format(fname=fname, exc=exc))
+
+            for section in sections:
+                res.update(raw.get(section, {}))
+
         self._dict = res
 
     def __getitem__(self, key):
@@ -134,56 +110,22 @@ class SPConfig(object):
             return self._dict.iterkeys()  # pylint: disable=no-member
         return iter(self._dict.keys())
 
-    @staticmethod
-    def _get_output_lines(cmd):
-        cmdstr = ' '.join(cmd)
-        try:
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=False)
-            output = proc.communicate()
-            code = proc.returncode
-        except (IOError, OSError, subprocess.CalledProcessError) as exp:
-            raise SPConfigException(
-                'Could not run "{cmd}": {exp}'
-                .format(cmd=cmdstr, exp=exp))
-        except Exception as unexp:
-            raise SPConfigException(
-                'Could not run "{cmd}": unexpected error: {unexp}'
-                .format(cmd=cmdstr, unexp=unexp))
-        if code != 0:
-            raise SPConfigException(
-                'Could not run "{cmd}": it exited with code {code}'
-                .format(cmd=cmdstr, code=code))
-
-        decoded = output[0].decode('UTF-8')
-        if decoded.endswith('\n'):
-            decoded = decoded[:-1]
-        return decoded.split('\n')
-
-    @staticmethod
-    def _fallback_get_all_sections():
-        for confget in ('/usr/lib/storpool/confget', '/usr/bin/confget'):
-            if os.path.isfile(confget):
-                break
-        else:
-            return []
-        return sorted(SPConfig._get_output_lines([
-            confget, '-f', '/etc/storpool.conf',
-            '-q', 'sections'
-        ]))
-
-    @staticmethod
-    def get_all_sections():
+    @classmethod
+    def get_all_sections(cls):
         """ Return all the section names in the StorPool config files. """
-        fallback = False
-        try:
-            data = feature_check.obtain_features('/usr/sbin/storpool_confget')
-            fallback = 'query-sections' not in data
-        except feature_check.obtain.ObtainError:
-            fallback = True
+        ini = confget.BACKENDS['ini']
+        sections = set()
 
-        if fallback:
-            return SPConfig._fallback_get_all_sections()
+        for fname in cls.get_config_files():
+            cfg = confget.Config([], filename=fname)
+            try:
+                raw = ini(cfg).read_file()
+            except Exception as exc:
+                raise SPConfigException(
+                    'Could not parse the {fname} StorPool configuration '
+                    'file: {exc}'
+                    .format(fname=fname, exc=exc))
 
-        return sorted(SPConfig._get_output_lines([
-            '/usr/sbin/storpool_confget', '-q', 'sections'
-        ]))
+            sections.update([key for key in raw if key])
+
+        return sorted(sections)

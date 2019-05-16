@@ -79,7 +79,7 @@ setuptools.setup(
     url='http://www.storpool.com/',
 
     install_requires=[
-        'feature_check',
+        'confget',
     ],
 
     zip_safe=True,

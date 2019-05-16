@@ -16,140 +16,88 @@
 #
 """ Tests for the storpool.spconfig.SPConfig class. """
 
-import unittest
+import collections
 
-import ddt
 import mock
 import pytest
 
 from storpool import spconfig
 
 
-@ddt.ddt
-class TestConfig(unittest.TestCase):
-    # pylint: disable=no-self-use
-    """ Simple tests for the configuration parser. """
+ConfigData = collections.namedtuple('ConfigData', [
+    'filename',
+    'data',
+])
 
-    @ddt.data(
-        {
-            'popen': {
-                'raise': 'os_error',
-            },
-            'errors': set(['config']),
-        },
-        {
-            'popen': {
-                'raise': 'weird_error',
-            },
-            'errors': set(['config', 'weird']),
-        },
-        {
-            'popen': {
-                'comm_raise': 'os_error',
-            },
-            'errors': set(['config']),
-        },
-        {
-            'popen': {
-                'comm_raise': 'weird_error',
-            },
-            'errors': set(['config', 'weird']),
-        },
-        {
-            'popen': {
-                'return': ('', None),
-                'code': 42,
-            },
-            'errors': set(['fortytwo']),
-        },
-        {
-            'popen': {
-                'return': ('', 'well hello there!'),
-                'code': 42,
-            },
-            'errors': set(['fortytwo', 'errmsg', 'hello']),
-        },
-        {
-            'popen': {
-                'return': ('', 'well hello there!'),
-                'code': 0,
-            },
-            'errors': set(['report', 'hello']),
-        },
-    )
-    @mock.patch('subprocess.Popen')
-    def test_fail(self, data, popen):
-        """ Simulate failures during the execution of storpool_confget. """
-        class WeirdError(Exception):
-            """ An exception meant to be raised and detected. """
+CONFIG_DATA = (
+    ConfigData(
+        filename='/usr/lib/storpool/storpool-defaults.conf',
+        data={'': {'a': '1'}},
+    ),
+    ConfigData(
+        filename='/etc/storpool.conf',
+        data={'beleriand': {'b': '2'}},
+    ),
+    ConfigData(
+        filename='/etc/storpool.conf.d/local.conf',
+        data={'': {'c': '3'}, 'beleriand': {'a': '4'}},
+    ),
+)
 
-        def raise_os_error(*_args, **_kwargs):
-            """  Simulate subprocess.Popen() but fail with an OSError. """
-            raise OSError()
+CONFIG_FILES = {
+    item.filename: item.data for item in CONFIG_DATA
+}
 
-        def raise_weird_error(*_args, **_kwargs):
-            """  Simulate subprocess.Popen() but fail with a WeirdError. """
-            raise WeirdError()
 
-        raisers = {
-            'os_error': raise_os_error,
-            'weird_error': raise_weird_error,
-        }
+def fake_get_config_files(_cls):
+    """ Simulate looking for the StorPool configuration files. """
+    return [item.filename for item in CONFIG_DATA]
 
-        mock_popen = mock.Mock()
-        popen.return_value = mock_popen
-        if 'popen' in data:
-            if 'raise' in data['popen']:
-                popen.side_effect = raisers[data['popen']['raise']]
-            elif 'comm_raise' in data['popen']:
-                mock_popen.communicate.side_effect = \
-                    raisers[data['popen']['comm_raise']]
-            else:
-                mock_popen.communicate.return_value = tuple([
-                    item.encode('UTF-8') if item is not None else None
-                    for item in data['popen']['return']
-                ])
-                mock_popen.wait.return_value = data['popen']['code']
 
-        with pytest.raises(spconfig.SPConfigException) as err:
-            spconfig.SPConfig()
-        as_str = str(err.value)
-        error_defs = {
-            'config': 'the StorPool configuration',
-            'weird': ': unexpected exception',
-            'fortytwo': 'with non-zero code 42',
-            'errmsg': ', error messages: ',
-            'report': 'reported errors: ',
-            'hello': 'hello there',
-        }
-        errors = set([item[0] for item in error_defs.items()
-                      if item[1] in as_str])
-        assert errors == data['errors']
+class FakeConfig(object):
+    # pylint: disable=too-few-public-methods
+    """ Simulate a confget.Config settings holder. """
 
-    @mock.patch('subprocess.Popen')
-    def test_success(self, popen):
-        """ Test that a SPConfig object behaves almost like a dictionary. """
-        mock_popen = mock.Mock()
-        mock_popen.wait.return_value = 0
-        popen.return_value = mock_popen
+    def __init__(self, varnames, filename='(invalid)'):
+        """ Initialize a fake Config object: store the filename. """
+        assert varnames == []
+        assert filename in CONFIG_FILES
+        self.filename = filename
 
-        mock_popen.communicate.return_value = (
-            'a=1\nb=2\nc=3\na=4'.encode('UTF-8'),
-            None,
-        )
-        cfg = spconfig.SPConfig()
 
-        assert cfg['b'] == '2'
-        with pytest.raises(KeyError):
-            assert cfg['d'] == 'we should never get here, right?'
+class FakeINI(object):
+    # pylint: disable=too-few-public-methods
+    """ Simulate a confget.backend.ini.INIBackend reader. """
 
-        assert cfg.get('a', 42) == '4'
-        assert cfg.get('d', 42) == 42
+    def __init__(self, config):
+        """ Initialize a fake INI reader: store the fake config object. """
+        assert isinstance(config, FakeConfig)
+        self.config = config
 
-        assert dict(cfg.items()) == {'a': '4', 'b': '2', 'c': '3'}
+    def read_file(self):
+        """ Simulate reading from the INI file. """
+        return CONFIG_FILES[self.config.filename]
 
-        assert sorted(cfg.keys()) == ['a', 'b', 'c']
 
-        assert sorted(cfg.iteritems()) == [('a', '4'), ('b', '2'), ('c', '3')]
+@mock.patch('storpool.spconfig.SPConfig.get_config_files',
+            new=fake_get_config_files)
+@mock.patch('confget.Config', new=FakeConfig)
+@mock.patch('confget.BACKENDS', new={'ini': FakeINI})
+def test_success():
+    """ Test that a SPConfig object behaves almost like a dictionary. """
+    cfg = spconfig.SPConfig(section='beleriand')
 
-        assert sorted(cfg.iterkeys()) == ['a', 'b', 'c']
+    assert cfg['b'] == '2'
+    with pytest.raises(KeyError):
+        assert cfg['d'] == 'we should never get here, right?'
+
+    assert cfg.get('a', 42) == '4'
+    assert cfg.get('d', 42) == 42
+
+    assert dict(cfg.items()) == {'a': '4', 'b': '2', 'c': '3'}
+
+    assert sorted(cfg.keys()) == ['a', 'b', 'c']
+
+    assert sorted(cfg.iteritems()) == [('a', '4'), ('b', '2'), ('c', '3')]
+
+    assert sorted(cfg.iterkeys()) == ['a', 'b', 'c']
