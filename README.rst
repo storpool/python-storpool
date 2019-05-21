@@ -19,6 +19,21 @@ and act as a compute node.
 Version history
 ===============
 
+5.0.0
+-----
+
+- document that this library interfaces with StorPool 18.02
+- do not use the deprecated `message` field of the BaseException class
+- add the SPConfig.get_all_sections() method and a dependency on
+  the feature_check Python library
+- use the Python confget library instead of the StorPool-specific
+  command-line parser tool
+- add a tox/pytest unit testing framework, convert some existing test
+  scripts to use it, and add new tests
+- adapt the source code for compatibility with Python 3.x
+- correct some limits and regular expressions used for validating
+  service IDs and object names
+
 4.1.0
 -----
 
