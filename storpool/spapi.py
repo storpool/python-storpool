@@ -199,6 +199,24 @@ class ApiMeta(type):
         type.__setattr__(cls, name, func)
 
 
+def clear_none(data):
+    """ Recursively remove any NoneType values. """
+    if getattr(data, 'to_json', None) is not None:
+        data = data.to_json()
+
+    if isinstance(data, dict):
+        return dict([
+            (item[0], clear_none(item[1]))
+            for item in data.items()
+            if item[1] is not None
+        ])
+
+    if isinstance(data, list) or isinstance(data, set):
+        return [clear_none(item) for item in data if item is not None]
+
+    return data
+
+
 @six.add_metaclass(ApiMeta)
 class Api(object):
     '''StorPool API abstraction'''
@@ -227,7 +245,7 @@ class Api(object):
 
     def __call__(self, method, path, json=None):
         if json is not None:
-            json = js.dumps(json)
+            json = js.dumps(clear_none(json))
 
         retry, lastErr = 0, None
         while True:

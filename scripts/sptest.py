@@ -196,6 +196,7 @@ def setup(no_ssd=False):
 
         snapName = vol.name + "_snapshot"
         print(api.snapshotCreate(vol.name, {'name': snapName}))
+        print(api.snapshotUpdate(snapName, {'iops': 1000}))
         print(reassign([{'snapshot': snapName, 'ro': [1]}]))
 
     print('- volumes list')

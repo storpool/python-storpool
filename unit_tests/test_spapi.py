@@ -18,6 +18,7 @@
 
 import collections
 import itertools
+import json
 import re
 import types
 import unittest
@@ -316,6 +317,47 @@ class TestAPI(unittest.TestCase):
         assert res[676].agCount == 18
         assert isinstance(res[676].aggregateScore, sptypes.DiskAggregateScores)
         assert isinstance(res[676].aggregateScore.to_json()['entries'], int)
+
+    @mock.patch('six.moves.http_client.HTTPConnection', spec=['__call__'])
+    def test_api_placement_group_update(self, http):
+        """ Test the way the Api class sends out queries. """
+        api = spapi.Api(host='4.3.2.1', port=6502, auth='456')
+        assert http.call_count == 0
+
+        resp = mock.Mock(spec=['status', 'read'])
+        resp.status = http_client.OK
+        resp.read.return_value = '''
+{
+   "data" : {
+      "generation" : 10436,
+      "ok" : true
+   },
+   "generation" : 10436
+}
+'''
+
+        conn = mock.Mock(spec=['request', 'getresponse', 'close'])
+        conn.getresponse.return_value = resp
+
+        http.return_value = conn
+
+        res = api.placementGroupUpdate(  # pylint: disable=not-callable
+            'weirdgroup',
+            json={'addDisks': set([101])}
+        )
+
+        http.assert_called_once_with('4.3.2.1', 6502, 10)
+        calls = conn.request.call_args_list
+        assert len(calls) == 1
+        assert len(calls[0][0]) == 4
+        assert calls[0][0][0] == 'POST'
+        assert calls[0][0][1] == '/ctrl/1.0/PlacementGroupUpdate/weirdgroup'
+        assert calls[0][0][3] == {'Authorization': 'Storpool v1:456'}
+
+        body = json.loads(calls[0][0][2])
+        assert body == {'addDisks': [101], 'rmDisks': []}
+
+        assert isinstance(res, spapi.ApiOk)
 
     @mock.patch('six.moves.http_client.HTTPConnection', spec=['__call__'])
     def test_api_error(self, http):
