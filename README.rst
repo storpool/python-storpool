@@ -19,6 +19,16 @@ and act as a compute node.
 Version history
 ===============
 
+5.1.0
+-----
+
+- add the storpool.VERSION string constant and let setup.py use it
+- when sending JSON-encoded objects to the StorPool API, omit any
+  JSON null values: the API will ignore them anyway, but there are some
+  cases when it may reject them as unknown before ignoring them
+- add the "tags" field to the GroupSnapshotsSpec class for
+  the snapshotCreateGroup() call
+
 5.0.0
 -----
 
