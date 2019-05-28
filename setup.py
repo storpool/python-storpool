@@ -19,12 +19,41 @@
 
 from distutils import cmd
 import os
+import re
 import subprocess
 import sys
 
 import setuptools
 
 from setuptools.command import build_py
+
+
+RE_VERSION = r'''^
+    \s* VERSION \s* = \s* '
+    (?P<version>
+           (?: 0 | [1-9][0-9]* )    # major
+        \. (?: 0 | [1-9][0-9]* )    # minor
+        \. (?: 0 | [1-9][0-9]* )    # patchlevel
+    (?: \. [a-zA-Z0-9]+ )?          # optional addendum (dev1, beta3, etc.)
+    )
+    ' \s*
+    $'''
+
+
+def get_version():
+    """ Get the version string from the module's __init__ file. """
+    found = None
+    re_semver = re.compile(RE_VERSION, re.X)
+    with open('storpool/__init__.py') as init:
+        for line in init.readlines():
+            match = re_semver.match(line)
+            if not match:
+                continue
+            assert found is None
+            found = match.group('version')
+
+    assert found is not None
+    return found
 
 
 class APIDocCommand(cmd.Command):
@@ -67,7 +96,7 @@ class BuildPyCommand(build_py.build_py):
 
 setuptools.setup(
     name='storpool',
-    version='5.0.0',
+    version=get_version(),
     packages=('storpool',),
     namespace_packages=('storpool',),
 
