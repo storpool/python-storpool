@@ -294,7 +294,7 @@ class TestAPI(unittest.TestCase):
 
         res = api.disksList()  # pylint: disable=not-callable
 
-        http.assert_called_once_with('1.2.3.4', 8080, 10)
+        http.assert_called_once_with('1.2.3.4', 8080, 10, source_address=None)
         conn.request.assert_called_once_with(
             'GET', '/ctrl/1.0/DisksList', None,
             {'Authorization': 'Storpool v1:123'}
@@ -346,7 +346,7 @@ class TestAPI(unittest.TestCase):
             json={'addDisks': set([101])}
         )
 
-        http.assert_called_once_with('4.3.2.1', 6502, 10)
+        http.assert_called_once_with('4.3.2.1', 6502, 10, source_address=None)
         calls = conn.request.call_args_list
         assert len(calls) == 1
         assert len(calls[0][0]) == 4
@@ -362,7 +362,8 @@ class TestAPI(unittest.TestCase):
     @mock.patch('six.moves.http_client.HTTPConnection', spec=['__call__'])
     def test_api_error(self, http):
         """ Test the way the Api class sends out queries. """
-        api = spapi.Api(host='1.1.1.1', port=8000, auth='456')
+        api = spapi.Api(host='1.1.1.1', port=8000, auth='456',
+                        source='2.3.4.5')
         assert http.call_count == 0
 
         resp = mock.Mock(spec=['status', 'read'])
@@ -384,7 +385,8 @@ class TestAPI(unittest.TestCase):
         with pytest.raises(spapi.ApiError) as err:
             api.disksList()  # pylint: disable=not-callable
 
-        http.assert_called_once_with('1.1.1.1', 8000, 10)
+        http.assert_called_once_with('1.1.1.1', 8000, 10,
+                                     source_address=('2.3.4.5', 0))
         conn.request.assert_called_once_with(
             'GET', '/ctrl/1.0/DisksList', None,
             {'Authorization': 'Storpool v1:456'}

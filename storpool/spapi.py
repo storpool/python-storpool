@@ -229,12 +229,13 @@ class Api(object):
         the supported API calls.
         """)
 
-    def __init__(self, host='127.0.0.1', port=80, auth='', timeout=10, transientRetries=5, transientSleep=lambda retry: 2 ** retry):
+    def __init__(self, host='127.0.0.1', port=80, auth='', timeout=10, transientRetries=5, transientSleep=lambda retry: 2 ** retry, source=None):
         self._host = host
         self._port = port
         self._timeout = timeout
         self._transientRetries = transientRetries
         self._transientSleep = transientSleep
+        self._source = source
         self._authHeader = {"Authorization": "Storpool v1:" + str(auth)}
 
     @classmethod
@@ -250,7 +251,8 @@ class Api(object):
         retry, lastErr = 0, None
         while True:
             try:
-                conn = http.HTTPConnection(self._host, self._port, self._timeout)
+                src = (self._source, 0) if self._source is not None else None
+                conn = http.HTTPConnection(self._host, self._port, self._timeout, source_address=src)
                 conn.request(method, path, json, self._authHeader)
                 response = conn.getresponse()
                 status, jres = response.status, js.load(response)
@@ -315,6 +317,11 @@ Api.spDocSection("General",
 
     # Explicitly specify the hostname, port, and authentication string
     >>> api=spapi.Api(host='192.168.0.5', port=80, auth='1556560560218011653')
+
+    # Use the default StorPool configuration settings but explicitly specify the source address as a string
+
+    >>> from storpool import spapi
+    >>> api=spapi.Api.fromConfig(source='192.168.0.2')
 
     # Use the created API access object
     >>> api.peersList()
