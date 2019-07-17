@@ -252,7 +252,7 @@ class Api(object):
         while True:
             try:
                 src = (self._source, 0) if self._source is not None else None
-                conn = http.HTTPConnection(self._host, self._port, self._timeout, source_address=src)
+                conn = http.HTTPConnection(self._host, self._port, timeout=self._timeout, source_address=src)
                 conn.request(method, path, json, self._authHeader)
                 response = conn.getresponse()
                 status, jres = response.status, js.load(response)
