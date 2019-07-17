@@ -24,6 +24,7 @@ for more information.
 """
 
 import errno
+import inspect
 import socket as sock
 import time as time
 
@@ -235,8 +236,21 @@ class Api(object):
         self._timeout = timeout
         self._transientRetries = transientRetries
         self._transientSleep = transientSleep
-        self._source = source
         self._authHeader = {"Authorization": "Storpool v1:" + str(auth)}
+
+        if source is not None:
+            hinit = http.HTTPConnection.__init__
+            if getattr(inspect, 'getfullargspec', None) is None:
+                hargs = inspect.getargspec(hinit).args
+            else:
+                hargs = inspect.getfullargspec(hinit).args
+            if "source_address" not in hargs:
+                raise NotImplementedError(
+                    "HTTP connection source not supported with "
+                    "this Python version")
+            self._source = {"source_address": (source, 0)}
+        else:
+            self._source = {}
 
     @classmethod
     def fromConfig(klass, cfg=None, **kwargs):
@@ -251,8 +265,7 @@ class Api(object):
         retry, lastErr = 0, None
         while True:
             try:
-                src = (self._source, 0) if self._source is not None else None
-                conn = http.HTTPConnection(self._host, self._port, timeout=self._timeout, source_address=src)
+                conn = http.HTTPConnection(self._host, self._port, timeout=self._timeout, **self._source)
                 conn.request(method, path, json, self._authHeader)
                 response = conn.getresponse()
                 status, jres = response.status, js.load(response)

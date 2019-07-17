@@ -294,8 +294,7 @@ class TestAPI(unittest.TestCase):
 
         res = api.disksList()  # pylint: disable=not-callable
 
-        http.assert_called_once_with('1.2.3.4', 8080, timeout=10,
-                                     source_address=None)
+        http.assert_called_once_with('1.2.3.4', 8080, timeout=10)
         conn.request.assert_called_once_with(
             'GET', '/ctrl/1.0/DisksList', None,
             {'Authorization': 'Storpool v1:123'}
@@ -347,8 +346,7 @@ class TestAPI(unittest.TestCase):
             json={'addDisks': set([101])}
         )
 
-        http.assert_called_once_with('4.3.2.1', 6502, timeout=10,
-                                     source_address=None)
+        http.assert_called_once_with('4.3.2.1', 6502, timeout=10)
         calls = conn.request.call_args_list
         assert len(calls) == 1
         assert len(calls[0][0]) == 4
@@ -361,13 +359,8 @@ class TestAPI(unittest.TestCase):
 
         assert isinstance(res, spapi.ApiOk)
 
-    @mock.patch('six.moves.http_client.HTTPConnection', spec=['__call__'])
-    def test_api_error(self, http):
+    def test_api_error(self):
         """ Test the way the Api class sends out queries. """
-        api = spapi.Api(host='1.1.1.1', port=8000, auth='456',
-                        source='2.3.4.5')
-        assert http.call_count == 0
-
         resp = mock.Mock(spec=['status', 'read'])
         resp.status = http_client.OK
         resp.read.return_value = '''
@@ -379,21 +372,66 @@ class TestAPI(unittest.TestCase):
 }
 '''
 
-        conn = mock.Mock(spec=['request', 'getresponse', 'close'])
-        conn.getresponse.return_value = resp
+        conn_called = []
+        req_called = []
+        get_resp_called = []
 
-        http.return_value = conn
+        # This seems a bit crazy; the goal here is to make sure that
+        # HTTPConnection is mocked yet it has an __init__() method that
+        # has the "source_address" named argument.
+        #
+        class MockHTTPConnection(object):
+            """ Mock an HTTPConnection. """
+
+            def __init__(self, host, port=None, strict=None, timeout=None,
+                         source_address=None):
+                # pylint: disable=too-many-arguments
+                """ Mock an HTTPConnection() constructor. """
+                assert host == "1.1.1.1"
+                assert port == 8000
+                assert strict is None
+                assert timeout == 10
+                assert source_address == ("2.3.4.5", 0)
+
+                assert conn_called.count(1) == 0
+                conn_called.append(1)
+
+            def request(self, method, url, body=None, headers=None):
+                """ Mock a request. """
+                assert method == "GET"
+                assert url == "/ctrl/1.0/DisksList"
+                assert body is None
+                assert headers == {'Authorization': 'Storpool v1:456'}
+
+                assert req_called.count(1) == 0
+                req_called.append(1)
+
+            def close(self):
+                """ Mock a connection close, nothing to do. """
+
+            def getresponse(self):
+                """ Mock the retrieval of a response. """
+                assert req_called.count(1) == 1
+
+                assert get_resp_called.count(1) == 0
+                get_resp_called.append(1)
+
+                return resp
 
         with pytest.raises(spapi.ApiError) as err:
-            api.disksList()  # pylint: disable=not-callable
+            with mock.patch('six.moves.http_client.HTTPConnection',
+                            new=MockHTTPConnection):
+                api = spapi.Api(host='1.1.1.1', port=8000, auth='456',
+                                source='2.3.4.5')
+                assert not conn_called
+                assert not req_called
+                assert not get_resp_called
 
-        http.assert_called_once_with('1.1.1.1', 8000, timeout=10,
-                                     source_address=('2.3.4.5', 0))
-        conn.request.assert_called_once_with(
-            'GET', '/ctrl/1.0/DisksList', None,
-            {'Authorization': 'Storpool v1:456'}
-        )
-        conn.getresponse.assert_called_once_with()
+                api.disksList()  # pylint: disable=not-callable
+
+        assert conn_called == [1]
+        assert req_called == [1]
+        assert get_resp_called == [1]
 
         assert err.value.name == 'WeirdError'
         assert err.value.desc.endswith('please reread')
