@@ -230,7 +230,7 @@ class Api(object):
         the supported API calls.
         """)
 
-    def __init__(self, host='127.0.0.1', port=80, auth='', timeout=10, transientRetries=5, transientSleep=lambda retry: 2 ** retry, source=None):
+    def __init__(self, host='127.0.0.1', port=80, auth='', timeout=300, transientRetries=5, transientSleep=lambda retry: 2 ** retry, source=None):
         self._host = host
         self._port = port
         self._timeout = timeout

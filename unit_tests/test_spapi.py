@@ -294,7 +294,7 @@ class TestAPI(unittest.TestCase):
 
         res = api.disksList()  # pylint: disable=not-callable
 
-        http.assert_called_once_with('1.2.3.4', 8080, timeout=10)
+        http.assert_called_once_with('1.2.3.4', 8080, timeout=300)
         conn.request.assert_called_once_with(
             'GET', '/ctrl/1.0/DisksList', None,
             {'Authorization': 'Storpool v1:123'}
@@ -346,7 +346,7 @@ class TestAPI(unittest.TestCase):
             json={'addDisks': set([101])}
         )
 
-        http.assert_called_once_with('4.3.2.1', 6502, timeout=10)
+        http.assert_called_once_with('4.3.2.1', 6502, timeout=300)
         calls = conn.request.call_args_list
         assert len(calls) == 1
         assert len(calls[0][0]) == 4
@@ -390,7 +390,7 @@ class TestAPI(unittest.TestCase):
                 assert host == "1.1.1.1"
                 assert port == 8000
                 assert strict is None
-                assert timeout == 10
+                assert timeout == 300
                 assert source_address == ("2.3.4.5", 0)
 
                 assert conn_called.count(1) == 0
