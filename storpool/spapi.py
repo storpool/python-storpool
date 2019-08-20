@@ -748,3 +748,6 @@ Api.iSCSIConfigChange = POST('iSCSIConfig', json=sp.iSCSIConfigChange).doc("Modi
 Api.spDocSection("Remote", "")
 
 Api.locationsList = GET("LocationsList", returns={'locations': [sp.RemoteLocation]}).doc("List the registered remote locations", "")
+
+Api.iSCSISessionsInfo = GET('iSCSISessionsInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.iSCSISessionsInfo).doc("query iSCSI controllers for active sessions", """ """)
+Api.iSCSInterfacesInfo = GET('iSCSInterfacesInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.ISCSIControllersIntefacesInfo).doc("query iSCSI controllers for interfaces state", """ """)

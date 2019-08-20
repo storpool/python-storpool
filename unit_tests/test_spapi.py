@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019  StorPool.
+# Copyright (c) 2019, 2020  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -195,6 +195,19 @@ class TestAPI(unittest.TestCase):
             return_value=616,
             call_query='Query/test',
             call_json=None,
+        ),
+        ApiMethodTestCase(
+            method='GET',
+            multicluster=False,
+            query='Query/{name}',
+            args=[('name', str)],
+            json={sptypes.SnapshotName: sptypes.ServerId},
+            returns=int,
+            params=['test', {'shibboleth': 616}],
+            kwparams={'clusterName': 'elsewhere'},
+            return_value=616,
+            call_query='Query/test',
+            call_json={'shibboleth': 616},
         ),
         ApiMethodTestCase(
             method='POST',
@@ -429,6 +442,70 @@ class TestAPI(unittest.TestCase):
         assert body == {'addDisks': [101], 'rmDisks': []}
 
         assert isinstance(res, spapi.ApiOk)
+
+    @mock.patch('six.moves.http_client.HTTPConnection', spec=['__call__'])
+    def test_api_iscsi_sessions_info(self, http):
+        """ Test the way the Api class sends out queries. """
+        api = spapi.Api(host='4.3.2.1', port=6502, auth='456')
+        assert http.call_count == 0
+
+        resp = mock.Mock(spec=['status', 'read'])
+        resp.status = http_client.OK
+        resp.read.return_value = '''
+{
+   "data" : {
+      "sessions" : [
+         {
+            "status": "timeout",
+            "controllerId": 1
+         }
+      ]
+   },
+   "generation" : 10436
+}
+'''
+
+        conn = mock.Mock(spec=['request', 'getresponse', 'close'])
+        conn.getresponse.return_value = resp
+
+        http.return_value = conn
+
+        res = api.iSCSISessionsInfo()  # pylint: disable=not-callable
+
+        http.assert_called_once_with('4.3.2.1', 6502, timeout=300)
+        calls = conn.request.call_args_list
+        assert len(calls) == 1
+        assert list(calls[0][0]) == [
+            'GET',
+            '/ctrl/1.0/iSCSISessionsInfo',
+            None,
+            {'Authorization': 'Storpool v1:456'},
+        ]
+
+        assert isinstance(res, sptypes.iSCSISessionsInfo)
+        assert len(res.sessions) == 1
+        assert isinstance(res.sessions[0], sptypes.iSCSISessionInfo)
+        assert spapi.clear_none(res.sessions[0].to_json()) == {
+            "status": "timeout",
+            "controllerId": 1,
+        }
+
+        res = api.iSCSISessionsInfo(  # pylint: disable=not-callable
+            json=sptypes.iSCSIControllersQuery(controllerIds=[42])
+        )
+
+        assert http.call_count == 2
+        calls = conn.request.call_args_list
+        assert len(calls) == 2
+        assert list(calls[1][0]) == [
+            'GET',
+            (
+                '/ctrl/1.0/iSCSISessionsInfo?json='
+                '%7B%22controllerIds%22%3A%5B42%5D%7D'
+            ),
+            None,
+            {'Authorization': 'Storpool v1:456'},
+        ]
 
     def test_api_error(self):
         """ Test the way the Api class sends out queries. """

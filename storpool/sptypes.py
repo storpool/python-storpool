@@ -1397,3 +1397,77 @@ class iSCSIConfigChange(object):
     '''
     commands: The actual iSCSI configuration commands.
     '''
+
+
+@JsonObject(nopOut=int, scsi=int, task=int, login=int, text=int, dataOut=int, logout=int, snack=int, nopIn=int, scsiRsp=int, taskRsp=int, loginRsp=int, textRsp=int, dataIn=int, logoutRsp=int, r2t=int, reject=int)
+class iSCSISessionStats(object):
+    '''
+    '''
+
+
+@JsonObject(inFreeList=int, dataOut=int, queued=int, processing=int, dataResp=int, aborted=int)
+class iSCSISessionTasks(object):
+    '''
+    '''
+
+
+@JsonObject(totalPacketsIn=int, totalBytesIn=int, newPacketsIn=int, newBytesIn=int, discardedPackets=int, discardedBytes=int, dataHoles=int, totalPacketsOut=int,
+    totalBytesOut=int, newPacketsOut=int, newBytesOut=int, retransmittedPackets=int, retransmittedBytes=int, retransmitsTimeout=int, retransmitsAcks=int, retransmitsAcks2=int)
+class iSCSISessionTcpStats(object):
+    '''
+    '''
+
+
+@JsonObject(portalIP=str, portalPort=int, initiatorIP=str, initiatorPort=int, wscale=int, localMSS=int, remoteMSS=int, remoteWindowSize=int, hwPort=int, stats=iSCSISessionTcpStats)
+class iSCSISessionTcp(object):
+    '''
+    '''
+
+
+@JsonObject(status=str, controllerId=iSCSIId, connectionId=maybe(int), ISID=maybe(str), timeCreated=maybe(int), target=maybe(str), initiator=maybe(str),
+    stats=maybe(iSCSISessionStats), tasks=maybe(iSCSISessionTasks), tcp=maybe(iSCSISessionTcp))
+class iSCSISessionInfo(object):
+    '''
+    satus: ok or other
+    controllerId: controller id
+    ISID: session ISID
+    timeCreated: unix timestamp when session was establised
+    targset: iSCSI name of the target
+    initiator: iSCSI name of the initiator
+    stats: session stats
+    tasks: currently active tasks count byt state
+    tcp: session tcp info
+    '''
+
+
+@JsonObject(sessions=[iSCSISessionInfo])
+class iSCSISessionsInfo(object):
+    '''
+    sessions: list of sessions
+    '''
+
+
+@JsonObject(port=int, state=str, interfaceName=str, MAC=str, resolveInterfaceName=str)
+class iscsiControllerInterfaceInfo(object):
+    '''
+    '''
+
+
+@JsonObject(msecsTimeout=maybe(int), controllerIds=maybe([iSCSIId]))
+class iSCSIControllersQuery(object):
+    '''
+    msecsTimeout: 0 is no timeout
+    controllerIds: ask only those controllers
+    '''
+
+
+@JsonObject(status=str, controllerId=iSCSIId, interfaces=maybe([iscsiControllerInterfaceInfo]))
+class ISCSIControllerIntefacesInfo(object):
+    '''
+    '''
+
+
+@JsonObject(controllers=[ISCSIControllerIntefacesInfo])
+class ISCSIControllersIntefacesInfo(object):
+    '''
+    '''
