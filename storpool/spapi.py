@@ -523,22 +523,22 @@ Api.diskScrubContinue = POST("DiskScrubContinue/{diskId}", DiskId).doc("Continue
 Api.diskRetrim = POST("DiskRetrim/{diskId}", DiskId).doc("Retrim disk", """ """)
 
 Api.spDocSection("Volumes", """ """)
-Api.volumesList = GET('VolumesList', returns=[sp.VolumeSummary]).doc("List all volumes",
+Api.volumesList = GET('VolumesList', returns=[sp.VolumeSummary], multiCluster=True).doc("List all volumes",
     """ Return configuration information about all the volumes. """)
-Api.volumesStatus = GET('VolumesGetStatus', returns={either(sp.VolumeName, sp.SnapshotName): sp.VolumeStatus}).doc("Get volume and snapshot status",
+Api.volumesStatus = GET('VolumesGetStatus', returns={either(sp.VolumeName, sp.SnapshotName): sp.VolumeStatus}, multiCluster=True).doc("Get volume and snapshot status",
     """ Return the status of each volume and snapshot. """)
-Api.volumesSpace = GET('VolumesSpace', returns=[sp.VolumeSpace]).doc("List total used space by each volume",
+Api.volumesSpace = GET('VolumesSpace', returns=[sp.VolumeSpace], multiCluster=True).doc("List total used space by each volume",
     """
     List estimated total virtual space used by each volume.
     """)
-Api.volumeList = GET('Volume/{volumeName}', VolumeName, returns=[sp.VolumeSummary]).doc("List a single volume",
+Api.volumeList = GET('Volume/{volumeName}', VolumeName, returns=[sp.VolumeSummary], multiCluster=True).doc("List a single volume",
     """ Same as VolumeList but only return information about a given volume. """)
-Api.volumeDescribe = GET('VolumeDescribe/{volumeName}', VolumeName, returns=sp.Volume).doc("Describe a volume",
+Api.volumeDescribe = GET('VolumeDescribe/{volumeName}', VolumeName, returns=sp.Volume, multiCluster=True).doc("Describe a volume",
     """
     Return detailed information about the distribution of the volume's data on
     the disks.
     """)
-Api.volumeInfo = GET('VolumeGetInfo/{volumeName}', VolumeName, returns=sp.VolumeInfo).doc("Get volume info",
+Api.volumeInfo = GET('VolumeGetInfo/{volumeName}', VolumeName, returns=sp.VolumeInfo, multiCluster=True).doc("Get volume info",
     """
     Return general information about the distribution of the volume's data on
     the disks.
@@ -548,7 +548,7 @@ Api.volumeListSnapshots = GET('VolumeListSnapshots/{volumeName}', VolumeName, re
     List a volume's parent snapshots in the same format as
     VolumeList
     """)
-Api.volumeCreate = POST('VolumeCreate', json=sp.VolumeCreateDesc, returns=ApiOkVolumeCreate).doc("Create a new volume", """ """)
+Api.volumeCreate = POST('VolumeCreate', json=sp.VolumeCreateDesc, returns=ApiOkVolumeCreate, multiCluster=True).doc("Create a new volume", """ """)
 Api.volumeUpdate = POST('VolumeUpdate/{volumeName}', VolumeName, json=sp.VolumeUpdateDesc, multiCluster=True).doc("Update a volume",
     """ Alter the configuration of an existing volume. """)
 Api.volumeFreeze = POST('VolumeFreeze/{volumeName}', VolumeName, json=maybe(sp.VolumeFreezeDesc)).doc("Freeze a volume",
@@ -581,18 +581,18 @@ Api.snapshotsList = GET('SnapshotsList', returns=[sp.SnapshotSummary]).doc("List
     List all the snapshots in the cluster in the same
     format as VolumeList.
     """)
-Api.snapshotsSpace = GET('SnapshotsSpace', returns=[sp.SnapshotSpace]).doc("List snapshots space estimations",
+Api.snapshotsSpace = GET('SnapshotsSpace', returns=[sp.SnapshotSpace], multiCluster=True).doc("List snapshots space estimations",
     """
     List estimated virtual space used by each snapshot.
     """)
-Api.snapshotList = GET('Snapshot/{snapshotName}', SnapshotName, returns=[sp.SnapshotSummary]).doc("List a single snapshot",
+Api.snapshotList = GET('Snapshot/{snapshotName}', SnapshotName, returns=[sp.SnapshotSummary], multiCluster=True).doc("List a single snapshot",
     """ Same as SnapshotList but only return information about a given snapshot. """)
-Api.snapshotDescribe = GET('SnapshotDescribe/{snapshotName}', SnapshotName, returns=sp.Snapshot).doc("Describe a snapshot",
+Api.snapshotDescribe = GET('SnapshotDescribe/{snapshotName}', SnapshotName, returns=sp.Snapshot, multiCluster=True).doc("Describe a snapshot",
     """
     Return detailed information about the distribution of the snapshot's data on the
     disks.
     """)
-Api.snapshotInfo = GET('SnapshotGetInfo/{snapshotName}', SnapshotName, returns=sp.SnapshotInfo).doc("Get snapshot info",
+Api.snapshotInfo = GET('SnapshotGetInfo/{snapshotName}', SnapshotName, returns=sp.SnapshotInfo, multiCluster=True).doc("Get snapshot info",
     """
     Return general information about the distribution of the snapshot's data on the
     disks.
@@ -643,7 +643,7 @@ Api.snapshotsRemoteUnexport = POST('SnapshotsRemoteUnexport', json=sp.SnapshotsR
     """)
 
 Api.spDocSection("Attachments", """""")
-Api.attachmentsList = GET('AttachmentsList', returns=[sp.AttachmentDesc]).doc("List all attachments",
+Api.attachmentsList = GET('AttachmentsList', returns=[sp.AttachmentDesc], multiCluster=True).doc("List all attachments",
     """
     List the volumes and snapshots currently attached to clients along with
     the read/write rights of each attachment.
@@ -651,7 +651,7 @@ Api.attachmentsList = GET('AttachmentsList', returns=[sp.AttachmentDesc]).doc("L
 Api.volumesReassign = POST('VolumesReassign', json=[either(sp.VolumeReassignDesc, sp.SnapshotReassignDesc)], multiCluster=True).doc("Reassign volumes and/or snapshots",
     """ Perform bulk attach/detach and attachment rights modification. """)
 
-Api.volumesReassignWait = POST('VolumesReassignWait', json=sp.VolumesReassignWaitDesc).doc("Reassign volumes and/or snapshots with confirmation from the clients",
+Api.volumesReassignWait = POST('VolumesReassignWait', json=sp.VolumesReassignWaitDesc, multiCluster=True).doc("Reassign volumes and/or snapshots with confirmation from the clients",
     """ Perform bulk attach/detach and attachment rights modification and waits for the clients to catch up. """)
 
 Api.spDocSection("Placement Groups",

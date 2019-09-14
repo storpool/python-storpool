@@ -186,7 +186,7 @@ GET_API_METHOD_TESTS = [
             args=['beleriand'],
             json=None,
             multicluster=False,
-            is_multicluster=False,
+            is_multicluster=True,
             post=False,
             query='VolumeDescribe',
         ),

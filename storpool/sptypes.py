@@ -167,6 +167,8 @@ VOLUME_TEMPLATE_NAME_REGEX = r'^[A-Za-z0-9_\-]+$'
 DISK_DESC_REGEX = r'^[A-Za-z0-9_\- ]{,30}$'
 REMOTE_LOCATION_NAME_SIZE = 64
 REMOTE_LOCATION_NAME_REGEX = VOLUME_NAME_REGEX
+CLUSTER_NAME_REGEX = VOLUME_NAME_REGEX
+CLUSTER_NAME_SIZE = 64
 VOLUME_TAG_NAME_REGEX = r'^[A-Za-z0-9_\-.:]+$'
 VOLUME_TAG_VALUE_REGEX = r'^[A-Za-z0-9_\-.:]*$'
 
@@ -237,8 +239,10 @@ AttachmentRights = oneOf('AttachmentRights', 'rw', 'ro')
 ObjectState = namedEnum("ObjectState", "OBJECT_UNDEF OBJECT_OK OBJECT_OUTDATED OBJECT_IN_RECOVERY OBJECT_WAITING_FOR_VERSION OBJECT_WAITING_FOR_DISK OBJECT_DATA_NOT_PRESENT OBJECT_DATA_LOST OBJECT_WAINING_FOR_CHAIN OBJECT_WAIT_IDLE".split(' '))
 
 RemoteLocationName = nameValidator("RemoteLocationName", REMOTE_LOCATION_NAME_REGEX, REMOTE_LOCATION_NAME_SIZE, 'list')
+ClusterName = nameValidator("ClusterName", CLUSTER_NAME_REGEX, CLUSTER_NAME_SIZE)
 GlobalVolumeId = regex('Global Volume Id', r'[a-z0-9]+\.[a-z0-9]+\.[a-z0-9]+$')
 LocationId = regex('Global Location Id', r'[a-z0-9]+$')
+ClusterId = regex('Global Location Id', r'[a-z0-9]+\.[a-z0-9]+$')
 
 iSCSIId = intRange('iSCSIId', 0, 0x0fff)
 iSCSIName = r'^[a-z0-9\-.:]+$'
@@ -545,7 +549,8 @@ class VolumeLimits(object):
     size=VolumeSize, replication=VolumeReplication,
     placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName,
     parentVolumeId=internal(longType), originalParentVolumeId=internal(longType), visibleVolumeId=longType, templateId=internal(longType),
-    objectsCount=int, creationTimestamp=longType, flags=internal(int), tags=maybe({VolumeTagName: VolumeTagValue}))
+    objectsCount=int, creationTimestamp=longType, flags=internal(int), tags=maybe({VolumeTagName: VolumeTagValue}),
+    clusterName=maybe(ClusterName), clusterId=maybe(ClusterId))
 class VolumeSummaryBase(VolumeLimits):
     '''
     parentName: The volume/snapshot's parent snapshot.
@@ -560,6 +565,8 @@ class VolumeSummaryBase(VolumeLimits):
     objectsCount: The number of objects that the volume/snapshot is comprised of.
     creationTimestamp: The volume's creation timestamp (UNIX timestamp)
     tags: Arbitrary short name/value pairs stored with the volume.
+    clusterName: multicluster calls only - the name of the cluster volume currently recides in
+    clusterId: multicluster calls only - the id of the cluster volume currently recides in
     '''
 
 
@@ -625,7 +632,7 @@ class SnapshotInfo(SnapshotSummary):
     status=oneOf("VolumeCurentStatus", "up", "up soon", "data lost", "down"), snapshot=bool, migrating=bool, decreasedRedundancy=bool, balancerBlocked=bool,
     storedSize=int, onDiskSize=int, syncingDataBytes=int, syncingMetaObjects=int, downBytes=int,
     downDrives=[DiskId], missingDrives=[DiskId], missingTargetDrives=[DiskId], softEjectingDrives=[DiskId],
-    tags=maybe({VolumeTagName: VolumeTagValue}))
+    tags=maybe({VolumeTagName: VolumeTagValue}), clusterName=maybe(ClusterName), clusterId=maybe(ClusterId))
 class VolumeStatus(object):
     '''
     name: The volume's name.
@@ -644,6 +651,8 @@ class VolumeStatus(object):
     downDrives: The IDs of the drives that are not accessible at the moment but needed by this volume. The volume will be in the 'down' status until all or some of these drives reappear.
     missingDrives: The IDs of the drives that are not accessible at the moment. The volume has all the needed data on the rest of the disks and can continue serving requests but it is in the 'degraded' status.
     tags: Arbitrary short name/value pairs stored with the volume.
+    clusterName: multicluster call only - the name of the cluster volume currently recides in
+    clusterId: multicluster call only - the id of the cluster volume currently recides in
     '''
 
 
@@ -776,7 +785,7 @@ class VolumesReassignWaitDesc(object):
     '''
 
 
-@JsonObject(volume=VolumeNameOrGlobalId, snapshot=bool, client=ClientId, rights=AttachmentRights, pos=AttachmentPos)
+@JsonObject(volume=VolumeNameOrGlobalId, snapshot=bool, client=ClientId, rights=AttachmentRights, pos=AttachmentPos, cluster=maybe(RemoteLocationName), clusterId=maybe(ClusterId))
 class AttachmentDesc(object):
     '''
     snapshot: Whether it is a snapshot or a volume.
@@ -784,6 +793,8 @@ class AttachmentDesc(object):
     volume: The name of the attached volume.
     rights: Whether the volume is attached as read only or read/write; always ro for snapshots.
     pos: The attachment position on the client; used by the StorPool client to form the name of the internal /dev/spN device node.
+    cluster: The local name of the cluster of this attachement for the multicluster call
+    clusterId: The clusterId of the cluster of this attachement for the multicluster call
     '''
 
 
