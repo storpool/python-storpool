@@ -278,7 +278,7 @@ class Api(object):
                         raise err
                 else:
                     return jres['data']
-            except sock.error as err:
+            except (sock.error, http.HTTPException) as err:
                 if self._transientRetries and err.errno in (errno.ECONNREFUSED, errno.ECONNRESET):
                     lastErr = err
                 else:
