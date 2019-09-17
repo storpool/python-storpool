@@ -19,6 +19,11 @@ and act as a compute node.
 Version history
 ===============
 
+5.1.1
+-----
+
+- treat an HTTPException as a transient API communication error
+
 5.1.0
 -----
 
