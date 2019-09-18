@@ -262,8 +262,15 @@ class Api(object):
         if json is not None:
             json = js.dumps(clear_none(json))
 
+        def is_transient_error(err):
+            if isinstance(err, http.HTTPException):
+                return True
+            assert isinstance(err, sock.error)
+            return err.errno in (errno.ECONNREFUSED, errno.ECONNRESET)
+
         retry, lastErr = 0, None
         while True:
+            conn = None
             try:
                 conn = http.HTTPConnection(self._host, self._port, timeout=self._timeout, **self._source)
                 conn.request(method, path, json, self._authHeader)
@@ -279,12 +286,13 @@ class Api(object):
                 else:
                     return jres['data']
             except (sock.error, http.HTTPException) as err:
-                if self._transientRetries and err.errno in (errno.ECONNREFUSED, errno.ECONNRESET):
+                if self._transientRetries and is_transient_error(err):
                     lastErr = err
                 else:
                     raise
             finally:
-                conn.close()
+                if conn:
+                    conn.close()
 
             if retry < self._transientRetries:
                 retrySleep = self._transientSleep(retry)

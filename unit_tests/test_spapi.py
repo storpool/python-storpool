@@ -17,9 +17,11 @@
 """ Tests for the storpool.spapi classes. """
 
 import collections
+import errno
 import itertools
 import json
 import re
+import socket
 import types
 import unittest
 
@@ -132,6 +134,14 @@ ApiMethodTestCase = collections.namedtuple('ApiMethodTestCase', [
     'return_value',
     'call_path',
     'call_json',
+])
+
+ApiErrorTestCase = collections.namedtuple('ApiErrorTestCase', [
+    'method',
+    'error',
+    'transient',
+    'result',
+    'message',
 ])
 
 
@@ -435,3 +445,183 @@ class TestAPI(unittest.TestCase):
 
         assert err.value.name == 'WeirdError'
         assert err.value.desc.endswith('please reread')
+
+    @ddt.data(
+        ApiErrorTestCase(
+            method="init",
+            error=socket.error(errno.ECONNREFUSED, "refused"),
+            transient=True,
+            result={
+                "conn": [1, 1, 1, 1, 1, 1],
+                "request": [],
+                "response": [],
+            },
+            message="refused",
+        ),
+        ApiErrorTestCase(
+            method="init",
+            error=socket.error(errno.EBADF, "badfile"),
+            transient=False,
+            result={
+                "conn": [1],
+                "request": [],
+                "response": [],
+            },
+            message="badfile",
+        ),
+        ApiErrorTestCase(
+            method="init",
+            error=http_client.CannotSendHeader("no reason"),
+            transient=True,
+            result={
+                "conn": [1, 1, 1, 1, 1, 1],
+                "request": [],
+                "response": [],
+            },
+            message="no reason",
+        ),
+
+        ApiErrorTestCase(
+            method="request",
+            error=socket.error(errno.ECONNREFUSED, "refused"),
+            transient=True,
+            result={
+                "conn": [1, 1, 1, 1, 1, 1],
+                "request": [1, 1, 1, 1, 1, 1],
+                "response": [],
+            },
+            message="refused",
+        ),
+        ApiErrorTestCase(
+            method="request",
+            error=socket.error(errno.EBADF, "badfile"),
+            transient=False,
+            result={
+                "conn": [1],
+                "request": [1],
+                "response": [],
+            },
+            message="badfile",
+        ),
+        ApiErrorTestCase(
+            method="request",
+            error=http_client.BadStatusLine("this-line"),
+            transient=True,
+            result={
+                "conn": [1, 1, 1, 1, 1, 1],
+                "request": [1, 1, 1, 1, 1, 1],
+                "response": [],
+            },
+            message="this-line",
+        ),
+
+        ApiErrorTestCase(
+            method="response",
+            error=socket.error(errno.ECONNREFUSED, "refused"),
+            transient=True,
+            result={
+                "conn": [1, 1, 1, 1, 1, 1],
+                "request": [1, 1, 1, 1, 1, 1],
+                "response": [1, 1, 1, 1, 1, 1],
+            },
+            message="refused",
+        ),
+        ApiErrorTestCase(
+            method="response",
+            error=socket.error(errno.EBADF, "badfile"),
+            transient=False,
+            result={
+                "conn": [1],
+                "request": [1],
+                "response": [1],
+            },
+            message="badfile",
+        ),
+        ApiErrorTestCase(
+            method="response",
+            error=http_client.CannotSendRequest("some reason"),
+            transient=True,
+            result={
+                "conn": [1, 1, 1, 1, 1, 1],
+                "request": [1, 1, 1, 1, 1, 1],
+                "response": [1, 1, 1, 1, 1, 1],
+            },
+            message="some reason",
+        ),
+    )
+    def test_api_network_error(self, data):
+        """ Test the way the Api class sends out queries. """
+        called = {"conn": [], "request": [], "response": []}
+
+        def check_transient_calls(name):
+            count = called[name].count(1)
+            if data.transient:
+                assert count <= 5
+            else:
+                assert count == 0
+
+        # This seems a bit crazy; the goal here is to make sure that
+        # HTTPConnection is mocked yet it has an __init__() method that
+        # has the "source_address" named argument.
+        #
+        class MockHTTPConnection(object):
+            """ Mock an HTTPConnection. """
+
+            def __init__(self, host, port=None, strict=None, timeout=None,
+                         source_address=None):
+                # pylint: disable=too-many-arguments
+                """ Mock an HTTPConnection() constructor. """
+                assert host == "1.1.1.1"
+                assert port == 8000
+                assert strict is None
+                assert timeout == 300
+                assert source_address == ("2.3.4.5", 0)
+
+                check_transient_calls("conn")
+                called["conn"].append(1)
+
+                if data.method == "init":
+                    raise data.error
+
+            def request(self, method, url, body=None, headers=None):
+                """ Mock a request. """
+                assert method == "GET"
+                assert url == "/ctrl/1.0/DisksList"
+                assert body is None
+                assert headers == {'Authorization': 'Storpool v1:456'}
+
+                check_transient_calls("request")
+                called["request"].append(1)
+
+                assert data.method in ("request", "response")
+                if data.method == "request":
+                    raise data.error
+
+            def close(self):
+                """ Mock a connection close, nothing to do. """
+
+            def getresponse(self):
+                """ Mock the retrieval of a response. """
+                assert called["request"].count(1) > 0
+
+                check_transient_calls("response")
+                called["response"].append(1)
+
+                assert data.method == "response"
+                raise data.error
+
+        with pytest.raises(type(data.error)) as err:
+            with mock.patch('six.moves.http_client.HTTPConnection',
+                            new=MockHTTPConnection):
+                api = spapi.Api(host='1.1.1.1', port=8000, auth='456',
+                                source='2.3.4.5', transientSleep=lambda _: 0)
+                assert called == {"conn": [], "request": [], "response": []}
+                api.disksList()  # pylint: disable=not-callable
+
+        assert called == data.result
+
+        if isinstance(err.value, socket.error):
+            assert err.value.errno == data.error.errno
+            assert data.message in err.value.strerror
+        else:
+            assert data.message == err.value.args[0]
