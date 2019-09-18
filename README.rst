@@ -19,6 +19,11 @@ and act as a compute node.
 Version history
 ===============
 
+5.1.2
+-----
+
+- fix the check for treating an HTTPException as a transient error
+
 5.1.1
 -----
 
