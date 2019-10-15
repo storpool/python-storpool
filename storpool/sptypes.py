@@ -1046,7 +1046,7 @@ class VolumesGroupBackupDesc(object):
     '''
 
 
-@JsonObject(name=VolumeName, location=RemoteLocationName, creationTimestamp=longType, size=VolumeSize, remoteId=GlobalVolumeId, onVolume=maybe(VolumeName), localSnapshot=maybe(SnapshotName))
+@JsonObject(name=VolumeName, location=RemoteLocationName, creationTimestamp=longType, size=VolumeSize, remoteId=GlobalVolumeId, onVolume=maybe(VolumeName), localSnapshot=maybe(SnapshotName), tags=maybe({VolumeTagName: VolumeTagValue}))
 class RemoteSnapshot(object):
     '''
     name: The name of the snapshot.
@@ -1056,6 +1056,7 @@ class RemoteSnapshot(object):
     remoteId: The global snapshot identifier.
     onVolume: The name of the local volume (if any) on which the snapshot was created.
     localSnapshot: The name of the local snapshot (if any) which is a copy of the remote snapshot.
+    tags: Arbitrary short name/value pairs stored with the snapshot.
     '''
 
 
