@@ -233,7 +233,7 @@ class JsonObjectDoc(ItemDoc):
 class ApiCallDoc(Doc):
     """ Documentation for an API section full of calls. """
 
-    def __init__(self, name, desc, method, path, args, json, returns):
+    def __init__(self, name, desc, method, query, path, args, json, returns):
         # pylint: disable=too-many-arguments
         """ Initialize an ApiCallDoc object with the specified parameters. """
         if not name:
@@ -241,11 +241,11 @@ class ApiCallDoc(Doc):
 
         super(ApiCallDoc, self).__init__(name, desc)
         self.method = method
+        self.query = query.split("/")[0]
         self.path = path
         self.args = args
         self.json = json
         self.returns = returns
-        self.query = path.split("/")[3]
 
     def index(self, html):
         """ Build an API call index entry. """

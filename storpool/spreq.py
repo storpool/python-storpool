@@ -84,6 +84,8 @@ def parse_args():
                         help='No-operation mode')
     parser.add_argument('--json', type=str,
                         help='JSON arguments to send to the API')
+    parser.add_argument('-M', '--multicluster', action='store_true',
+                        help='Enable multicluster mode')
     parser.add_argument('-P', '--post', action='store_true',
                         help='Use a POST query instead of a GET one')
     parser.add_argument('query', type=str,
@@ -120,7 +122,7 @@ def get_api_method(args):
     http_method = 'POST' if args.post else 'GET'
 
     try:
-        api = from_config_with_overrides()
+        api = from_config_with_overrides(multiCluster=args.multicluster)
     except KeyError as k_err:
         err_exit('cliMissingConfigVariable',
                  'Missing CLI configuration variable',

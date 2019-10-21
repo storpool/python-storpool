@@ -126,13 +126,14 @@ API_ARG_DATA_EXPLODED = itertools.chain(
 
 ApiMethodTestCase = collections.namedtuple('ApiMethodTestCase', [
     'method',
-    'path',
+    'multicluster',
+    'query',
     'args',
     'json',
     'returns',
     'params',
     'return_value',
-    'call_path',
+    'call_query',
     'call_json',
 ])
 
@@ -170,24 +171,38 @@ class TestAPI(unittest.TestCase):
     @ddt.data(
         ApiMethodTestCase(
             method='GET',
-            path='Query/{name}',
+            multicluster=False,
+            query='Query/{name}',
             args=[('name', str)],
             json=None,
             returns=int,
             params=['test'],
             return_value=616,
-            call_path='/ctrl/1.0/Query/test',
+            call_query='Query/test',
             call_json=None,
         ),
         ApiMethodTestCase(
             method='POST',
-            path='AnotherQuery/{id}',
+            multicluster=False,
+            query='AnotherQuery/{id}',
             args=[('id', int)],
             json={sptypes.DiskId: sptypes.ServerId},
             returns=int,
             params=[42, {616: 6}],
             return_value=616,
-            call_path='/ctrl/1.0/AnotherQuery/42',
+            call_query='AnotherQuery/42',
+            call_json={616: 6},
+        ),
+        ApiMethodTestCase(
+            method='POST',
+            multicluster=True,
+            query='AnotherQuery/{id}',
+            args=[('id', int)],
+            json={sptypes.DiskId: sptypes.ServerId},
+            returns=int,
+            params=[42, {616: 6}],
+            return_value=616,
+            call_query='AnotherQuery/42',
             call_json={616: 6},
         ),
     )
@@ -195,10 +210,12 @@ class TestAPI(unittest.TestCase):
         """ Make sure _API_METHOD.compile() returns a sensible function. """
         # pylint: disable=protected-access
         args = [spapi._API_ARG(aname, atype) for aname, atype in data.args]
-        meth = spapi._API_METHOD(data.method, data.path, args,
-                                 data.json, data.returns)
+        meth = spapi._API_METHOD(
+            data.method, data.multicluster, data.query, args,
+            data.json, data.returns)
         assert meth.method == data.method
-        assert meth.path == '/ctrl/1.0/' + data.path
+        multi = "MultiCluster/" if data.multicluster else ""
+        assert meth.path == '/ctrl/1.0/' + multi + data.query
         assert meth.args == args
         if data.json is None:
             assert meth.json is None
@@ -218,8 +235,8 @@ class TestAPI(unittest.TestCase):
 
         res = func(mock_api, *data.params)
         assert res == data.return_value
-        mock_api.assert_called_once_with(data.method, data.call_path,
-                                         data.call_json)
+        mock_api.assert_called_once_with(
+            data.method, data.multicluster, data.call_query, data.call_json)
 
     @mock.patch('six.moves.http_client.HTTPConnection', spec=['__call__'])
     def test_api_disks_list(self, http):

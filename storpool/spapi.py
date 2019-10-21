@@ -46,6 +46,14 @@ SP_DEV_PATH = '/dev/storpool/'
 SP_API_PREFIX = '/ctrl/1.0'
 
 
+def _format_path(query, multiCluster):
+    """ Return the HTTP path to send an actual query to. """
+    return "{pref}/{multi}{query}".format(
+        pref=SP_API_PREFIX,
+        multi="MultiCluster/" if multiCluster else "",
+        query=query)
+
+
 class _API_ARG(object):
     def __init__(self, name, validate):
         self._name = name
@@ -63,9 +71,11 @@ GlobalVolumeId = _API_ARG('globalVolumeId', sp.GlobalVolumeId)
 
 
 class _API_METHOD(object):
-    def __init__(self, method, query, args, json, returns):
+    def __init__(self, method, multiCluster, query, args, json, returns):
         self.method = method
-        self.path = "{pref}/{query}".format(pref=SP_API_PREFIX, query=query)
+        self.multiCluster = multiCluster
+        self.query = query
+        self.path = _format_path(query, multiCluster)
         self.args = args
         self.json = spType(json) if json is not None else None
         self.returns = spType(returns)
@@ -75,7 +85,7 @@ class _API_METHOD(object):
         self.types.update({name: desc})
 
     def doc(self, name, desc):
-        self.spDoc = ApiCallDoc(name, desc, self.method, self.path, dict((arg._name, arg._type.spDoc) for arg in self.args), self.json.spDoc if self.json else None, self.returns.spDoc)
+        self.spDoc = ApiCallDoc(name, desc, self.method, self.query, self.path, dict((arg._name, arg._type.spDoc) for arg in self.args), self.json.spDoc if self.json else None, self.returns.spDoc)
         return self
 
     def compile(self):
@@ -85,7 +95,7 @@ class _API_METHOD(object):
         def fmtEq(x):
             return "{x}={x}".format(x=x)
 
-        method, path, args, json, returns = self.method, self.path, self.args, self.json, self.returns
+        method, query, args, json, returns = self.method, self.query, self.args, self.json, self.returns
 
         args = list(args)
         if json is not None:
@@ -95,12 +105,12 @@ class _API_METHOD(object):
         for arg in args:
             ftext += '    {arg} = _validate_{arg}({arg})\n'.format(arg=arg._name)
 
-        ftext += '    path = "{path}"'.format(path=path)
+        ftext += '    query = "{query}"'.format(query=query)
         if args:
             ftext += '.format({args})\n'.format(args=commas(fmtEq(arg._name) for arg in args))
         ftext += '\n'
 
-        ftext += '    res = self("{method}", path, {json})\n'.format(method=method, json=None if json is None else 'json')
+        ftext += '    res = self("{method}", {multiCluster}, query, {json})\n'.format(method=method, multiCluster=repr(self.multiCluster), json=None if json is None else 'json')
         ftext += '    try:\n'
         ftext += '        return returns(res)\n'
         ftext += '    except InvalidArgumentError as e:\n'
@@ -117,7 +127,7 @@ class _API_METHOD(object):
         func = globalz['func']
         del globalz['func']
 
-        doc = "HTTP: {method} {path}\n\n".format(method=method, path=path)
+        doc = "HTTP: {method} {path}\n\n".format(method=method, path=self.path)
 
         if args:
             doc += "    Arguments:\n"
@@ -137,11 +147,11 @@ class _API_METHOD(object):
 def GET(query, *args, **kwargs):
     assert 'json' not in kwargs, 'GET requests currently do not accept JSON objects'
     assert 'returns' in kwargs, 'GET requests must specify a return type'
-    return _API_METHOD('GET', query, args, None, kwargs['returns'])
+    return _API_METHOD('GET', kwargs.get('multiCluster', False), query, args, None, kwargs['returns'])
 
 
 def POST(query, *args, **kwargs):
-    return _API_METHOD('POST', query, args, kwargs.get('json', None), kwargs.get('returns', ApiOk))
+    return _API_METHOD('POST', kwargs.get('multiCluster', False), query, args, kwargs.get('json', None), kwargs.get('returns', ApiOk))
 
 
 @JsonObject(ok=const(True), generation=longType, info=maybe(str))
@@ -230,13 +240,14 @@ class Api(object):
         the supported API calls.
         """)
 
-    def __init__(self, host='127.0.0.1', port=80, auth='', timeout=300, transientRetries=5, transientSleep=lambda retry: 2 ** retry, source=None):
+    def __init__(self, host='127.0.0.1', port=80, auth='', timeout=300, transientRetries=5, transientSleep=lambda retry: 2 ** retry, source=None, multiCluster=False):
         self._host = host
         self._port = port
         self._timeout = timeout
         self._transientRetries = transientRetries
         self._transientSleep = transientSleep
         self._authHeader = {"Authorization": "Storpool v1:" + str(auth)}
+        self._multiCluster = multiCluster
 
         if source is not None:
             hinit = http.HTTPConnection.__init__
@@ -258,7 +269,7 @@ class Api(object):
             cfg = SPConfig()
         return klass(host=cfg['SP_API_HTTP_HOST'], port=int(cfg['SP_API_HTTP_PORT']), auth=cfg['SP_AUTH_TOKEN'], **kwargs)
 
-    def __call__(self, method, path, json=None):
+    def __call__(self, method, multiCluster, query, json=None):
         if json is not None:
             json = js.dumps(clear_none(json))
 
@@ -273,6 +284,7 @@ class Api(object):
             conn = None
             try:
                 conn = http.HTTPConnection(self._host, self._port, timeout=self._timeout, **self._source)
+                path = _format_path(query, multiCluster and self._multiCluster)
                 conn.request(method, path, json, self._authHeader)
                 response = conn.getresponse()
                 status, jres = response.status, js.load(response)
@@ -513,7 +525,7 @@ Api.volumeListSnapshots = GET('VolumeListSnapshots/{volumeName}', VolumeName, re
     VolumeList
     """)
 Api.volumeCreate = POST('VolumeCreate', json=sp.VolumeCreateDesc, returns=ApiOkVolumeCreate).doc("Create a new volume", """ """)
-Api.volumeUpdate = POST('VolumeUpdate/{volumeName}', VolumeName, json=sp.VolumeUpdateDesc).doc("Update a volume",
+Api.volumeUpdate = POST('VolumeUpdate/{volumeName}', VolumeName, json=sp.VolumeUpdateDesc, multiCluster=True).doc("Update a volume",
     """ Alter the configuration of an existing volume. """)
 Api.volumeFreeze = POST('VolumeFreeze/{volumeName}', VolumeName, json=maybe(sp.VolumeFreezeDesc)).doc("Freeze a volume",
     """ Convert the volume to a snapshot """)
@@ -525,11 +537,11 @@ Api.volumeRebase = POST('VolumeRebase/{volumeName}', VolumeName, json=sp.VolumeR
 Api.volumeAbandonDisk = POST('VolumeAbandonDisk/{volumeName}', VolumeName, json=sp.AbandonDiskDesc).doc("Abandon disk",
     """
     """)
-Api.volumeDelete = POST('VolumeDelete/{volumeName}', VolumeName).doc("Delete a volume", """ """)
-Api.volumeBackup = POST('VolumeBackup', json=sp.VolumeBackupDesc, returns=ApiOkVolumeBackup).doc("Backup a volume to a remote location",
+Api.volumeDelete = POST('VolumeDelete/{volumeName}', VolumeName, multiCluster=True).doc("Delete a volume", """ """)
+Api.volumeBackup = POST('VolumeBackup', json=sp.VolumeBackupDesc, returns=ApiOkVolumeBackup, multiCluster=True).doc("Backup a volume to a remote location",
     """
     """)
-Api.volumesGroupBackup = POST('VolumesGroupBackup', json=sp.VolumesGroupBackupDesc, returns=ApiOkVolumesGroupBackup).doc("Backup a group of volumes to a remote location",
+Api.volumesGroupBackup = POST('VolumesGroupBackup', json=sp.VolumesGroupBackupDesc, returns=ApiOkVolumesGroupBackup, multiCluster=True).doc("Backup a group of volumes to a remote location",
     """
     """)
 
@@ -561,7 +573,7 @@ Api.snapshotInfo = GET('SnapshotGetInfo/{snapshotName}', SnapshotName, returns=s
     Return general information about the distribution of the snapshot's data on the
     disks.
     """)
-Api.snapshotCreate = POST('VolumeSnapshot/{volumeName}', VolumeName, json=sp.VolumeSnapshotDesc, returns=ApiOkVolumeCreate).doc("Snapshot a volume",
+Api.snapshotCreate = POST('VolumeSnapshot/{volumeName}', VolumeName, json=sp.VolumeSnapshotDesc, returns=ApiOkVolumeCreate, multiCluster=True).doc("Snapshot a volume",
     """
     Create a snapshot of the given volume; the snapshot becomes the parent of
     the volume.
@@ -576,11 +588,11 @@ Api.snapshotRebase = POST('SnapshotRebase/{snapshotName}', SnapshotName, json=sp
 Api.snapshotAbandonDisk = POST('VolumeAbandonDisk/{snapshotName}', SnapshotName, json=sp.AbandonDiskDesc).doc("Abandon disk",
     """
     """)
-Api.snapshotDelete = POST('SnapshotDelete/{snapshotName}', SnapshotName).doc("Delete a snapshot", """ """)
+Api.snapshotDelete = POST('SnapshotDelete/{snapshotName}', SnapshotName, multiCluster=True).doc("Delete a snapshot", """ """)
 
 Api.snapshotDeleteById = POST('SnapshotDeleteById/{globalVolumeId}', GlobalVolumeId).doc("Delete a snapshot by global id", """ """)
 
-Api.snapshotCreateGroup = POST('VolumesGroupSnapshot', json=sp.GroupSnapshotsSpec, returns=sp.GroupSnapshotsResult).doc("Create consistent snapshots of a group of volumes",
+Api.snapshotCreateGroup = POST('VolumesGroupSnapshot', json=sp.GroupSnapshotsSpec, returns=sp.GroupSnapshotsResult, multiCluster=True).doc("Create consistent snapshots of a group of volumes",
     """
     """)
 
@@ -612,7 +624,7 @@ Api.attachmentsList = GET('AttachmentsList', returns=[sp.AttachmentDesc]).doc("L
     List the volumes and snapshots currently attached to clients along with
     the read/write rights of each attachment.
     """)
-Api.volumesReassign = POST('VolumesReassign', json=[either(sp.VolumeReassignDesc, sp.SnapshotReassignDesc)]).doc("Reassign volumes and/or snapshots",
+Api.volumesReassign = POST('VolumesReassign', json=[either(sp.VolumeReassignDesc, sp.SnapshotReassignDesc)], multiCluster=True).doc("Reassign volumes and/or snapshots",
     """ Perform bulk attach/detach and attachment rights modification. """)
 
 Api.volumesReassignWait = POST('VolumesReassignWait', json=sp.VolumesReassignWaitDesc).doc("Reassign volumes and/or snapshots with confirmation from the clients",

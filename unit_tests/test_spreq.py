@@ -140,6 +140,8 @@ STATUS_PYTHON = {
 ArgsType = collections.namedtuple('ArgType', [
     'args',
     'json',
+    'multicluster',
+    'is_multicluster',
     'post',
     'query',
 ])
@@ -150,6 +152,8 @@ GET_API_METHOD_TESTS = [
         ArgsType(
             args=[],
             json=None,
+            multicluster=False,
+            is_multicluster=False,
             post=False,
             query='ServicesList',
         ),
@@ -159,6 +163,8 @@ GET_API_METHOD_TESTS = [
         ArgsType(
             args=[1],
             json=None,
+            multicluster=False,
+            is_multicluster=False,
             post=False,
             query='ServicesList',
         ),
@@ -168,6 +174,8 @@ GET_API_METHOD_TESTS = [
         ArgsType(
             args=[1],
             json=None,
+            multicluster=False,
+            is_multicluster=False,
             post=True,
             query='ServicesList',
         ),
@@ -177,6 +185,8 @@ GET_API_METHOD_TESTS = [
         ArgsType(
             args=['beleriand'],
             json=None,
+            multicluster=False,
+            is_multicluster=False,
             post=False,
             query='VolumeDescribe',
         ),
@@ -186,6 +196,8 @@ GET_API_METHOD_TESTS = [
         ArgsType(
             args=[],
             json=None,
+            multicluster=False,
+            is_multicluster=False,
             post=False,
             query='VolumeBalancerStatus',
         ),
@@ -195,8 +207,32 @@ GET_API_METHOD_TESTS = [
         ArgsType(
             args=[],
             json={'cmd': 'stop'},
+            multicluster=False,
+            is_multicluster=False,
             post=True,
             query='VolumeBalancerStatus',
+        ),
+    ),
+    (
+        'volumeDelete',
+        ArgsType(
+            args=['no-name'],
+            json=None,
+            multicluster=False,
+            is_multicluster=True,
+            post=True,
+            query='VolumeDelete',
+        ),
+    ),
+    (
+        'volumeDelete',
+        ArgsType(
+            args=['no-name'],
+            json=None,
+            multicluster=True,
+            is_multicluster=True,
+            post=True,
+            query='VolumeDelete',
         ),
     ),
 ]
@@ -268,3 +304,26 @@ class TestRequests(unittest.TestCase):
             meth = spreq.get_api_method(args)
 
         assert meth.__name__ == name
+
+    @mock.patch('storpool.spconfig.SPConfig', spec=['__call__'])
+    @ddt.data(*GET_API_METHOD_TESTS)
+    @ddt.unpack
+    def test_multicluster(self, name, args, sp_cfg):
+        """ Make sure that API methods are looked up correctly. """
+        sp_cfg.return_value = {
+            'SP_API_HTTP_HOST': 'hostname',
+            'SP_API_HTTP_PORT': 8000,
+            'SP_AUTH_TOKEN': 'token',
+        }
+
+        with mock.patch('os.environ.get', spec=['__call__'],
+                        new=lambda _var, _default: None):
+            if name is None:
+                with pytest.raises(SystemExit):
+                    spreq.get_api_method(args)
+                return
+
+            meth = spreq.get_api_method(args)
+
+        assert meth.__name__ == name
+        assert ('/MultiCluster/' in meth.spDoc.path) == args.is_multicluster
