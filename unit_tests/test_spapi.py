@@ -132,6 +132,7 @@ ApiMethodTestCase = collections.namedtuple('ApiMethodTestCase', [
     'json',
     'returns',
     'params',
+    'kwparams',
     'return_value',
     'call_query',
     'call_json',
@@ -177,6 +178,20 @@ class TestAPI(unittest.TestCase):
             json=None,
             returns=int,
             params=['test'],
+            kwparams={},
+            return_value=616,
+            call_query='Query/test',
+            call_json=None,
+        ),
+        ApiMethodTestCase(
+            method='GET',
+            multicluster=False,
+            query='Query/{name}',
+            args=[('name', str)],
+            json=None,
+            returns=int,
+            params=['test'],
+            kwparams={'clusterName': 'elsewhere'},
             return_value=616,
             call_query='Query/test',
             call_json=None,
@@ -189,6 +204,20 @@ class TestAPI(unittest.TestCase):
             json={sptypes.DiskId: sptypes.ServerId},
             returns=int,
             params=[42, {616: 6}],
+            kwparams={},
+            return_value=616,
+            call_query='AnotherQuery/42',
+            call_json={616: 6},
+        ),
+        ApiMethodTestCase(
+            method='POST',
+            multicluster=False,
+            query='AnotherQuery/{id}',
+            args=[('id', int)],
+            json={sptypes.DiskId: sptypes.ServerId},
+            returns=int,
+            params=[42, {616: 6}],
+            kwparams={'clusterName': 'remote'},
             return_value=616,
             call_query='AnotherQuery/42',
             call_json={616: 6},
@@ -201,6 +230,20 @@ class TestAPI(unittest.TestCase):
             json={sptypes.DiskId: sptypes.ServerId},
             returns=int,
             params=[42, {616: 6}],
+            kwparams={},
+            return_value=616,
+            call_query='AnotherQuery/42',
+            call_json={616: 6},
+        ),
+        ApiMethodTestCase(
+            method='POST',
+            multicluster=True,
+            query='AnotherQuery/{id}',
+            args=[('id', int)],
+            json={sptypes.DiskId: sptypes.ServerId},
+            returns=int,
+            params=[42, {616: 6}],
+            kwparams={'clusterName': 'backup'},
             return_value=616,
             call_query='AnotherQuery/42',
             call_json={616: 6},
@@ -233,10 +276,11 @@ class TestAPI(unittest.TestCase):
         mock_api = mock.Mock(spec=['__call__'])
         mock_api.return_value = data.return_value
 
-        res = func(mock_api, *data.params)
+        res = func(mock_api, *data.params, **data.kwparams)
         assert res == data.return_value
         mock_api.assert_called_once_with(
-            data.method, data.multicluster, data.call_query, data.call_json)
+            data.method, data.multicluster, data.call_query, data.call_json,
+            clusterName=data.kwparams.get("clusterName"))
 
     @mock.patch('six.moves.http_client.HTTPConnection', spec=['__call__'])
     def test_api_disks_list(self, http):

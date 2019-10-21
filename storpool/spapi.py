@@ -46,10 +46,11 @@ SP_DEV_PATH = '/dev/storpool/'
 SP_API_PREFIX = '/ctrl/1.0'
 
 
-def _format_path(query, multiCluster):
+def _format_path(query, multiCluster, clusterName=None):
     """ Return the HTTP path to send an actual query to. """
-    return "{pref}/{multi}{query}".format(
+    return "{pref}/{remote}{multi}{query}".format(
         pref=SP_API_PREFIX,
+        remote="RemoteCommand/{name}/".format(name=clusterName) if clusterName is not None else "",
         multi="MultiCluster/" if multiCluster else "",
         query=query)
 
@@ -101,7 +102,8 @@ class _API_METHOD(object):
         if json is not None:
             args.append(_API_ARG('json', json))
 
-        ftext = 'def func(self, {args}):\n'.format(args=commas(arg._name for arg in args))
+        ftext = 'def func(self, {args}clusterName=None):\n'.format(
+            args=''.join(arg._name + ", " for arg in args))
         for arg in args:
             ftext += '    {arg} = _validate_{arg}({arg})\n'.format(arg=arg._name)
 
@@ -110,7 +112,7 @@ class _API_METHOD(object):
             ftext += '.format({args})\n'.format(args=commas(fmtEq(arg._name) for arg in args))
         ftext += '\n'
 
-        ftext += '    res = self("{method}", {multiCluster}, query, {json})\n'.format(method=method, multiCluster=repr(self.multiCluster), json=None if json is None else 'json')
+        ftext += '    res = self("{method}", {multiCluster}, query, {json}, clusterName=clusterName)\n'.format(method=method, multiCluster=repr(self.multiCluster), json=None if json is None else 'json')
         ftext += '    try:\n'
         ftext += '        return returns(res)\n'
         ftext += '    except InvalidArgumentError as e:\n'
@@ -269,7 +271,7 @@ class Api(object):
             cfg = SPConfig()
         return klass(host=cfg['SP_API_HTTP_HOST'], port=int(cfg['SP_API_HTTP_PORT']), auth=cfg['SP_AUTH_TOKEN'], **kwargs)
 
-    def __call__(self, method, multiCluster, query, json=None):
+    def __call__(self, method, multiCluster, query, json=None, clusterName=None):
         if json is not None:
             json = js.dumps(clear_none(json))
 
@@ -284,7 +286,7 @@ class Api(object):
             conn = None
             try:
                 conn = http.HTTPConnection(self._host, self._port, timeout=self._timeout, **self._source)
-                path = _format_path(query, multiCluster and self._multiCluster)
+                path = _format_path(query, multiCluster and self._multiCluster, clusterName=clusterName)
                 conn.request(method, path, json, self._authHeader)
                 response = conn.getresponse()
                 status, jres = response.status, js.load(response)

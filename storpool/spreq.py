@@ -84,6 +84,8 @@ def parse_args():
                         help='No-operation mode')
     parser.add_argument('--json', type=str,
                         help='JSON arguments to send to the API')
+    parser.add_argument('-C', '--clustername', type=str,
+                        help='Name of a remote cluster to send the command to')
     parser.add_argument('-M', '--multicluster', action='store_true',
                         help='Enable multicluster mode')
     parser.add_argument('-P', '--post', action='store_true',
@@ -172,14 +174,16 @@ def main():
     method_args = args.args
     if args.json is not None:
         method_args.append(json.loads(args.json))
+    method_kwargs = {"clusterName": args.clustername}
 
     if args.noop:
-        print('About to invoke {method} with {args}'
-              .format(method=repr(method), args=repr(method_args)))
+        print('About to invoke {method} with {args}, {kwargs}'
+              .format(method=repr(method), args=repr(method_args),
+                      kwargs=repr(method_kwargs)))
         return
 
     try:
-        res = method(*method_args)
+        res = method(*method_args, **method_kwargs)
         print(json.dumps(deep_to_json(res), indent=2))
     except spapi.ApiError as err:
         print(json.dumps(err.json, indent=2), file=sys.stderr)
