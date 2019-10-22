@@ -400,6 +400,28 @@ Api.spDocSection("General",
 
     Note: Requests will sometimes use GET instead of POST and consequently,
     will not require JSON. Responses on the other hand always produce JSON content.
+
+    Some of the API calls may be used in a StorPool multicluster environment to
+    reference and modify volumes and snapshots in a different (but connected)
+    StorPool cluster. These have a "MultiCluster/" component in their URL path.
+    When using the Python StorPool bindings, multicluster feature is enabled by
+    adding a "multiCluster=True" parameter to the Api constructor invocation.
+
+    In a StorPool multicluster environment an instance of the StorPool API may
+    be used to forward a command to the API instance of another cluster by
+    adding a "RemoteCommand/<clusterName>/" path component immediately after
+    the API version prefix:
+
+    ```
+    curl -H "Authorization: Storpool v1:1556129910218014736" 192.168.42.208:81/ctrl/1.0/RemoteCommand/backup/DisksList
+    ```
+
+    When using the Python StorPool bindings, this is done by adding
+    a "clusterName=clusterName" parameter to the API method invocation:
+
+    ```
+    api.disksList(clusterName="backup")
+    ```
     """)
 
 Api.spDocSection("Peers", """ """)
