@@ -159,7 +159,9 @@ def volumeSizeValidator(argName):
 VOLUME_NAME_SIZE = 200
 PLACEMENT_GROUP_NAME_SIZE = 128
 VOLUME_NAME_REGEX = r'^\#?[A-Za-z0-9_\-.:]+$'
+VOLUME_NAME_OR_GLOBAL_ID_REGEX = r'^\#?[A-Za-z0-9_\-.:]+$|^~[a-z0-9]+\.[a-z0-9]+\.[a-z0-9]+$'
 SNAPSHOT_NAME_REGEX = r'^\*?[A-Za-z0-9_\-.:@]+$'
+SNAPSHOT_NAME_OR_GLOBAL_ID_REGEX = r'^\*?[A-Za-z0-9_\-.:@]+$|^~[a-z0-9]+\.[a-z0-9]+\.[a-z0-9]+$'
 PLACEMENT_GROUP_NAME_REGEX = r'^[A-Za-z0-9_\-]+$'
 VOLUME_TEMPLATE_NAME_REGEX = r'^[A-Za-z0-9_\-]+$'
 DISK_DESC_REGEX = r'^[A-Za-z0-9_\- ]{,30}$'
@@ -213,8 +215,10 @@ DiskId = intRange('DiskID', 0, MAX_DISK_ID)
 DiskDescription = regex('DiskDescritpion', DISK_DESC_REGEX)
 
 SnapshotName = nameValidator("SnapshotName", SNAPSHOT_NAME_REGEX, VOLUME_NAME_SIZE, 'list', 'status')
+SnapshotNameOrGlobalId = nameValidator("SnapshotNameOrGlobalId", SNAPSHOT_NAME_OR_GLOBAL_ID_REGEX, VOLUME_NAME_SIZE, 'list', 'status')
 
 VolumeName = nameValidator("VolumeName", VOLUME_NAME_REGEX, VOLUME_NAME_SIZE, 'list', 'status')
+VolumeNameOrGlobalId = nameValidator("VolumeNameOrGlobalId", VOLUME_NAME_OR_GLOBAL_ID_REGEX, VOLUME_NAME_SIZE, 'list', 'status')
 VolumeReplication = intRange('Replication', 1, 3)
 VolumeSize = volumeSizeValidator("Size")
 VolumeResize = volumeSizeValidator("SizeAdd")
@@ -473,7 +477,7 @@ class DiskDescUpdate(object):
 
 
 # ACTIVE REQUESTS
-@JsonObject(requestId=str, requestIdx=int, volume=either(VolumeName, SnapshotName), address=longType, size=int,
+@JsonObject(requestId=str, requestIdx=int, volume=either(VolumeNameOrGlobalId, SnapshotNameOrGlobalId), address=longType, size=int,
     op=oneOf('RequestOp', "read", "write", "merge", "system", "entries flush", "#bad_state", "#bad_drOp"), state=internal(str), prevState=internal(str), drOp=internal(str), msecActive=int)
 class ActiveRequestDesc(object):
     '''
@@ -559,14 +563,14 @@ class VolumeSummaryBase(VolumeLimits):
     '''
 
 
-@JsonObject(name=VolumeName)
+@JsonObject(name=VolumeNameOrGlobalId)
 class VolumeSummary(VolumeSummaryBase):
     '''
     name: The name of this volume.
     '''
 
 
-@JsonObject(name=SnapshotName, onVolume=VolumeName,
+@JsonObject(name=SnapshotName, onVolume=VolumeNameOrGlobalId,
     autoName=bool, bound=bool, deleted=bool, transient=bool, targetDeleteDate=maybe(int), globalId=GlobalVolumeId,
     recoveringFromRemote=bool)
 class SnapshotSummary(VolumeSummaryBase):
@@ -617,7 +621,7 @@ class SnapshotInfo(SnapshotSummary):
     pass
 
 
-@JsonObject(name=either(VolumeName, SnapshotName), size=VolumeSize, replication=VolumeReplication,
+@JsonObject(name=either(VolumeNameOrGlobalId, SnapshotNameOrGlobalId), size=VolumeSize, replication=VolumeReplication,
     status=oneOf("VolumeCurentStatus", "up", "up soon", "data lost", "down"), snapshot=bool, migrating=bool, decreasedRedundancy=bool, balancerBlocked=bool,
     storedSize=int, onDiskSize=int, syncingDataBytes=int, syncingMetaObjects=int, downBytes=int,
     downDrives=[DiskId], missingDrives=[DiskId], missingTargetDrives=[DiskId], softEjectingDrives=[DiskId],
@@ -673,7 +677,7 @@ class VolumePolicyDesc(object):
     '''
 
 
-@JsonObject(name=VolumeName, size=maybe(VolumeSize), parent=maybe(SnapshotName), template=maybe(VolumeTemplateName), baseOn=maybe(VolumeName))
+@JsonObject(name=VolumeName, size=maybe(VolumeSize), parent=maybe(SnapshotNameOrGlobalId), template=maybe(VolumeTemplateName), baseOn=maybe(VolumeNameOrGlobalId))
 class VolumeCreateDesc(VolumePolicyDesc):
     '''
     name: The name of the volume to be created.
@@ -743,7 +747,7 @@ DetachClientsList = eitherOr([ClientId], "all")
 AttachmentPos = intRange('AttachmentPos', 0, MAX_CLIENT_DISK)
 
 
-@JsonObject(volume=VolumeName, detach=maybe(DetachClientsList), ro=maybe([ClientId]), rw=maybe([ClientId]), force=False)
+@JsonObject(volume=VolumeNameOrGlobalId, detach=maybe(DetachClientsList), ro=maybe([ClientId]), rw=maybe([ClientId]), force=False)
 class VolumeReassignDesc(object):
     '''
     volume: The name of the volume to be reassigned.
@@ -772,7 +776,7 @@ class VolumesReassignWaitDesc(object):
     '''
 
 
-@JsonObject(volume=VolumeName, snapshot=bool, client=ClientId, rights=AttachmentRights, pos=AttachmentPos)
+@JsonObject(volume=VolumeNameOrGlobalId, snapshot=bool, client=ClientId, rights=AttachmentRights, pos=AttachmentPos)
 class AttachmentDesc(object):
     '''
     snapshot: Whether it is a snapshot or a volume.
@@ -893,7 +897,7 @@ class VolumeBalancerCommand(object):
     '''
 
 
-@JsonObject(name=either(VolumeName, SnapshotName),
+@JsonObject(name=either(VolumeNameOrGlobalId, SnapshotNameOrGlobalId),
     placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName, replication=VolumeReplication,
     size=longType, objectsCount=int,
     snapshot=bool, reallocated=bool, blocked=bool)
@@ -968,7 +972,7 @@ class VolumeBalancerSlot(object):
 @JsonObject(placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName, replication=VolumeReplication,
     feasible=bool, blocked=bool,
     size=int, storedSize=int, objectsCount=int,
-    root=either(VolumeName, SnapshotName), volumes=[either(VolumeName, SnapshotName)],
+    root=either(VolumeNameOrGlobalId, SnapshotNameOrGlobalId), volumes=[either(VolumeNameOrGlobalId, SnapshotNameOrGlobalId)],
     targetDiskSets=[[DiskId]], slots=[VolumeBalancerSlot], reuseServer=maybe(bool))
 class VolumeBalancerAllocationGroup(object):
     '''
@@ -1021,7 +1025,7 @@ class SnapshotUnexportDesc(object):
     '''
 
 
-@JsonObject(volume=VolumeName, location=RemoteLocationName, tags=maybe({VolumeTagName: VolumeTagValue}))
+@JsonObject(volume=VolumeNameOrGlobalId, location=RemoteLocationName, tags=maybe({VolumeTagName: VolumeTagValue}))
 class VolumeBackupDesc(object):
     '''
     volume: The name of the volume to backup.
@@ -1037,7 +1041,7 @@ class VolumesGroupBackupSingle(object):
     '''
 
 
-@JsonObject(location=RemoteLocationName, volumes=[VolumeName], tags=maybe({VolumeTagName: VolumeTagValue}))
+@JsonObject(location=RemoteLocationName, volumes=[VolumeNameOrGlobalId], tags=maybe({VolumeTagName: VolumeTagValue}))
 class VolumesGroupBackupDesc(object):
     '''
     volumes: The names of the volumes to backup.
@@ -1046,7 +1050,7 @@ class VolumesGroupBackupDesc(object):
     '''
 
 
-@JsonObject(name=VolumeName, location=RemoteLocationName, creationTimestamp=longType, size=VolumeSize, remoteId=GlobalVolumeId, onVolume=maybe(VolumeName), localSnapshot=maybe(SnapshotName), tags=maybe({VolumeTagName: VolumeTagValue}))
+@JsonObject(name=VolumeNameOrGlobalId, location=RemoteLocationName, creationTimestamp=longType, size=VolumeSize, remoteId=GlobalVolumeId, onVolume=maybe(VolumeNameOrGlobalId), localSnapshot=maybe(SnapshotNameOrGlobalId), tags=maybe({VolumeTagName: VolumeTagValue}))
 class RemoteSnapshot(object):
     '''
     name: The name of the snapshot.
@@ -1095,7 +1099,7 @@ class SnapshotsRemoteUnexport(object):
     '''
 
 
-@JsonObject(volume=VolumeName, name=maybe(SnapshotName))
+@JsonObject(volume=VolumeNameOrGlobalId, name=maybe(SnapshotName))
 class GroupSnapshotSpec(object):
     '''
     volume: The name of the volume to create a snapshot of.
@@ -1110,7 +1114,7 @@ class GroupSnapshotsSpec(object):
     '''
 
 
-@JsonObject(volume=VolumeName, snapshot=maybe(SnapshotName), remoteId=GlobalVolumeId)
+@JsonObject(volume=VolumeNameOrGlobalId, snapshot=maybe(SnapshotName), remoteId=GlobalVolumeId)
 class GroupSnapshotResult(object):
     '''
     volume: The name of the source volume.
