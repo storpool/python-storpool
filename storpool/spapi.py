@@ -569,6 +569,18 @@ Api.volumesGroupBackup = POST('VolumesGroupBackup', json=sp.VolumesGroupBackupDe
     """
     """)
 
+Api.volumeMoveToRemote = POST('VolumeMoveToRemote/{volumeName}', VolumeName, json=sp.VolumeMoveToRemoteDesc).doc("Move a volume from local cluster to a remote cluster",
+   """
+   """)
+
+Api.volumeExport = POST('VolumeExport/{volumeName}', VolumeName, json=sp.VolumeExportDesc).doc("Export a volume to another cluster, so it can be attached when allowRemoteExports is true",
+   """
+   """)
+
+Api.volumeAcquire = POST('VolumeAcquire/{volumeName}', VolumeName, json=sp.VolumeAcquireDesc, multiCluster=True).doc("move the volume from its current remote cluster to the local one. Noop if already here. Multicluster only call",
+   """
+   """)
+
 Api.spDocSection("Snapshots",
     """
     Snapshots in their essence are very similar to volumes in the sense

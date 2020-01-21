@@ -248,6 +248,7 @@ iSCSIId = intRange('iSCSIId', 0, 0x0fff)
 iSCSIName = r'^[a-z0-9\-.:]+$'
 iSCSIPGName = r'^[A-Za-z0-9_\-.:]+$'
 
+OnAttached = oneOf("fail", "detach", "detachForce", "export")
 
 # NETWORK
 @JsonObject(mac=MacAddr)
@@ -756,7 +757,7 @@ DetachClientsList = eitherOr([ClientId], "all")
 AttachmentPos = intRange('AttachmentPos', 0, MAX_CLIENT_DISK)
 
 
-@JsonObject(volume=VolumeNameOrGlobalId, detach=maybe(DetachClientsList), ro=maybe([ClientId]), rw=maybe([ClientId]), force=False)
+@JsonObject(volume=VolumeNameOrGlobalId, detach=maybe(DetachClientsList), ro=maybe([ClientId]), rw=maybe([ClientId]), force=False, allowRemoteExported=False, onRemoteAttached=maybe(OnAttached))
 class VolumeReassignDesc(object):
     '''
     volume: The name of the volume to be reassigned.
@@ -764,6 +765,8 @@ class VolumeReassignDesc(object):
     ro: The clients on which to attach the volume as read only.
     rw: The clients on which to attach the volume as read/write.
     force: Whether to force detaching of open volumes.
+    allowRemoteExported: if true allow attaching a remote exported volume
+    onRemoteAttached: mutlicluster only. What to do if volume is attached in the remote cluster. "export" if not specified
     '''
 
 
@@ -1058,6 +1061,30 @@ class VolumesGroupBackupDesc(object):
     volumes: The names of the volumes to backup.
     location: The remote location to backup to.
     tags: Arbitrary short name/value pairs stored with the volume.
+    '''
+
+
+@JsonObject(cluster=maybe(ClusterName), clusterId=maybe(ClusterId), onAttached=maybe(OnAttached))
+class VolumeMoveToRemoteDesc(object):
+    '''
+    cluster: The name of the target cluster, use this or clusterId
+    clusterId: The id of the target cluster, use this or cluster
+    onAttached: What to do if volume is attached. "fail" if not specified
+    '''
+
+
+@JsonObject(cluster=maybe(ClusterName), clusterId=maybe(ClusterId))
+class VolumeExportDesc(object):
+    '''
+    cluster: The name of the target cluster, use this or clusterId
+    clusterId: The id of the target cluster, use this or cluster
+    '''
+
+
+@JsonObject(onRemoteAttached=maybe(OnAttached))
+class VolumeAcquireDesc(object):
+    '''
+    onRemoteAttached: What to do if volume is attached. "fail" if not specified
     '''
 
 
