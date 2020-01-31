@@ -551,7 +551,7 @@ Api.volumeListSnapshots = GET('VolumeListSnapshots/{volumeName}', VolumeName, re
 Api.volumeCreate = POST('VolumeCreate', json=sp.VolumeCreateDesc, returns=ApiOkVolumeCreate, multiCluster=True).doc("Create a new volume", """ """)
 Api.volumeUpdate = POST('VolumeUpdate/{volumeName}', VolumeName, json=sp.VolumeUpdateDesc, multiCluster=True).doc("Update a volume",
     """ Alter the configuration of an existing volume. """)
-Api.volumeFreeze = POST('VolumeFreeze/{volumeName}', VolumeName, json=maybe(sp.VolumeFreezeDesc)).doc("Freeze a volume",
+Api.volumeFreeze = POST('VolumeFreeze/{volumeName}', VolumeName, json=maybe(sp.VolumeFreezeDesc), multiCluster=True).doc("Freeze a volume",
     """ Convert the volume to a snapshot """)
 Api.volumeRebase = POST('VolumeRebase/{volumeName}', VolumeName, json=sp.VolumeRebaseDesc).doc("Rebase a volume",
     """
