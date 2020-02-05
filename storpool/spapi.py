@@ -660,7 +660,15 @@ Api.exportsList = GET('ExportsList', returns={'exports': [sp.Export]}).doc("List
     """
     """)
 
+Api.volumeExportsList = GET('VolumeExportsList', returns={'exports': [sp.Export]}).doc("List exported volumes",
+    """
+    """)
+
 Api.snapshotsRemoteList = GET('SnapshotsRemoteList', returns={'snapshots': [sp.RemoteSnapshot]}).doc("List the available remote snapshots",
+    """
+    """)
+
+Api.volumesRemoteList = GET('VolumesRemoteList', returns={'volumes': [sp.RemoteSnapshot]}).doc("List the available remote volumes",
     """
     """)
 
