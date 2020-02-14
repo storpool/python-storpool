@@ -249,6 +249,9 @@ iSCSIName = r'^[a-z0-9\-.:]+$'
 iSCSIPGName = r'^[A-Za-z0-9_\-.:]+$'
 
 OnAttached = oneOf("fail", "detach", "detachForce", "export")
+DematerializationStatus = oneOf("pending", "allObjectsUsed", "complete")
+DeleteBlocked = oneOf("not blocked", "pending", "rebasing", "flushing", "volume not found", "generation mismatch", "disk down", "multiple children", "peer down", "write not completed", "recovering from remote", "parent recovering from remote", "unknown")
+MultiClusterState = oneOf("owner", "ownerExported", "slaveCopy", "clusterLocal", "clusterLocalExported", "clusterLocalAutoReconcile", "clusterLocalAutoReconcileExported")
 
 # NETWORK
 @JsonObject(mac=MacAddr)
@@ -551,7 +554,9 @@ class VolumeLimits(object):
     placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName,
     parentVolumeId=internal(longType), originalParentVolumeId=internal(longType), visibleVolumeId=longType, templateId=internal(longType),
     objectsCount=int, creationTimestamp=longType, flags=internal(int), tags=maybe({VolumeTagName: VolumeTagValue}),
-    clusterName=maybe(ClusterName), clusterId=maybe(ClusterId))
+    clusterName=maybe(ClusterName), clusterId=maybe(ClusterId),
+    reuseServer=maybe(bool),
+    firstNotParentObjectId=internal(int))
 class VolumeSummaryBase(VolumeLimits):
     '''
     parentName: The volume/snapshot's parent snapshot.
@@ -568,6 +573,7 @@ class VolumeSummaryBase(VolumeLimits):
     tags: Arbitrary short name/value pairs stored with the volume.
     clusterName: multicluster calls only - the name of the cluster volume currently recides in
     clusterId: multicluster calls only - the id of the cluster volume currently recides in
+    reuseServer: is it allowed to place replicas on the same server
     '''
 
 
@@ -578,9 +584,24 @@ class VolumeSummary(VolumeSummaryBase):
     '''
 
 
+@JsonObject(backupOfVisibleVolumeId=longType, backupOfGlobalId=GlobalVolumeId)
+class SnapshotBackupSummary(object):
+    '''
+    backupOfVisibleVolumeId: The ID of the volume that has been backed up to this snapshot.
+    backupOfGlobalId: The global ID of the volume that has been backed up to this snapshot.
+    '''
+
+
 @JsonObject(name=SnapshotName, onVolume=VolumeNameOrGlobalId,
     autoName=bool, bound=bool, deleted=bool, transient=bool, targetDeleteDate=maybe(int), globalId=GlobalVolumeId,
-    recoveringFromRemote=bool)
+    recoveringFromRemote=bool, backup=maybe(SnapshotBackupSummary),
+    createdFromVisibleVolumeId=maybe(internal(longType)),
+    createdFromGlobalId=maybe(internal(GlobalVolumeId)),
+    dematerializationStatus=maybe(internal(DematerializationStatus)),
+    deleteBlocked=maybe(internal(DeleteBlocked)),
+    volumeMoveSource=maybe(internal(bool)),
+    mcState=maybe(internal(MultiClusterState)),
+    mcStateVal=maybe(internal(int)))
 class SnapshotSummary(VolumeSummaryBase):
     '''
     name: The name of this snapshot
@@ -592,6 +613,7 @@ class SnapshotSummary(VolumeSummaryBase):
     targetDeleteDate: Scheduled date for the snapshot to be deleted. Unix timestamp
     globalId: The global snapshot identifier.
     recoveringFromRemote: Is this snapshot's data currently being transferred from a remote location.
+    backup: Information about a volume that has been backed up to this snapshot.
     '''
 
 
