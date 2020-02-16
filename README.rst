@@ -19,6 +19,23 @@ and act as a compute node.
 Version history
 ===============
 
+5.2.0
+-----
+
+- document that this library interfaces with StorPool 19.01
+- add the "source" parameter to the spapi.Api constructor to specify
+  the source address to make the HTTP connection to the StorPool API from
+- fix a bug in setting the timeout for the HTTP query to the API
+- raise the HTTP query timeout to 300 seconds
+- treat HTTP library exceptions as transient errors
+- add the RemoteSnapshot.tags field
+- accept StorPool snapshot global IDs prefixed by a "~" character as
+  valid names for volumes and snapshots in most places
+- add StorPool multicluster support: add the cluster name and
+  multicluster flag parameters to the spapi.Api constructor and mark
+  some of the API queries as supporting a multicluster path
+- add some multicluster-related API queries
+
 5.1.2
 -----
 
