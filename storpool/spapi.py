@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014 - 2019  StorPool.
+# Copyright (c) 2014 - 2020  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -236,7 +236,7 @@ class Api(object):
     spDoc = ApiDoc(
         """StorPool API Reference""",
         """
-        Copyright (c) 2014 - 2019  StorPool. All rights reserved.
+        Copyright (c) 2014 - 2020  StorPool. All rights reserved.
 
         This reference document describes the StorPool API version 19.01 and
         the supported API calls.
