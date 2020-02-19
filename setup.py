@@ -39,6 +39,8 @@ RE_VERSION = r'''^
     ' \s*
     $'''
 
+BUILD_DOC = os.environ.get("SP_NO_DOC_BUILD") != "1"
+
 
 def get_version():
     """ Get the version string from the module's __init__ file. """
@@ -90,7 +92,8 @@ class BuildPyCommand(build_py.build_py):
     """Custom build command, also invoking 'apidoc'."""
 
     def run(self):
-        self.run_command('apidoc')
+        if BUILD_DOC:
+            self.run_command('apidoc')
         build_py.build_py.run(self)
 
 
@@ -124,5 +127,6 @@ setuptools.setup(
         ],
     },
 
-    data_files=[('/usr/share/doc/python-storpool', ['storpool/apidoc.html'])],
+    data_files=[('/usr/share/doc/python-storpool', ['storpool/apidoc.html'])]
+    if BUILD_DOC else [],
 )
