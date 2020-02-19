@@ -584,17 +584,10 @@ class VolumeSummary(VolumeSummaryBase):
     '''
 
 
-@JsonObject(backupOfVisibleVolumeId=longType, backupOfGlobalId=GlobalVolumeId)
-class SnapshotBackupSummary(object):
-    '''
-    backupOfVisibleVolumeId: The ID of the volume that has been backed up to this snapshot.
-    backupOfGlobalId: The global ID of the volume that has been backed up to this snapshot.
-    '''
-
-
 @JsonObject(name=SnapshotName, onVolume=VolumeNameOrGlobalId,
     autoName=bool, bound=bool, deleted=bool, transient=bool, targetDeleteDate=maybe(int), globalId=GlobalVolumeId,
-    recoveringFromRemote=bool, backup=maybe(SnapshotBackupSummary),
+    recoveringFromRemote=bool,
+    backup=maybe(bool), backupOfVisibleVolumeId=maybe(longType), backupOfGlobalId=maybe(GlobalVolumeId),
     createdFromVisibleVolumeId=maybe(internal(longType)),
     createdFromGlobalId=maybe(internal(GlobalVolumeId)),
     dematerializationStatus=maybe(internal(DematerializationStatus)),
@@ -613,7 +606,9 @@ class SnapshotSummary(VolumeSummaryBase):
     targetDeleteDate: Scheduled date for the snapshot to be deleted. Unix timestamp
     globalId: The global snapshot identifier.
     recoveringFromRemote: Is this snapshot's data currently being transferred from a remote location.
-    backup: Information about a volume that has been backed up to this snapshot.
+    backup: Is this snapshot a backup of a remote snapshot.
+    backupOfVisibleVolumeId: The numeric global ID of the snapshot that has been backed up to this snapshot.
+    backupOfGlobalId: The global ID of the volume that has been backed up to this snapshot.
     '''
 
 
