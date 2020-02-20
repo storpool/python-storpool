@@ -19,6 +19,13 @@ and act as a compute node.
 Version history
 ===============
 
+5.3.0
+-----
+
+- correct the newly-added snapshot backup-related fields
+- allow setup.py to not build the documentation if `SP_NO_DOC_BUILD` is
+  defined in the environment
+
 5.2.0
 -----
 
