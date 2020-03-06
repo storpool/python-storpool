@@ -774,7 +774,7 @@ DetachClientsList = eitherOr([ClientId], "all")
 AttachmentPos = intRange('AttachmentPos', 0, MAX_CLIENT_DISK)
 
 
-@JsonObject(volume=VolumeNameOrGlobalId, detach=maybe(DetachClientsList), ro=maybe([ClientId]), rw=maybe([ClientId]), force=False, allowRemoteExported=False, onRemoteAttached=maybe(OnAttached))
+@JsonObject(volume=VolumeNameOrGlobalId, detach=maybe(DetachClientsList), ro=maybe([ClientId]), rw=maybe([ClientId]), force=False, allowRemoteExported=maybe(bool), onRemoteAttached=maybe(OnAttached))
 class VolumeReassignDesc(object):
     '''
     volume: The name of the volume to be reassigned.

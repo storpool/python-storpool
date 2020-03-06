@@ -19,6 +19,13 @@ and act as a compute node.
 Version history
 ===============
 
+5.3.1
+-----
+
+- fix the type of the VolumeReassignDesc.allowRemoteExported field so that
+  the Python bindings do not always send a value to the StorPool API,
+  thus improving backwards compatibility
+
 5.3.0
 -----
 
