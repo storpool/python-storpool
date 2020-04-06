@@ -119,13 +119,19 @@ def spDict(dct):
 
 def maybe(val):
     subType = spType(val)
-    valT = subType.handleVal
+
+    def validate(val):
+        """Validate the supplied value, possibly None."""
+        if val is None:
+            return None
+        return subType.handleVal(val)
+
     name = "Optional({0})".format(subType.name)
     _doc = doc.TypeDoc(
         "Optional",
         "If present must be of type {0}".format(subType.name),
         deps=[subType.spDoc])
-    return SpType(name, valT, lambda: None, _doc)
+    return SpType(name, validate, lambda: None, _doc)
 
 
 def internal(val):
