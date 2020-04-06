@@ -60,6 +60,12 @@ class _API_ARG(object):
         self._name = name
         self._type = spType(validate)
 
+    def defstr(self):
+        if self._type.spDoc.name == "Optional":
+            return "{name}=None".format(name=self._name)
+        else:
+            return self._name
+
 
 DiskId = _API_ARG('diskId', sp.DiskId)
 ServerId = _API_ARG('serverId', sp.ServerId)
@@ -103,7 +109,7 @@ class _API_METHOD(object):
             args.append(_API_ARG('json', json))
 
         ftext = 'def func(self, {args}clusterName=None):\n'.format(
-            args=''.join(arg._name + ", " for arg in args))
+            args=''.join(arg.defstr() + ", " for arg in args))
         for arg in args:
             ftext += '    {arg} = _validate_{arg}({arg})\n'.format(arg=arg._name)
 
