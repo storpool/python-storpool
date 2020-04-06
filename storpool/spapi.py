@@ -26,6 +26,7 @@ for more information.
 import errno
 import inspect
 import socket as sock
+import sys
 import time as time
 
 import six
@@ -40,6 +41,11 @@ from .spconfig import SPConfig
 from .sptype import JsonObject, spType, either, const, maybe, longType
 from .sputils import msec, sec, pathPollWait
 from .spdoc import ApiDoc, ApiCallDoc
+
+if sys.version_info[0] < 3:
+    import urllib as uquote
+else:
+    import urllib.parse as uquote
 
 
 SP_DEV_PATH = '/dev/storpool/'
@@ -153,9 +159,8 @@ class _API_METHOD(object):
 
 
 def GET(query, *args, **kwargs):
-    assert 'json' not in kwargs, 'GET requests currently do not accept JSON objects'
     assert 'returns' in kwargs, 'GET requests must specify a return type'
-    return _API_METHOD('GET', kwargs.get('multiCluster', False), query, args, None, kwargs['returns'])
+    return _API_METHOD('GET', kwargs.get('multiCluster', False), query, args, kwargs.get('json', None), kwargs['returns'])
 
 
 def POST(query, *args, **kwargs):
@@ -293,6 +298,9 @@ class Api(object):
             try:
                 conn = http.HTTPConnection(self._host, self._port, timeout=self._timeout, **self._source)
                 path = _format_path(query, multiCluster and self._multiCluster, clusterName=clusterName)
+                if method == "GET" and json:
+                    path += "?json=" + uquote.quote(json, safe='')
+                    json = None
                 conn.request(method, path, json, self._authHeader)
                 response = conn.getresponse()
                 status, jres = response.status, js.load(response)
