@@ -487,14 +487,14 @@ class DiskDescUpdate(object):
 
 # ACTIVE REQUESTS
 @JsonObject(requestId=str, requestIdx=int, volume=either(VolumeNameOrGlobalId, SnapshotNameOrGlobalId), address=longType, size=int,
-    op=oneOf('RequestOp', "read", "write", "merge", "system", "entries flush", "#bad_state", "#bad_drOp"), state=internal(str), prevState=internal(str), drOp=internal(str), msecActive=int)
+    op=oneOf('RequestOp', "read", "write", "merge", "system", "entries flush", "#bad_state", "#bad_drOp", "idle", "error recovery", "transaction", "data recovery"), state=internal(str), prevState=internal(str), drOp=internal(str), msecActive=int)
 class ActiveRequestDesc(object):
     '''
     requestId: A unique request ID that may be matched between clients and disks.
     requestIdx: A temporary local request identifier for this request on this client or disk.
     address: The offset in bytes within the logical volume.
     size: The size of the request in bytes.
-    op: The type of the requested operation; one of read, write, system, merge, entries flush, #bad_state, #bad_drOp
+    op: The type of the requested operation; one of read, write, system, merge, entries flush, #bad_state, #bad_drOp, idle, error recovery, transaction, data recovery
     state: An internal attribute used only for debugging. We strongly recommend that you do not use this attribute in any kind of automation.
     prevState: An internal attribute used only for debugging. We strongly recommend that you do not use this attribute in any kind of automation.
     drOp: An internal attribute used only for debugging. We strongly recommend that you do not use this attribute in any kind of automation.
