@@ -1520,3 +1520,43 @@ class AllPeersActiveRequestsQuery(object):
     '''
     msecsTimeout: 0 is no timeout
     '''
+
+
+# MAINTENANCE MODE
+@JsonObject(nodeId=int, started=int, duration=int, description=str, overrun=bool, remaining=maybe(int))
+class MaintenanceNodeDesc(object):
+    '''
+    nodeId: The id of the node in maintenance,
+    started: unix timestamp the maintenance was started
+    duration: planned duration for the maintenance
+    description: human readable information
+    overrun: true if the duration has passed
+    rmaining: seconds untill the end of the duration
+    '''
+
+
+@JsonObject(nodes=[MaintenanceNodeDesc])
+class MaintenanceNodesList(object):
+    '''
+    A detailed listing of all nodes in maintenance and running services on them.
+    '''
+
+
+@JsonObject(nodeId=int, duration=int, description=str, minOkReplicas=maybe(int), maxReplicationDecrease=maybe(int), votingSafetyMargin=maybe(int), maxNodesInMaintenance=maybe(int))
+class MaintenanceSetDesc(object):
+    '''
+    nodeId: The id of the node which will be set in maintenance.
+    duration: Period of time after that the maintenance will expire automatically.
+    description: human readable information
+    minOkReplicas: the minimum ok copies of all data tha has copy on the node that must remain while the node is down
+    maxReplicationDecrease: same as minOkReplicas = volume.replication - maxReplicationDecrease, but for each volume
+    votingSafetyMargin: number of voting nodes that must be live above the 1/2 + 1 minimum
+    maxNodesInMaintenance: maximum number of nodes simultaniously in maintenance
+    '''
+
+
+@JsonObject(nodeId=int)
+class MaintenanceCompleteDesc(object):
+    '''
+    nodeId: The id the node whose maintenance will be unset.
+    '''

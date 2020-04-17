@@ -753,3 +753,7 @@ Api.iSCSISessionsInfo = GET('iSCSISessionsInfo', json=maybe(sp.iSCSIControllersQ
 Api.iSCSInterfacesInfo = GET('iSCSInterfacesInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.ISCSIControllersIntefacesInfo).doc("query iSCSI controllers for interfaces state", """ """)
 
 Api.AllPeersActiveRequests = GET('AllPeersActiveRequests', json=maybe(sp.AllPeersActiveRequestsQuery), returns=sp.AllPeersActiveRequests).doc("query all peers for there status and active requests", """ """)
+
+Api.MaintenanceList = GET("MaintenanceList", returns=sp.MaintenanceNodesList).doc("List the nodes in maintenance", "")
+Api.MaintenanceSet = POST("MaintenanceSet", json=sp.MaintenanceSetDesc).doc("Set node in maintenance", "")
+Api.MaintenanceComplete = POST("MaintenanceComplete", json=sp.MaintenanceCompleteDesc).doc("complete node's maintenance.", "")
