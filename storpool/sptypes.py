@@ -1560,3 +1560,10 @@ class MaintenanceCompleteDesc(object):
     '''
     nodeId: The id the node whose maintenance will be unset.
     '''
+
+
+@JsonObject(toSnapshot=SnapshotNameOrGlobalId)
+class VolumeRevertDesc(object):
+    '''
+    toSnapshot: name of the snapshot to revert to
+    '''
