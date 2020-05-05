@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019  StorPool.
+# Copyright (c) 2019, 2020  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,8 @@
 """ Tests for the storpool.spconfig.SPConfig class. """
 
 import collections
+import itertools
+import os
 
 import mock
 import pytest
@@ -47,6 +49,27 @@ CONFIG_DATA = (
 CONFIG_FILES = {
     item.filename: item.data for item in CONFIG_DATA
 }
+
+TEST_CONFIG_FILES = {
+    "/etc/storpool.conf": True,
+    "/etc/storpool-defaults.conf": False,
+    "/etc/storpool.conf.d/local.conf": True,
+    "/etc/storpool.conf.d/storpool.conf": True,
+    "/usr/lib/storpool/storpool.conf": False,
+    "/usr/lib/storpool/storpool-defaults.conf": True,
+}
+
+TEST_CONFIG_FILES_LISTDIR = dict(
+    (
+        dirname,
+        ["subdir", "another-subdir.conf"]
+        + sorted(filename for _, filename in files)
+    )
+    for dirname, files in itertools.groupby(
+        sorted(os.path.split(fname) for fname in TEST_CONFIG_FILES),
+        lambda item: item[0],
+    )
+)
 
 
 def fake_get_config_files(_cls):
@@ -101,3 +124,51 @@ def test_success():
     assert sorted(cfg.iteritems()) == [('a', '4'), ('b', '2'), ('c', '3')]
 
     assert sorted(cfg.iterkeys()) == ['a', 'b', 'c']
+
+
+def test_get_config_files():
+    """Test that SPConfig.get_config_files() works properly."""
+
+    dirs_checked = set()
+    files_checked = set()
+
+    def mock_listdir(dirname):
+        """Mock os.listdir(), return our synthetic filesystem's contents."""
+        return TEST_CONFIG_FILES_LISTDIR[dirname]
+
+    def mock_is_dir(path):
+        """Mock os.path.isdir(), check and record."""
+        dirs_checked.add(path)
+        return path in TEST_CONFIG_FILES_LISTDIR
+
+    def mock_is_file(path):
+        """Mock os.path.isfile(), check and record."""
+        files_checked.add(path)
+        return path in TEST_CONFIG_FILES
+
+    with mock.patch("os.listdir", new=mock_listdir), mock.patch(
+        "os.path.isdir", new=mock_is_dir
+    ), mock.patch(
+        "os.path.isfile", new=mock_is_file
+    ):
+        res = set(spconfig.SPConfig.get_config_files())
+
+    assert dirs_checked == set(["/etc/storpool.conf.d"])
+    assert files_checked == set(
+        [
+            filename
+            for filename in TEST_CONFIG_FILES
+            if filename.startswith("/etc/storpool.conf.d/")
+        ]
+        + [
+            "/etc/storpool.conf",
+            "/etc/storpool.conf.d/subdir",
+            "/etc/storpool.conf.d/another-subdir.conf",
+            "/usr/lib/storpool/storpool-defaults.conf",
+        ]
+    )
+    assert res == set(
+        filename
+        for filename, wanted in TEST_CONFIG_FILES.items()
+        if wanted
+    )
