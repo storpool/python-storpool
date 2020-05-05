@@ -19,6 +19,19 @@ and act as a compute node.
 Version history
 ===============
 
+5.4.0
+-----
+
+- all the volume- and snapshot-related API calls now accept a GlobalID in
+  place of a VolumeName or SnapshotName
+- blacklist pylint-2.5.0 in the test requirements, see
+  https://github.com/PyCQA/pylint/issues/3527
+- add a unit test for `spconfig.SPConfig.get_config_files()`
+- align the operation of `spconfig.SPConfig.get_config_files()` with
+  the `storpool_confget` utility that it is meant to mimic: when looking
+  for config files in the `/etc/storpool.conf.d/` directory, only use
+  files with names ending in ".conf" and not starting with a dot
+
 5.3.1
 -----
 
