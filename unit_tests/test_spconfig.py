@@ -53,8 +53,12 @@ CONFIG_FILES = {
 TEST_CONFIG_FILES = {
     "/etc/storpool.conf": True,
     "/etc/storpool-defaults.conf": False,
+    "/etc/storpool.conf.d/.hidden.conf": False,
     "/etc/storpool.conf.d/local.conf": True,
+    "/etc/storpool.conf.d/local.confx": False,
+    "/etc/storpool.conf.d/server.conf.bak": False,
     "/etc/storpool.conf.d/storpool.conf": True,
+    "/etc/storpool.conf.d/storpool.conf~": False,
     "/usr/lib/storpool/storpool.conf": False,
     "/usr/lib/storpool/storpool-defaults.conf": True,
 }
@@ -156,13 +160,9 @@ def test_get_config_files():
     assert dirs_checked == set(["/etc/storpool.conf.d"])
     assert files_checked == set(
         [
-            filename
-            for filename in TEST_CONFIG_FILES
-            if filename.startswith("/etc/storpool.conf.d/")
-        ]
-        + [
             "/etc/storpool.conf",
-            "/etc/storpool.conf.d/subdir",
+            "/etc/storpool.conf.d/local.conf",
+            "/etc/storpool.conf.d/storpool.conf",
             "/etc/storpool.conf.d/another-subdir.conf",
             "/usr/lib/storpool/storpool-defaults.conf",
         ]

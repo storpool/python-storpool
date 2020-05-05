@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014 - 2019  StorPool.
+# Copyright (c) 2014 - 2020  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,6 +52,7 @@ class SPConfig(object):
             to_check.extend([
                 os.path.join(cls.PATH_CONFIG_DIR, fname)
                 for fname in sorted(os.listdir(cls.PATH_CONFIG_DIR))
+                if fname.endswith(".conf") and not fname.startswith(".")
             ])
         return [path for path in to_check if os.path.isfile(path)]
 
