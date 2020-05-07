@@ -602,7 +602,7 @@ Api.spDocSection("Snapshots",
     snapshots (all except write-related operations). They can not be
     modified and play an essential role in copy-on-write scenarios.
     """)
-Api.snapshotsList = GET('SnapshotsList', returns=[sp.SnapshotSummary]).doc("List all snapshots",
+Api.snapshotsList = GET('SnapshotsList', returns=[sp.SnapshotSummary], multiCluster=True).doc("List all snapshots",
     """
     List all the snapshots in the cluster in the same
     format as VolumeList.
