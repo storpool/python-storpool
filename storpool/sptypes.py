@@ -253,6 +253,7 @@ DematerializationStatus = oneOf("pending", "allObjectsUsed", "complete")
 DeleteBlocked = oneOf("not blocked", "pending", "rebasing", "flushing", "volume not found", "generation mismatch", "disk down", "multiple children", "peer down", "write not completed", "recovering from remote", "parent recovering from remote", "unknown")
 MultiClusterState = oneOf("owner", "ownerExported", "slaveCopy", "clusterLocal", "clusterLocalExported", "clusterLocalAutoReconcile", "clusterLocalAutoReconcileExported")
 
+
 # NETWORK
 @JsonObject(mac=MacAddr)
 class NetDesc(object):
