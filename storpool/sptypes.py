@@ -1431,12 +1431,12 @@ class iSCSISessionInfo(object):
     satus: ok or other
     controllerId: controller id
     ISID: session ISID
-    timeCreated: unix timestamp when session was establised
+    timeCreated: unix timestamp when session was established
     targset: iSCSI name of the target
     initiator: iSCSI name of the initiator
     stats: session stats
-    tasks: currently active tasks count byt state
-    tcp: session tcp info
+    tasks: currently active tasks count by state
+    tcp: session TCP info
     '''
 
 
@@ -1456,7 +1456,7 @@ class iscsiControllerInterfaceInfo(object):
 @JsonObject(msecsTimeout=maybe(int), controllerIds=maybe([iSCSIId]))
 class iSCSIControllersQuery(object):
     '''
-    msecsTimeout: 0 is no timeout
+    msecsTimeout: 0 means no timeout
     controllerIds: ask only those controllers
     '''
 
@@ -1528,17 +1528,17 @@ class MaintenanceNodeDesc(object):
     '''
     nodeId: The id of the node in maintenance,
     started: unix timestamp the maintenance was started
-    duration: planned duration for the maintenance
-    description: human readable information
+    duration: planned duration of the maintenance
+    description: human-readable information
     overrun: true if the duration has passed
-    rmaining: seconds untill the end of the duration
+    rmaining: seconds until the end of the duration
     '''
 
 
 @JsonObject(nodes=[MaintenanceNodeDesc])
 class MaintenanceNodesList(object):
     '''
-    A detailed listing of all nodes in maintenance and running services on them.
+    A detailed listing of all nodes in maintenance and the services running on them.
     '''
 
 
@@ -1546,19 +1546,19 @@ class MaintenanceNodesList(object):
 class MaintenanceSetDesc(object):
     '''
     nodeId: The id of the node which will be set in maintenance.
-    duration: Period of time after that the maintenance will expire automatically.
-    description: human readable information
-    minOkReplicas: the minimum ok copies of all data tha has copy on the node that must remain while the node is down
+    duration: Period of time after which the maintenance will expire automatically.
+    description: human-readable information
+    minOkReplicas: the minimum ok copies of all data that has a copy on the node that must remain while the node is down
     maxReplicationDecrease: same as minOkReplicas = volume.replication - maxReplicationDecrease, but for each volume
-    votingSafetyMargin: number of voting nodes that must be live above the 1/2 + 1 minimum
-    maxNodesInMaintenance: maximum number of nodes simultaniously in maintenance
+    votingSafetyMargin: number of voting nodes that must be alive above the 1/2 + 1 minimum
+    maxNodesInMaintenance: maximum number of nodes simultaneously in maintenance
     '''
 
 
 @JsonObject(nodeId=int)
 class MaintenanceCompleteDesc(object):
     '''
-    nodeId: The id the node whose maintenance will be unset.
+    nodeId: The id of the node to unset maintenance mode for
     '''
 
 
