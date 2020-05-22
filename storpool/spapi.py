@@ -754,8 +754,8 @@ Api.iSCSInterfacesInfo = GET('iSCSInterfacesInfo', json=maybe(sp.iSCSIController
 
 Api.allPeersActiveRequests = GET('AllPeersActiveRequests', json=maybe(sp.AllPeersActiveRequestsQuery), returns=sp.AllPeersActiveRequests).doc("query all peers for their status and active requests", """ """)
 
-Api.MaintenanceList = GET("MaintenanceList", returns=sp.MaintenanceNodesList).doc("List the nodes in maintenance", "")
-Api.MaintenanceSet = POST("MaintenanceSet", json=sp.MaintenanceSetDesc).doc("Set node in maintenance", "")
-Api.MaintenanceComplete = POST("MaintenanceComplete", json=sp.MaintenanceCompleteDesc).doc("complete node's maintenance.", "")
+Api.maintenanceList = GET("MaintenanceList", returns=sp.MaintenanceNodesList).doc("List the nodes in maintenance", "")
+Api.maintenanceSet = POST("MaintenanceSet", json=sp.MaintenanceSetDesc).doc("Set node in maintenance", "")
+Api.maintenanceComplete = POST("MaintenanceComplete", json=sp.MaintenanceCompleteDesc).doc("complete node's maintenance.", "")
 
-Api.VolumeRevert = POST("VolumeRevert/{volumeName}", VolumeName, json=sp.VolumeRevertDesc, multiCluster=True).doc("revert volume to a snapshot discarding all its current data", """ """)
+Api.volumeRevert = POST("VolumeRevert/{volumeName}", VolumeName, json=sp.VolumeRevertDesc, multiCluster=True).doc("revert volume to a snapshot discarding all its current data", """ """)
