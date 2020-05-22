@@ -192,6 +192,8 @@ MAX_BRIDGE_ID = MAX_PEERS_PER_SUBTYPE - 1
 MAX_CLIENT_ID = MAX_PEERS_PER_SUBTYPE - 1
 MAX_MGMT_ID = MAX_PEERS_PER_SUBTYPE - 1
 
+NO_DISK_ID = 2**32 - 2
+
 GENERATION_NONE = longType(-1)
 
 # Simple type validators
@@ -215,6 +217,7 @@ BridgeId = intRange('BridgeId', 1, MAX_BRIDGE_ID)
 
 DiskId = intRange('DiskID', 0, MAX_DISK_ID)
 DiskDescription = regex('DiskDescritpion', DISK_DESC_REGEX)
+DiskIdOrNoDiskId = eitherOr(DiskId, NO_DISK_ID)
 
 SnapshotName = nameValidator("SnapshotName", SNAPSHOT_NAME_REGEX, VOLUME_NAME_SIZE, 'list', 'status')
 SnapshotNameOrGlobalId = nameValidator("SnapshotNameOrGlobalId", SNAPSHOT_NAME_OR_GLOBAL_ID_REGEX, VOLUME_NAME_SIZE, 'list', 'status')
@@ -237,6 +240,8 @@ IOPS = unlimitedInt('IOPS', 0, '-')
 AttachmentRights = oneOf('AttachmentRights', 'rw', 'ro')
 
 ObjectState = namedEnum("ObjectState", "OBJECT_UNDEF OBJECT_OK OBJECT_OUTDATED OBJECT_IN_RECOVERY OBJECT_WAITING_FOR_VERSION OBJECT_WAITING_FOR_DISK OBJECT_DATA_NOT_PRESENT OBJECT_DATA_LOST OBJECT_WAINING_FOR_CHAIN OBJECT_WAIT_IDLE".split(' '))
+
+DiskState = oneOf('DiskState', 'DISK_NONE', 'DISK_UNKNOWN', 'DISK_DATA_INITIALIZING', 'DISK_DATA_PENDING_INSERT', 'DISK_DATA', 'DISK_DATA_STOPPING', 'DISK_DATA_FLUSH_WBC', 'DISK_DATA_STOPPED', 'DISK_STOPPING', 'DISK_EJECTED', 'DISK_JOURNAL', 'DISK_JOURNAL_PENDING')
 
 RemoteLocationName = nameValidator("RemoteLocationName", REMOTE_LOCATION_NAME_REGEX, REMOTE_LOCATION_NAME_SIZE, 'list')
 ClusterName = nameValidator("ClusterName", CLUSTER_NAME_REGEX, CLUSTER_NAME_SIZE)
@@ -1473,45 +1478,98 @@ class ISCSIControllersIntefacesInfo(object):
     '''
 
 
-@JsonObject(type=str, id=str)
+# ALL PEERS ACTIVE REQUESTS
+@JsonObject(type=oneOf('Id', 'bridge', 'server', 'iSCSI', 'client', 'unknown'), id=str)
 class AllPeersActiveRequestsServiceDesc(object):
     '''
+    type: type of the service
+    id: identificator for the service of the given type
     '''
 
 
-@JsonObject(status=str, peerId=int, service=AllPeersActiveRequestsServiceDesc)
-class AllPeersActiveRequestsSimpleStats(object):
+@JsonObject(peerId=PeerId, service=AllPeersActiveRequestsServiceDesc)
+class AllPeersActiveRequestsPeerDesc():
     '''
-    '''
-
-
-@JsonObject(status="diskExpected", peerId=int, service=AllPeersActiveRequestsServiceDesc, diskId=int, lastState=str)
-class AllPeersActiveRequestsDiskExpected(object):
-    '''
+    peerId: peer id
+    service: identification json for the service
     '''
 
 
-@JsonObject(status="diskState", peerId=int, service=AllPeersActiveRequestsServiceDesc, diskId=int, diskState=str, objectsWaitingForVersion=int, objectsOutdated=int, objectsOutdatedRemote=int)
-class AllPeersActiveRequestsDiskStatus(object):
+@JsonObject(status=oneOf('Status', 'too_old', 'peer_down', 'peerDone', 'timeout', 'streamNotConnected', 'streamOverfilled', 'invalidResponse'))
+class AllPeersActiveRequestsSimpleStats(AllPeersActiveRequestsPeerDesc):
     '''
+    status: status of the request to the service
     '''
 
 
-@JsonObject(diskId=int, peerId=int, service=maybe(AllPeersActiveRequestsServiceDesc))
+@JsonObject(status=const('diskExpected'), diskId=DiskId, lastState=oneOf('LastState', 'up', 'down'))
+class AllPeersActiveRequestsDiskExpected(AllPeersActiveRequestsPeerDesc):
+    '''
+    status: "diskExpected"
+    diskId: disk id
+    lastState: last known state of the disk
+    '''
+
+
+@JsonObject(status=const('diskState'), diskId=DiskId, diskState=DiskState, objectsWaitingForVersion=internal(int), objectsOutdated=internal(int), objectsOutdatedRemote=internal(int))
+class AllPeersActiveRequestsDiskStatus(AllPeersActiveRequestsPeerDesc):
+    '''
+    status: "diskState"
+    diskId: disk id
+    distState: state of the disk
+    objectsWaitingForVersion: An internal attribute used only for debugging. We strongly recommend that you do not use this attribute in any kind of automation.
+    objectsOutdated: An internal attribute used only for debugging. We strongly recommend that you do not use this attribute in any kind of automation.
+    objectsOutdatedRemote: An internal attribute used only for debugging. We strongly recommend that you do not use this attribute in any kind of automation.
+    '''
+
+
+@JsonObject(diskId=DiskIdOrNoDiskId, peerId=PeerId, service=maybe(AllPeersActiveRequestsServiceDesc))
 class AllPeersActiveRequestsRequestPeer(object):
     '''
+    diskId: disk id
+    peerId: peer id
+    service: identification json for the service
     '''
 
 
-@JsonObject(status="request", peerId=int, service=AllPeersActiveRequestsServiceDesc, diskId=int, requestIdx=int, requestId=str, volumeId=int, volume=maybe(str), address=int, size=int, usecActive=int, state=str, prevState=str, drOp=maybe(str), op=str, peers=[AllPeersActiveRequestsRequestPeer])
-class AllPeersActiveRequestsRequest(object):
+@JsonObject(
+    status=const('request'),
+    diskId=DiskIdOrNoDiskId,
+    requestIdx=int,
+    requestId=str,
+    volumeId=longType,
+    volume=maybe(either(VolumeNameOrGlobalId, SnapshotNameOrGlobalId)),
+    address=longType,
+    size=int,
+    op=oneOf('RequestOp', "read", "write", "merge", "system", "entries flush", "#bad_state", "#bad_drOp", "idle", "error recovery", "transaction", "data recovery"),
+    usecActive=int,
+    peers=[AllPeersActiveRequestsRequestPeer],
+    state=internal(str),
+    prevState=internal(str),
+    drOp=internal(maybe(str)),
+)
+class AllPeersActiveRequestsRequest(AllPeersActiveRequestsPeerDesc):
     '''
+    status: "request"
+    requestId: A unique request ID that may be matched between clients and disks.
+    requestIdx: A temporary local request identifier for this request on this client or disk.
+    volumeId: id of the volume associated with the request
+    volume: global id or name of the volume associated with the request
+    address: The offset in bytes within the logical volume.
+    size: The size of the request in bytes.
+    op: The type of the requested operation; one of read, write, system, merge, entries flush, #bad_state, #bad_drOp, idle, error recovery, transaction, data recovery
+    usecActive: Time in microseconds since the request was submitted.
+    peers: list of peers associated with the request
+    state: An internal attribute used only for debugging. We strongly recommend that you do not use this attribute in any kind of automation.
+    prevState: An internal attribute used only for debugging. We strongly recommend that you do not use this attribute in any kind of automation.
+    drOp: An internal attribute used only for debugging. We strongly recommend that you do not use this attribute in any kind of automation.
     '''
 
 
 @JsonObject(requests=[either(AllPeersActiveRequestsDiskExpected, AllPeersActiveRequestsDiskStatus, AllPeersActiveRequestsRequest, AllPeersActiveRequestsSimpleStats)])
 class AllPeersActiveRequests(object):
     '''
+    requests: list containing service status messages and active requests descriptions
     '''
 
 

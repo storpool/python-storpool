@@ -752,7 +752,7 @@ Api.locationsList = GET("LocationsList", returns={'locations': [sp.RemoteLocatio
 Api.iSCSISessionsInfo = GET('iSCSISessionsInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.iSCSISessionsInfo).doc("query iSCSI controllers for active sessions", """ """)
 Api.iSCSInterfacesInfo = GET('iSCSInterfacesInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.ISCSIControllersIntefacesInfo).doc("query iSCSI controllers for interfaces state", """ """)
 
-Api.AllPeersActiveRequests = GET('AllPeersActiveRequests', json=maybe(sp.AllPeersActiveRequestsQuery), returns=sp.AllPeersActiveRequests).doc("query all peers for their status and active requests", """ """)
+Api.allPeersActiveRequests = GET('AllPeersActiveRequests', json=maybe(sp.AllPeersActiveRequestsQuery), returns=sp.AllPeersActiveRequests).doc("query all peers for their status and active requests", """ """)
 
 Api.MaintenanceList = GET("MaintenanceList", returns=sp.MaintenanceNodesList).doc("List the nodes in maintenance", "")
 Api.MaintenanceSet = POST("MaintenanceSet", json=sp.MaintenanceSetDesc).doc("Set node in maintenance", "")
