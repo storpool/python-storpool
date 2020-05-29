@@ -758,4 +758,4 @@ Api.MaintenanceList = GET("MaintenanceList", returns=sp.MaintenanceNodesList).do
 Api.MaintenanceSet = POST("MaintenanceSet", json=sp.MaintenanceSetDesc).doc("Set node in maintenance", "")
 Api.MaintenanceComplete = POST("MaintenanceComplete", json=sp.MaintenanceCompleteDesc).doc("complete node's maintenance.", "")
 
-Api.VolumeRevert = POST("VolumeRevert/{volumeName}", VolumeName, json=sp.VolumeRevertDesc).doc("revert volume to a snapshot discarding all its current data", """ """)
+Api.VolumeRevert = POST("VolumeRevert/{volumeName}", VolumeName, json=sp.VolumeRevertDesc, multiCluster=True).doc("revert volume to a snapshot discarding all its current data", """ """)
