@@ -121,7 +121,7 @@ class JsonObjectImpl(object):
         self.__jsonAttrs__[attr] = self.__jsonAttrDefs__[attr].handleVal(value)
 
     def to_json(self):
-        """ Recursively store the member fields into a dictionary. """
+        """ Store the member fields into a dictionary. """
         return dict(
             (attr, getattr(self, attr)) for attr in self.__jsonAttrDefs__)
 
