@@ -46,7 +46,7 @@ def get_version():
     """ Get the version string from the module's __init__ file. """
     found = None
     re_semver = re.compile(RE_VERSION, re.X)
-    with open('storpool/__init__.py') as init:
+    with open('storpool/spapi.py') as init:
         for line in init.readlines():
             match = re_semver.match(line)
             if not match:

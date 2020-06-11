@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019  StorPool.
+# Copyright (c) 2019, 2020  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@
 import re
 import sys
 
-import storpool
+from storpool import spapi
 
 
 RE_VERSION_HISTORY = re.compile(r'''
@@ -80,4 +80,4 @@ def extract_version_numbers(fname, encoding='UTF-8'):
 def test_version():
     """ Make sure the current version is in the README.rst file. """
     lines = extract_version_numbers('README.rst')
-    assert lines[0] == storpool.VERSION
+    assert lines[0] == spapi.VERSION

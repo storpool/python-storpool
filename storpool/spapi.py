@@ -48,6 +48,9 @@ else:
     import urllib.parse as uquote
 
 
+VERSION = '5.4.0'
+
+
 SP_DEV_PATH = '/dev/storpool/'
 SP_API_PREFIX = '/ctrl/1.0'
 
