@@ -555,7 +555,7 @@ class VolumeLimits(object):
     '''
 
 
-@JsonObject(id=internal(longType), parentName=eitherOr(SnapshotName, ""), templateName=eitherOr(VolumeTemplateName, ""),
+@JsonObject(id=internal(longType), parentName=eitherOr(SnapshotNameOrGlobalId, ""), templateName=eitherOr(VolumeTemplateName, ""),
     size=VolumeSize, replication=VolumeReplication, globalId=GlobalVolumeId,
     placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName,
     parentVolumeId=internal(longType), originalParentVolumeId=internal(longType), visibleVolumeId=longType, templateId=internal(longType),
@@ -591,7 +591,7 @@ class VolumeSummary(VolumeSummaryBase):
     '''
 
 
-@JsonObject(name=SnapshotName, onVolume=VolumeNameOrGlobalId,
+@JsonObject(name=SnapshotNameOrGlobalId, onVolume=VolumeNameOrGlobalId,
     autoName=bool, bound=bool, deleted=bool, transient=bool, targetDeleteDate=maybe(int),
     recoveringFromRemote=bool,
     backup=maybe(bool), backupOfVisibleVolumeId=maybe(longType), backupOfGlobalId=maybe(GlobalVolumeId),
@@ -753,7 +753,7 @@ class SnapshotUpdateDesc(VolumePolicyDesc):
     '''
 
 
-@JsonObject(parentName=maybe(SnapshotName))
+@JsonObject(parentName=maybe(SnapshotNameOrGlobalId))
 class VolumeRebaseDesc(object):
     '''
     parentName: The name of one of the volume's parents on which to re-base. If left out, it will be re-based to base.
@@ -793,7 +793,7 @@ class VolumeReassignDesc(object):
     '''
 
 
-@JsonObject(snapshot=SnapshotName, detach=maybe(DetachClientsList), ro=maybe([ClientId]), force=False)
+@JsonObject(snapshot=SnapshotNameOrGlobalId, detach=maybe(DetachClientsList), ro=maybe([ClientId]), force=False)
 class SnapshotReassignDesc(object):
     '''
     snapshot: The name of the snapshot which should be reassigned.
@@ -1044,7 +1044,7 @@ class SnapshotFromRemoteDesc(object):
     '''
 
 
-@JsonObject(snapshot=SnapshotName, location=RemoteLocationName)
+@JsonObject(snapshot=SnapshotNameOrGlobalId, location=RemoteLocationName)
 class SnapshotExportDesc(object):
     '''
     snapshot: The name of the snapshot.
@@ -1052,7 +1052,7 @@ class SnapshotExportDesc(object):
     '''
 
 
-@JsonObject(snapshot=SnapshotName, location=maybe(RemoteLocationName), all=maybe(bool), force=maybe(bool))
+@JsonObject(snapshot=SnapshotNameOrGlobalId, location=maybe(RemoteLocationName), all=maybe(bool), force=maybe(bool))
 class SnapshotUnexportDesc(object):
     '''
     snapshot: The name of the snapshot.
@@ -1134,7 +1134,7 @@ class RemoteLocation(object):
     '''
 
 
-@JsonObject(snapshot=SnapshotName, location=RemoteLocationName, globalId=GlobalVolumeId, backingUp=maybe(bool), volumeId=internal(longType), visibleVolumeId=internal(longType))
+@JsonObject(snapshot=SnapshotNameOrGlobalId, location=RemoteLocationName, globalId=GlobalVolumeId, backingUp=maybe(bool), volumeId=internal(longType), visibleVolumeId=internal(longType))
 class Export(object):
     '''
     snapshot: The name of the snapshot.
@@ -1176,7 +1176,7 @@ class GroupSnapshotsSpec(object):
     '''
 
 
-@JsonObject(volume=VolumeNameOrGlobalId, volumeGlobalId=GlobalVolumeId, snapshot=maybe(SnapshotName), remoteId=GlobalVolumeId, snapshotGlobalId=GlobalVolumeId)
+@JsonObject(volume=VolumeNameOrGlobalId, volumeGlobalId=GlobalVolumeId, snapshot=maybe(SnapshotNameOrGlobalId), remoteId=GlobalVolumeId, snapshotGlobalId=GlobalVolumeId)
 class GroupSnapshotResult(object):
     '''
     volume: The name of the source volume.
