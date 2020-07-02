@@ -1184,10 +1184,10 @@ class GroupSnapshotResult(object):
     '''
 
 
-@JsonObject(volumes=[GroupSnapshotResult])
+@JsonObject(snapshots=[GroupSnapshotResult])
 class GroupSnapshotsResult(object):
     '''
-    volumes: The volumes to create snapshots of.
+    snapshots: The volumes to create snapshots of.
     '''
 
 

@@ -197,6 +197,19 @@ class ApiOkVolumesGroupBackup(ApiOk):
     '''
 
 
+@JsonObject(
+    autoName=sp.maybe(sp.SnapshotName),
+    snapshotGlobalId=sp.maybe(sp.GlobalVolumeId),
+    snapshotVisibleVolumeId=sp.maybe(sp.longType)
+)
+class ApiOkSnapshotCreate(ApiOk):
+    '''
+    autoName: The name of the transient snapshot used during the creation of the volume.
+    snapshotGlobalId: The global snapshot identifier.
+    snapshotVisibleVolumeId: The ID by which the volume/snapshot was created.
+    '''
+
+
 class ApiError(Exception):
     def __init__(self, status, json):
         super(ApiError, self).__init__()
@@ -623,7 +636,7 @@ Api.snapshotInfo = GET('SnapshotGetInfo/{snapshotName}', SnapshotName, returns=s
     Return general information about the distribution of the snapshot's data on the
     disks.
     """)
-Api.snapshotCreate = POST('VolumeSnapshot/{volumeName}', VolumeName, json=sp.VolumeSnapshotDesc, returns=ApiOkVolumeCreate, multiCluster=True).doc("Snapshot a volume",
+Api.snapshotCreate = POST('VolumeSnapshot/{volumeName}', VolumeName, json=sp.VolumeSnapshotDesc, returns=ApiOkSnapshotCreate, multiCluster=True).doc("Snapshot a volume",
     """
     Create a snapshot of the given volume; the snapshot becomes the parent of
     the volume.
