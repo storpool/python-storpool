@@ -556,7 +556,7 @@ class VolumeLimits(object):
 
 
 @JsonObject(id=internal(longType), parentName=eitherOr(SnapshotName, ""), templateName=eitherOr(VolumeTemplateName, ""),
-    size=VolumeSize, replication=VolumeReplication,
+    size=VolumeSize, replication=VolumeReplication, globalId=GlobalVolumeId,
     placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName,
     parentVolumeId=internal(longType), originalParentVolumeId=internal(longType), visibleVolumeId=longType, templateId=internal(longType),
     objectsCount=int, creationTimestamp=longType, flags=internal(int), tags=maybe({VolumeTagName: VolumeTagValue}),
@@ -569,6 +569,7 @@ class VolumeSummaryBase(VolumeLimits):
     templateName: The template that the volume/snapshot's settings are taken from.
     size: The volume/snapshots's size in bytes.
     replication: The number of copies/replicas kept.
+    globalId: The global identifier.
     placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
     placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
     placeHead: The name of a placement group which describes the disks to be used for the first replica.
@@ -591,7 +592,7 @@ class VolumeSummary(VolumeSummaryBase):
 
 
 @JsonObject(name=SnapshotName, onVolume=VolumeNameOrGlobalId,
-    autoName=bool, bound=bool, deleted=bool, transient=bool, targetDeleteDate=maybe(int), globalId=GlobalVolumeId,
+    autoName=bool, bound=bool, deleted=bool, transient=bool, targetDeleteDate=maybe(int),
     recoveringFromRemote=bool,
     backup=maybe(bool), backupOfVisibleVolumeId=maybe(longType), backupOfGlobalId=maybe(GlobalVolumeId),
     createdFromVisibleVolumeId=maybe(internal(longType)),
@@ -610,7 +611,6 @@ class SnapshotSummary(VolumeSummaryBase):
     deleted: Is this snapshot currently being deleted.
     transient: Is this a transient snapshot. Transient snapshots are internally created when cloning a volume. They cannot be attached as they may be garbage-collected at any time.
     targetDeleteDate: Scheduled date for the snapshot to be deleted. Unix timestamp
-    globalId: The global snapshot identifier.
     recoveringFromRemote: Is this snapshot's data currently being transferred from a remote location.
     backup: Is this snapshot a backup of a remote snapshot.
     backupOfVisibleVolumeId: The numeric global ID of the snapshot that has been backed up to this snapshot.
