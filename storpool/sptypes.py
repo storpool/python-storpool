@@ -1112,7 +1112,18 @@ class VolumeAcquireDesc(object):
     '''
 
 
-@JsonObject(name=VolumeNameOrGlobalId, location=RemoteLocationName, creationTimestamp=longType, size=VolumeSize, remoteId=GlobalVolumeId, onVolume=maybe(VolumeNameOrGlobalId), localSnapshot=maybe(SnapshotNameOrGlobalId), tags=maybe({VolumeTagName: VolumeTagValue}))
+@JsonObject(
+    name=VolumeNameOrGlobalId,
+    location=RemoteLocationName,
+    creationTimestamp=longType,
+    size=VolumeSize,
+    remoteId=GlobalVolumeId,
+    onVolume=maybe(VolumeNameOrGlobalId),
+    localSnapshot=maybe(SnapshotNameOrGlobalId),
+    tags=maybe({VolumeTagName: VolumeTagValue}),
+    createdFromGlobalId=internal(GlobalVolumeId),
+    createdFromVisibleVolumeId=internal(longType)
+)
 class RemoteSnapshot(object):
     '''
     name: The name of the snapshot.
