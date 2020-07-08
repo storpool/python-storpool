@@ -1071,10 +1071,11 @@ class VolumeBackupDesc(object):
     '''
 
 
-@JsonObject(remoteId=GlobalVolumeId)
+@JsonObject(remoteId=GlobalVolumeId, snapshotGlobalId=GlobalVolumeId)
 class VolumesGroupBackupSingle(object):
     '''
     remoteId: the globally unique id of the backup.
+    snapshotGlobalId: the globally unique id of the backup.
     '''
 
 
@@ -1175,13 +1176,14 @@ class GroupSnapshotsSpec(object):
     '''
 
 
-@JsonObject(volume=VolumeNameOrGlobalId, volumeGlobalId=GlobalVolumeId, snapshot=maybe(SnapshotName), remoteId=GlobalVolumeId)
+@JsonObject(volume=VolumeNameOrGlobalId, volumeGlobalId=GlobalVolumeId, snapshot=maybe(SnapshotName), remoteId=GlobalVolumeId, snapshotGlobalId=GlobalVolumeId)
 class GroupSnapshotResult(object):
     '''
     volume: The name of the source volume.
     volumeGlobalId: The globally unique id of the volume.
     snapshot: The name of the created snapshot.
     remoteId: The globally unique id of the created snapshot.
+    snapshotGlobalId: The globally unique id of the created snapshot.
     '''
 
 
