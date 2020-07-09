@@ -1172,11 +1172,16 @@ class SnapshotsRemoteUnexport(object):
     '''
 
 
-@JsonObject(volume=VolumeNameOrGlobalId, name=maybe(SnapshotName))
+@JsonObject(
+    volume=VolumeNameOrGlobalId,
+    name=maybe(SnapshotName),
+    tags=maybe({VolumeTagName: VolumeTagValue})
+)
 class GroupSnapshotSpec(object):
     '''
     volume: The name of the volume to create a snapshot of.
     name: The name of the snapshot to create.
+    tags: Arbitrary short name/value pairs to be stored with the snapshot.
     '''
 
 
