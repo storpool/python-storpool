@@ -169,6 +169,8 @@ REMOTE_LOCATION_NAME_SIZE = 64
 REMOTE_LOCATION_NAME_REGEX = VOLUME_NAME_REGEX
 CLUSTER_NAME_REGEX = VOLUME_NAME_REGEX
 CLUSTER_NAME_SIZE = 64
+REMOTE_CLUSTER_NAME_REGEX = VOLUME_NAME_REGEX
+REMOTE_CLUSTER_NAME_SIZE = 64
 VOLUME_TAG_NAME_REGEX = r'^[A-Za-z0-9_\-.:]+$'
 VOLUME_TAG_VALUE_REGEX = r'^[A-Za-z0-9_\-.:]*$'
 
@@ -244,10 +246,12 @@ ObjectState = namedEnum("ObjectState", "OBJECT_UNDEF OBJECT_OK OBJECT_OUTDATED O
 DiskState = oneOf('DiskState', 'DISK_NONE', 'DISK_UNKNOWN', 'DISK_DATA_INITIALIZING', 'DISK_DATA_PENDING_INSERT', 'DISK_DATA', 'DISK_DATA_STOPPING', 'DISK_DATA_FLUSH_WBC', 'DISK_DATA_STOPPED', 'DISK_STOPPING', 'DISK_EJECTED', 'DISK_JOURNAL', 'DISK_JOURNAL_PENDING')
 
 RemoteLocationName = nameValidator("RemoteLocationName", REMOTE_LOCATION_NAME_REGEX, REMOTE_LOCATION_NAME_SIZE, 'list')
+RemoteClusterName = nameValidator("RemoteClusterName", REMOTE_CLUSTER_NAME_REGEX, REMOTE_CLUSTER_NAME_SIZE, 'list')
 ClusterName = nameValidator("ClusterName", CLUSTER_NAME_REGEX, CLUSTER_NAME_SIZE)
 GlobalVolumeId = regex('Global Volume Id', r'[a-z0-9]+\.[a-z0-9]+\.[a-z0-9]+$')
 LocationId = regex('Global Location Id', r'[a-z0-9]+$')
 ClusterId = regex('Global Location Id', r'[a-z0-9]+\.[a-z0-9]+$')
+SubClusterId = regex('Subcluster Id', r'[a-z0-9]+$')
 
 iSCSIId = intRange('iSCSIId', 0, 0x0fff)
 iSCSIName = r'^[a-z0-9\-.:]+$'
@@ -1138,10 +1142,137 @@ class RemoteSnapshot(object):
 
 
 @JsonObject(id=LocationId, name=RemoteLocationName)
-class RemoteLocation(object):
+class RemoteLocationBase(object):
     '''
     id: A StorPool-provided unique location id.
     name: The human-readable location name.
+    '''
+
+
+@JsonObject(sendBufferSize=longType, recvBufferSize=longType)
+class RemoteLocation(RemoteLocationBase):
+    '''
+    sendBufferSize: the size of the TCP send buffer for the location
+    recvBufferSize: the size of the TCP recieve buffer for the location
+    '''
+
+
+@JsonObject(
+    location=RemoteLocationName,
+    sendBufferSize=maybe(longType),
+    recvBufferSize=maybe(longType)
+)
+class RemoteLocationUpdateDesc(object):
+    '''
+    location: The human-readable location name.
+    sendBufferSize: the size of the TCP send buffer for the location
+    recvBufferSize: the size of the TCP recieve buffer for the location
+    '''
+
+
+@JsonObject(location=RemoteLocationName, name=RemoteLocationName)
+class RemoteLocationRenameDesc(object):
+    '''
+    location: The human-readable location name.
+    name: The new human-readable location name.
+    '''
+
+
+@JsonObject(id=SubClusterId, location=RemoteLocationName)
+class RemoteClusterBase(object):
+    '''
+    id: A StorPool-provided unique cluster subid
+    location: the cluster's location name
+    '''
+
+
+@JsonObject(name=maybe(RemoteClusterName))
+class RemoteClusterAddDesc(RemoteClusterBase):
+    '''
+    name: The human-readable cluster name
+    '''
+
+
+@JsonObject(name=RemoteClusterName)
+class RemoteCluster(RemoteClusterBase):
+    '''
+    name: The human-readable cluster name
+    '''
+
+
+@JsonObject(
+    name=maybe(RemoteClusterName),
+    location=maybe(RemoteLocationName),
+    id=maybe(SubClusterId),
+    clusterWillNotBeComingBack=maybe(bool)
+)
+class RemoteClusterRemoveDesc(object):
+    '''
+    name: The human-readable cluster name.
+    location: the cluster's location name
+    id: A StorPool-provided unique cluster subid
+    clusterWillNotBeComingBack: Set this flag if the remote cluster will not be registered again in the future. Default is false.
+    '''
+
+
+@JsonObject(cluster=RemoteClusterName, name=RemoteClusterName)
+class RemoteClusterRenameDesc(object):
+    '''
+    cluster: The human-readable cluster name.
+    name: The new human-readable cluster name.
+    '''
+
+@JsonObject(
+    ip=str,
+    publicKey=str,
+    minimumDeleteDelay=maybe(longType),
+    noCrypto=maybe(bool)
+)
+class RemoteBridgeBase(object):
+    '''
+    ip: the ip address of the remote bridge
+    publicKey: the public key of the remote bridge
+    minimumDeleteDelay: minimum value for the deferred deletion
+    noCrypto: Set this flag if the connection with the remote bridge should not be encrypted
+    '''
+
+
+@JsonObject(location=RemoteLocationName)
+class RemoteBridgeAddLocationDesc(RemoteBridgeBase):
+    '''
+    location: the location of the remote bridge
+    '''
+
+
+@JsonObject(remote=RemoteClusterName)
+class RemoteBridgeAddClusterDesc(RemoteBridgeBase):
+    '''
+    remote: the cluster of the remote bridge
+    '''
+
+
+RemoteBridgeAddDesc = either(
+    RemoteBridgeAddLocationDesc, RemoteBridgeAddClusterDesc
+)
+
+
+@JsonObject(ip=str)
+class RemoteBridgeRemoveDesc(object):
+    '''
+    ip: the ip address of the remote bridge
+    '''
+
+
+@JsonObject(
+    location=RemoteLocationName,
+    cluster=maybe(RemoteClusterName),
+    remote=either(RemoteClusterName, RemoteLocationName)
+)
+class RemoteBridge(RemoteBridgeBase):
+    '''
+    location: the location of the remote bridge
+    cluster: the cluster of the remote bridge
+    remote: the cluster or the location of the remote bridge
     '''
 
 

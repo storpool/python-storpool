@@ -772,6 +772,19 @@ Api.iSCSIConfigChange = POST('iSCSIConfig', json=sp.iSCSIConfigChange).doc("Modi
 Api.spDocSection("Remote", "")
 
 Api.locationsList = GET("LocationsList", returns={'locations': [sp.RemoteLocation]}).doc("List the registered remote locations", "")
+Api.locationAdd = POST("LocationAdd", json=sp.RemoteLocationBase).doc("Register a new remote location", """ """)
+Api.locationRemove = POST("LocationRemove", json={'location': sp.RemoteLocationName}).doc("Remove a remote location", """ """)
+Api.locationUpdate = POST("LocationUpdate", json=sp.RemoteLocationUpdateDesc).doc("Update a remote location", """ """)
+Api.locationRename = POST("LocationRename", json=sp.RemoteLocationRenameDesc).doc("Rename a remote location", """ """)
+
+Api.clustersList = GET("ClustersList", returns={'clusters': [sp.RemoteCluster]}).doc("List the registered remote clusters", "")
+Api.clusterAdd = POST("ClusterAdd", json=sp.RemoteClusterAddDesc).doc("Register a new remote cluster", """ """)
+Api.clusterRemove = POST("ClusterRemove", json=sp.RemoteClusterRemoveDesc).doc("Remove a remote cluster", """ """)
+Api.clusterRename = POST("ClusterRename", json=sp.RemoteClusterRenameDesc).doc("Rename a remote cluster", """ """)
+
+Api.remoteBridgesList = GET("RemoteBridgesList", returns={'remoteBridges': [sp.RemoteBridge]}).doc("List the registered remote bridges", "")
+Api.remoteBridgeAdd = POST("RemoteBridgeAdd", json=sp.RemoteBridgeAddDesc).doc("Register a new remote bridge", """ """)
+Api.remoteBridgeRemove = POST("RemoteBridgeRemove", json=sp.RemoteBridgeRemoveDesc).doc("Deregister a remote bridge", """ """)
 
 Api.iSCSISessionsInfo = GET('iSCSISessionsInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.iSCSISessionsInfo).doc("query iSCSI controllers for active sessions", """ """)
 Api.iSCSInterfacesInfo = GET('iSCSInterfacesInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.ISCSIControllersIntefacesInfo).doc("query iSCSI controllers for interfaces state", """ """)
