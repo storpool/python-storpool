@@ -611,6 +611,10 @@ Api.volumeAcquire = POST('VolumeAcquire/{volumeName}', VolumeName, json=sp.Volum
    """
    """)
 
+Api.volumeFromRemote = POST('VolumeFromRemote', json=sp.VolumeFromRemoteDesc).doc("Create a volume from a snapshot from a remote location",
+  """
+  """)
+
 Api.spDocSection("Snapshots",
     """
     Snapshots in their essence are very similar to volumes in the sense

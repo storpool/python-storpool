@@ -1043,8 +1043,26 @@ class SnapshotFromRemoteDesc(object):
     placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
     placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
     placeHead: The name of a placement group which describes the disks to be used for the first replica.
+    replication: The number of copies/replicas kept.
+    template: The name of the template that the settings of the new volume are based on.
     export: Auto-export the snapshot after creating it. e.g. for backup.
     tags: Arbitrary short name/value pairs stored with the snapshot.
+    '''
+
+
+@JsonObject(remoteLocation=RemoteLocationName, remoteId=GlobalVolumeId, name=VolumeName, placeAll=maybe(PlacementGroupName), placeTail=maybe(PlacementGroupName), placeHead=maybe(PlacementGroupName), replication=maybe(VolumeReplication), template=maybe(VolumeTemplateName), export=maybe(bool), tags=maybe({VolumeTagName: VolumeTagValue}))
+class VolumeFromRemoteDesc(object):
+    '''
+    remoteLocation: The name of the remote location to fetch the snapshot from.
+    remoteId: The global snapshot identifier.
+    name: The name of the new volume.
+    placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
+    placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+    placeHead: The name of a placement group which describes the disks to be used for the first replica.
+    replication: The number of copies/replicas kept.
+    template: The name of the template that the settings of the new volume are based on.
+    export: Auto-export the volume after creating it. e.g. for backup.
+    tags: Arbitrary short name/value pairs stored with the volume.
     '''
 
 
