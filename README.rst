@@ -22,6 +22,97 @@ Version history
 5.5.0
 -----
 
+- allow the "json" argument to be optional for some specific API calls
+- allow arguments defined as maybe() to actually accept None passed in
+  explicitly as a value
+- support passing a "json" argument to GET for some specific API calls
+- support StorPool multicluster mode for the snapshotsList query
+- correct a member field name for GroupSnapshotsResult
+- let some API calls also accept StorPool global ID volume/snapshot
+  identifiers instead of names
+- move the VERSION constant from the storpool module to storpool.spapi,
+  since the top-level storpool module may not contain anything - it is
+  a namespace package
+- minor test infrastructure improvements
+- add some new API methods:
+  - allPeersActiveRequests
+  - clusterAdd
+  - clusterRemove
+  - clusterRename
+  - clustersList
+  - iSCSInterfacesInfo
+  - iSCSISessionsInfo
+  - locationAdd
+  - locationRemove
+  - locationRename
+  - locationUpdate
+  - maintenanceComplete
+  - maintenanceList
+  - maintenanceSet
+  - remoteBridgeAdd
+  - remoteBridgeRemove
+  - remoteBridgesList
+  - volumeExportsList
+  - volumeFromRemote
+  - volumeRevert
+  - volumesRemoteList
+- add some new types:
+  - AllPeersActiveRequests
+  - AllPeersActiveRequestsDiskExpected
+  - AllPeersActiveRequestsDiskStatus
+  - AllPeersActiveRequestsPeerDesc
+  - AllPeersActiveRequestsQuery
+  - AllPeersActiveRequestsRequest
+  - AllPeersActiveRequestsRequestPeer
+  - AllPeersActiveRequestsServiceDesc
+  - AllPeersActiveRequestsSimpleStats
+  - ApiOkSnapshotCreate
+  - iSCSIControllerInterfaceInfo
+  - iSCSIControllerIntefacesInfo
+  - iSCSIControllersQuery
+  - iSCSIControllersIntefacesInfo
+  - iSCSISessionInfo
+  - iSCSISessionStats
+  - iSCSISessionTasks
+  - iSCSISessionTcp
+  - iSCSISessionTcpStats
+  - iSCSISessionsInfo
+  - MaintenanceCompleteDesc
+  - MaintenanceNodeDesc
+  - MaintenanceNodesList
+  - MaintenanceSetDesc
+  - RemoteBridge
+  - RemoteBridgeAddClusterDesc
+  - RemoteBridgeAddDesc
+  - RemoteBridgeAddLocationDesc
+  - RemoteBridgeBase
+  - RemoteBridgeRemoveDesc
+  - RemoteCluster
+  - RemoteClusterAddDesc
+  - RemoteClusterBase
+  - RemoteClusterName
+  - RemoteClusterRemoveDesc
+  - RemoteClusterRenameDesc
+  - RemoteLocationBase
+  - RemoteLocationRenameDesc
+  - RemoteLocationUpdateDesc
+  - SubClusterId
+  - VolumeFromRemoteDesc
+  - VolumeRevertDesc
+- add some new member fields:
+  - GroupSnapshotResult.snapshotGlobalId
+  - GroupSnapshotResult.volumeGlobalId
+  - GroupSnapshotSpec.tags
+  - RemoteLocation.sendBufferSize
+  - RemoteLocation.recvBufferSize
+  - RemoteSnapshot.createdFromGlobalId
+  - RemoteSnapshot.createdFromVisibleVolumeId
+  - SnapshotFromRemoteDesc.replication
+  - SnapshotFromRemoteDesc.template
+  - VolumeSummaryBase.globalId
+  - VolumesGroupBackupSingle.snapshotGlobalId
+- add more disk request operation types to the ActiveRequestDesc.op enum
+
 5.4.0
 -----
 
