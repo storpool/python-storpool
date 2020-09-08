@@ -19,6 +19,9 @@ and act as a compute node.
 Version history
 ===============
 
+5.5.0
+-----
+
 5.4.0
 -----
 
