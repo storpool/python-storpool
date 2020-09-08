@@ -1622,7 +1622,7 @@ class iSCSISessionsInfo(object):
 
 
 @JsonObject(port=int, state=str, interfaceName=str, MAC=str, resolveInterfaceName=str)
-class iscsiControllerInterfaceInfo(object):
+class iSCSIControllerInterfaceInfo(object):
     '''
     '''
 
@@ -1635,14 +1635,14 @@ class iSCSIControllersQuery(object):
     '''
 
 
-@JsonObject(status=str, controllerId=iSCSIId, interfaces=maybe([iscsiControllerInterfaceInfo]))
-class ISCSIControllerIntefacesInfo(object):
+@JsonObject(status=str, controllerId=iSCSIId, interfaces=maybe([iSCSIControllerInterfaceInfo]))
+class iSCSIControllerIntefacesInfo(object):
     '''
     '''
 
 
-@JsonObject(controllers=[ISCSIControllerIntefacesInfo])
-class ISCSIControllersIntefacesInfo(object):
+@JsonObject(controllers=[iSCSIControllerIntefacesInfo])
+class iSCSIControllersIntefacesInfo(object):
     '''
     '''
 

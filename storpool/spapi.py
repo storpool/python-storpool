@@ -791,7 +791,7 @@ Api.remoteBridgeAdd = POST("RemoteBridgeAdd", json=sp.RemoteBridgeAddDesc).doc("
 Api.remoteBridgeRemove = POST("RemoteBridgeRemove", json=sp.RemoteBridgeRemoveDesc).doc("Deregister a remote bridge", """ """)
 
 Api.iSCSISessionsInfo = GET('iSCSISessionsInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.iSCSISessionsInfo).doc("query iSCSI controllers for active sessions", """ """)
-Api.iSCSInterfacesInfo = GET('iSCSInterfacesInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.ISCSIControllersIntefacesInfo).doc("query iSCSI controllers for interfaces state", """ """)
+Api.iSCSInterfacesInfo = GET('iSCSInterfacesInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.iSCSIControllersIntefacesInfo).doc("query iSCSI controllers for interfaces state", """ """)
 
 Api.allPeersActiveRequests = GET('AllPeersActiveRequests', json=maybe(sp.AllPeersActiveRequestsQuery), returns=sp.AllPeersActiveRequests).doc("query all peers for their status and active requests", """ """)
 
