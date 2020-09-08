@@ -1240,6 +1240,7 @@ class RemoteClusterRenameDesc(object):
     name: The new human-readable cluster name.
     '''
 
+
 @JsonObject(
     ip=str,
     publicKey=str,
