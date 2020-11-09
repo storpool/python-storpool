@@ -117,8 +117,8 @@ setuptools.setup(
     zip_safe=True,
 
     cmdclass={
-        'apidoc':    APIDocCommand,
-        'build_py':    BuildPyCommand,
+        'apidoc': APIDocCommand,
+        'build_py': BuildPyCommand,
     },
 
     entry_points={
