@@ -258,7 +258,7 @@ iSCSIName = r'^[a-z0-9\-.:]+$'
 iSCSIPGName = r'^[A-Za-z0-9_\-.:]+$'
 
 OnAttached = oneOf("OnAttached", "fail", "detach", "detachForce", "export")
-DematerializationStatus = oneOf("DematerializationStatus", "pending", "allObjectsUsed", "complete", "blockedRelocate", "blockedParentRelocate", "blockedParentRemoving", "blockedParentDifferentVag")
+DematerializationStatus = oneOf("DematerializationStatus", "pending", "allObjectsUsed", "complete", "blockedRelocate", "blockedParentRelocate", "blockedParentRemoving", "blockedParentDifferentVag", "destroyed")
 DeleteBlocked = oneOf("DeleteBlocked", "not blocked", "pending", "rebasing", "flushing", "volume not found", "generation mismatch", "disk down", "multiple children", "peer down", "write not completed", "recovering from remote", "parent recovering from remote", "unknown")
 MultiClusterState = oneOf("MultiClusterState", "owner", "ownerExported", "slaveCopy", "clusterLocal", "clusterLocalExported", "clusterLocalAutoReconcile", "clusterLocalAutoReconcileExported")
 
