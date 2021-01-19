@@ -1664,7 +1664,7 @@ class AllPeersActiveRequestsPeerDesc():
     '''
 
 
-@JsonObject(status=oneOf('Status', 'too_old', 'peer_down', 'peerDone', 'timeout', 'streamNotConnected', 'streamOverfilled', 'invalidResponse'))
+@JsonObject(status=oneOf('Status', 'peer_down', 'peerDone', 'timeout', 'streamNotConnected', 'streamOverfilled', 'invalidResponse'))
 class AllPeersActiveRequestsSimpleStats(AllPeersActiveRequestsPeerDesc):
     '''
     status: status of the request to the service
