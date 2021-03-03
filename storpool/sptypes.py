@@ -815,7 +815,7 @@ class VolumesReassignWaitDesc(object):
     '''
 
 
-@JsonObject(volume=VolumeNameOrGlobalId, snapshot=bool, client=ClientId, rights=AttachmentRights, pos=AttachmentPos, cluster=maybe(RemoteLocationName), clusterId=maybe(ClusterId))
+@JsonObject(volume=VolumeNameOrGlobalId, snapshot=bool, client=ClientId, rights=AttachmentRights, pos=AttachmentPos, globalId=GlobalVolumeId, cluster=maybe(RemoteLocationName), clusterId=maybe(ClusterId))
 class AttachmentDesc(object):
     '''
     snapshot: Whether it is a snapshot or a volume.
@@ -823,6 +823,7 @@ class AttachmentDesc(object):
     volume: The name of the attached volume.
     rights: Whether the volume is attached as read only or read/write; always ro for snapshots.
     pos: The attachment position on the client; used by the StorPool client to form the name of the internal /dev/spN device node.
+    globalId: The globally unique iddentifier of the volume or snapshot.
     cluster: The local name of the cluster of this attachement for the multicluster call
     clusterId: The clusterId of the cluster of this attachement for the multicluster call
     '''
