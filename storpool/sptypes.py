@@ -257,10 +257,10 @@ iSCSIId = intRange('iSCSIId', 0, 0x0fff)
 iSCSIName = r'^[a-z0-9\-.:]+$'
 iSCSIPGName = r'^[A-Za-z0-9_\-.:]+$'
 
-OnAttached = oneOf("fail", "detach", "detachForce", "export")
-DematerializationStatus = oneOf("pending", "allObjectsUsed", "complete", "blockedRelocate", "blockedParentRelocate", "blockedParentRemoving", "blockedParentDifferentVag")
-DeleteBlocked = oneOf("not blocked", "pending", "rebasing", "flushing", "volume not found", "generation mismatch", "disk down", "multiple children", "peer down", "write not completed", "recovering from remote", "parent recovering from remote", "unknown")
-MultiClusterState = oneOf("owner", "ownerExported", "slaveCopy", "clusterLocal", "clusterLocalExported", "clusterLocalAutoReconcile", "clusterLocalAutoReconcileExported")
+OnAttached = oneOf("OnAttached", "fail", "detach", "detachForce", "export")
+DematerializationStatus = oneOf("DematerializationStatus", "pending", "allObjectsUsed", "complete", "blockedRelocate", "blockedParentRelocate", "blockedParentRemoving", "blockedParentDifferentVag")
+DeleteBlocked = oneOf("DeleteBlocked", "not blocked", "pending", "rebasing", "flushing", "volume not found", "generation mismatch", "disk down", "multiple children", "peer down", "write not completed", "recovering from remote", "parent recovering from remote", "unknown")
+MultiClusterState = oneOf("MultiClusterState", "owner", "ownerExported", "slaveCopy", "clusterLocal", "clusterLocalExported", "clusterLocalAutoReconcile", "clusterLocalAutoReconcileExported")
 
 
 # NETWORK
