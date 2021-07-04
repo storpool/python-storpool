@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019, 2020  StorPool.
+# Copyright (c) 2019 - 2021  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
 """ Tests for the storpool.spconfig.SPConfig class. """
 
 import collections
+import errno
 import itertools
 import os
 
@@ -28,26 +29,35 @@ from storpool import spconfig
 
 ConfigData = collections.namedtuple('ConfigData', [
     'filename',
+    'exists',
     'data',
 ])
 
 CONFIG_DATA = (
     ConfigData(
         filename='/usr/lib/storpool/storpool-defaults.conf',
+        exists=True,
         data={'': {'a': '1'}},
     ),
     ConfigData(
         filename='/etc/storpool.conf',
+        exists=True,
         data={'beleriand': {'b': '2'}},
     ),
     ConfigData(
         filename='/etc/storpool.conf.d/local.conf',
+        exists=True,
         data={'': {'c': '3'}, 'beleriand': {'a': '4'}},
+    ),
+    ConfigData(
+        filename='/etc/storpool.conf.d/storpool.conf',
+        exists=False,
+        data={},
     ),
 )
 
 CONFIG_FILES = {
-    item.filename: item.data for item in CONFIG_DATA
+    item.filename: item for item in CONFIG_DATA
 }
 
 TEST_CONFIG_FILES = {
@@ -76,8 +86,9 @@ TEST_CONFIG_FILES_LISTDIR = dict(
 )
 
 
-def fake_get_config_files(_cls):
+def fake_get_config_files(_cls, missing_ok=False):
     """ Simulate looking for the StorPool configuration files. """
+    assert missing_ok is not None  # Make this do something...
     return [item.filename for item in CONFIG_DATA]
 
 
@@ -103,7 +114,29 @@ class FakeINI(object):
 
     def read_file(self):
         """ Simulate reading from the INI file. """
-        return CONFIG_FILES[self.config.filename]
+        return CONFIG_FILES[self.config.filename].data
+
+
+class FakeINICheck(object):
+    # pylint: disable=too-few-public-methods
+    """ Simulate a confget.backend.ini.INIBackend reader. """
+
+    def __init__(self, config):
+        """ Initialize a fake INI reader: store the fake config object. """
+        assert isinstance(config, FakeConfig)
+        self.config = config
+
+    def read_file(self):
+        """ Simulate reading from the INI file. """
+        res = CONFIG_FILES[self.config.filename]
+        if not res.exists:
+            raise IOError(
+                errno.ENOENT,
+                "No such file or directory",
+                self.config.filename,
+            )
+
+        return res.data
 
 
 @mock.patch('storpool.spconfig.SPConfig.get_config_files',
@@ -112,6 +145,23 @@ class FakeINI(object):
 @mock.patch('confget.BACKENDS', new={'ini': FakeINI})
 def test_success():
     """ Test that a SPConfig object behaves almost like a dictionary. """
+    cfg = spconfig.SPConfig(section='beleriand', missing_ok=True)
+
+    assert cfg['b'] == '2'
+    with pytest.raises(KeyError):
+        assert cfg['d'] == 'we should never get here, right?'
+
+    assert cfg.get('a', 42) == '4'
+    assert cfg.get('d', 42) == 42
+
+    assert dict(cfg.items()) == {'a': '4', 'b': '2', 'c': '3'}
+
+    assert sorted(cfg.keys()) == ['a', 'b', 'c']
+
+    assert sorted(cfg.iteritems()) == [('a', '4'), ('b', '2'), ('c', '3')]
+
+    assert sorted(cfg.iterkeys()) == ['a', 'b', 'c']
+
     cfg = spconfig.SPConfig(section='beleriand')
 
     assert cfg['b'] == '2'
@@ -128,6 +178,18 @@ def test_success():
     assert sorted(cfg.iteritems()) == [('a', '4'), ('b', '2'), ('c', '3')]
 
     assert sorted(cfg.iterkeys()) == ['a', 'b', 'c']
+
+
+@mock.patch('storpool.spconfig.SPConfig.get_config_files',
+            new=fake_get_config_files)
+@mock.patch('confget.Config', new=FakeConfig)
+@mock.patch('confget.BACKENDS', new={'ini': FakeINICheck})
+def test_file_not_found():
+    """ Test that a SPConfig object behaves almost like a dictionary. """
+    with pytest.raises(spconfig.SPConfigException) as err:
+        spconfig.SPConfig(section='beleriand', missing_ok=True)
+
+    assert "/etc/storpool.conf.d/storpool.conf" in str(err.value)
 
 
 def test_get_config_files():
@@ -155,7 +217,7 @@ def test_get_config_files():
     ), mock.patch(
         "os.path.isfile", new=mock_is_file
     ):
-        res = set(spconfig.SPConfig.get_config_files())
+        res = set(spconfig.SPConfig.get_config_files(missing_ok=True))
 
     assert dirs_checked == set(["/etc/storpool.conf.d"])
     assert files_checked == set(
@@ -172,3 +234,21 @@ def test_get_config_files():
         for filename, wanted in TEST_CONFIG_FILES.items()
         if wanted
     )
+
+    dirs_checked.clear()
+    files_checked.clear()
+
+    with mock.patch("os.listdir", new=mock_listdir), mock.patch(
+        "os.path.isdir", new=mock_is_dir
+    ), mock.patch(
+        "os.path.isfile", new=mock_is_file
+    ):
+        res = set(spconfig.SPConfig.get_config_files())
+
+    assert dirs_checked == set(["/etc/storpool.conf.d"])
+    assert not files_checked
+    assert res == set(
+        filename
+        for filename, wanted in TEST_CONFIG_FILES.items()
+        if wanted
+    ) | set(["/etc/storpool.conf.d/another-subdir.conf"])

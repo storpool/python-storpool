@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014 - 2020  StorPool.
+# Copyright (c) 2014 - 2021  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,13 +39,13 @@ class SPConfig(object):
     PATH_CONFIG = '/etc/storpool.conf'
     PATH_CONFIG_DIR = '/etc/storpool.conf.d'
 
-    def __init__(self, section=None):
+    def __init__(self, section=None, missing_ok=False):
         self._dict = dict()
         self._section = section
-        self.run_confget()
+        self.run_confget(missing_ok=missing_ok)
 
     @classmethod
-    def get_config_files(cls):
+    def get_config_files(cls, missing_ok=False):
         """ Return the StorPool configuration files present on the system. """
         to_check = [cls.PATH_DEFAULTS, cls.PATH_CONFIG]
         if os.path.isdir(cls.PATH_CONFIG_DIR):
@@ -54,9 +54,12 @@ class SPConfig(object):
                 for fname in sorted(os.listdir(cls.PATH_CONFIG_DIR))
                 if fname.endswith(".conf") and not fname.startswith(".")
             ])
+
+        if not missing_ok:
+            return to_check
         return [path for path in to_check if os.path.isfile(path)]
 
-    def run_confget(self):
+    def run_confget(self, missing_ok=False):
         """ Parse the StorPool configuration files by ourselves. """
         if self._section is not None:
             section = self._section
@@ -66,7 +69,7 @@ class SPConfig(object):
         ini = confget.BACKENDS['ini']
         res = {}
 
-        for fname in self.get_config_files():
+        for fname in self.get_config_files(missing_ok=missing_ok):
             try:
                 cfg = confget.Config([], filename=fname)
                 raw = ini(cfg).read_file()
