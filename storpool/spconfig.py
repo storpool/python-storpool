@@ -87,7 +87,7 @@ class SPConfig(object):
     def __getitem__(self, key):
         return self._dict[key]
 
-    def get(self, key, defval):
+    def get(self, key, defval=None):
         """ Return value of the specified configuration variable. """
         return self._dict.get(key, defval)
 
