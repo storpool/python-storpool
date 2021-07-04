@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014 - 2020  StorPool.
+# Copyright (c) 2014 - 2021  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,7 +48,7 @@ else:
     import urllib.parse as uquote
 
 
-VERSION = '5.5.0'
+VERSION = '6.0.0'
 
 
 SP_DEV_PATH = '/dev/storpool/'
