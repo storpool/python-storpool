@@ -35,14 +35,9 @@ ConfigData = collections.namedtuple('ConfigData', [
 
 CONFIG_DATA = (
     ConfigData(
-        filename='/usr/lib/storpool/storpool-defaults.conf',
-        exists=True,
-        data={'': {'a': '1'}},
-    ),
-    ConfigData(
         filename='/etc/storpool.conf',
         exists=True,
-        data={'beleriand': {'b': '2'}},
+        data={'beleriand': {'SP_CACHE_SIZE': '8192'}},
     ),
     ConfigData(
         filename='/etc/storpool.conf.d/local.conf',
@@ -70,7 +65,6 @@ TEST_CONFIG_FILES = {
     "/etc/storpool.conf.d/storpool.conf": True,
     "/etc/storpool.conf.d/storpool.conf~": False,
     "/usr/lib/storpool/storpool.conf": False,
-    "/usr/lib/storpool/storpool-defaults.conf": True,
 }
 
 TEST_CONFIG_FILES_LISTDIR = dict(
@@ -147,37 +141,63 @@ def test_success():
     """ Test that a SPConfig object behaves almost like a dictionary. """
     cfg = spconfig.SPConfig(section='beleriand', missing_ok=True)
 
-    assert cfg['b'] == '2'
+    assert cfg['SP_CACHE_SIZE'] == '8192'
     with pytest.raises(KeyError):
         assert cfg['d'] == 'we should never get here, right?'
 
     assert cfg.get('a', 42) == '4'
     assert cfg.get('d', 42) == 42
 
-    assert dict(cfg.items()) == {'a': '4', 'b': '2', 'c': '3'}
+    assert dict(cfg.items()) == dict(
+        set(
+            item
+            for item in spconfig.DEFAULTS.items()
+            if item[0] != 'SP_CACHE_SIZE'
+        )
+        | set({'SP_CACHE_SIZE': '8192', 'a': '4', 'c': '3'}.items())
+    )
 
-    assert sorted(cfg.keys()) == ['a', 'b', 'c']
+    assert (
+        sorted(set(cfg.keys()) - set(spconfig.DEFAULTS.keys()))
+    ) == ['a', 'c']
 
-    assert sorted(cfg.iteritems()) == [('a', '4'), ('b', '2'), ('c', '3')]
+    assert sorted(
+        set(cfg.iteritems()) - set(spconfig.DEFAULTS.items())
+    ) == [('SP_CACHE_SIZE', '8192'), ('a', '4'), ('c', '3')]
 
-    assert sorted(cfg.iterkeys()) == ['a', 'b', 'c']
+    assert sorted(
+        set(cfg.iterkeys()) - set(spconfig.DEFAULTS.keys())
+    ) == ['a', 'c']
 
     cfg = spconfig.SPConfig(section='beleriand')
 
-    assert cfg['b'] == '2'
+    assert cfg['SP_CACHE_SIZE'] == '8192'
     with pytest.raises(KeyError):
         assert cfg['d'] == 'we should never get here, right?'
 
     assert cfg.get('a', 42) == '4'
     assert cfg.get('d', 42) == 42
 
-    assert dict(cfg.items()) == {'a': '4', 'b': '2', 'c': '3'}
+    assert dict(cfg.items()) == dict(
+        set(
+            item
+            for item in spconfig.DEFAULTS.items()
+            if item[0] != 'SP_CACHE_SIZE'
+        )
+        | set({'SP_CACHE_SIZE': '8192', 'a': '4', 'c': '3'}.items())
+    )
 
-    assert sorted(cfg.keys()) == ['a', 'b', 'c']
+    assert (
+        sorted(set(cfg.keys()) - set(spconfig.DEFAULTS.keys()))
+    ) == ['a', 'c']
 
-    assert sorted(cfg.iteritems()) == [('a', '4'), ('b', '2'), ('c', '3')]
+    assert sorted(
+        set(cfg.iteritems()) - set(spconfig.DEFAULTS.items())
+    ) == [('SP_CACHE_SIZE', '8192'), ('a', '4'), ('c', '3')]
 
-    assert sorted(cfg.iterkeys()) == ['a', 'b', 'c']
+    assert sorted(
+        set(cfg.iterkeys()) - set(spconfig.DEFAULTS.keys())
+    ) == ['a', 'c']
 
 
 @mock.patch('storpool.spconfig.SPConfig.get_config_files',
@@ -226,7 +246,6 @@ def test_get_config_files():
             "/etc/storpool.conf.d/local.conf",
             "/etc/storpool.conf.d/storpool.conf",
             "/etc/storpool.conf.d/another-subdir.conf",
-            "/usr/lib/storpool/storpool-defaults.conf",
         ]
     )
     assert res == set(
