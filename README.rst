@@ -22,6 +22,16 @@ Version history
 6.0.0
 -----
 
+INCOMPATIBLE CHANGES:
+- spconfig.SPConfig:
+  - raise an exception if /etc/storpool.conf is missing
+  - no longer look for /usr/lib/storpool/storpool-defaults.conf,
+    use a static list of default values instead
+
+- allow spconfig.SPConfig.get() to be invoked with a single argument,
+  using None as a default value
+- add the year 2021 to the copyright notice of the generated documentation
+
 5.5.0
 -----
 
