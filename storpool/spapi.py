@@ -263,7 +263,7 @@ class Api(object):
     spDoc = ApiDoc(
         """StorPool API Reference""",
         """
-        Copyright (c) 2014 - 2020  StorPool. All rights reserved.
+        Copyright (c) 2014 - 2021  StorPool. All rights reserved.
 
         This reference document describes the StorPool API version 19.01 and
         the supported API calls.
