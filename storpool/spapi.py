@@ -484,6 +484,9 @@ Api.serversListBlocked = GET('ServersListBlocked', returns=sp.ClusterStatus).doc
     is waiting for.
     """)
 
+Api.spDocSection("Active requests", """ """)
+Api.allPeersActiveRequests = GET('AllPeersActiveRequests', json=maybe(sp.AllPeersActiveRequestsQuery), returns=sp.AllPeersActiveRequests).doc("Query all peers for their status and active requests", """ """)
+
 Api.spDocSection("Servers", """ """)
 Api.serversList = GET('ServersList', returns=sp.ClusterStatus).doc("List all Storpool servers",
    """
@@ -607,13 +610,15 @@ Api.volumeExport = POST('VolumeExport/{volumeName}', VolumeName, json=sp.VolumeE
    """
    """)
 
-Api.volumeAcquire = POST('VolumeAcquire/{volumeName}', VolumeName, json=sp.VolumeAcquireDesc, multiCluster=True).doc("move the volume from its current remote cluster to the local one. Noop if already here. Multicluster only call",
+Api.volumeAcquire = POST('VolumeAcquire/{volumeName}', VolumeName, json=sp.VolumeAcquireDesc, multiCluster=True).doc("Move the volume from its current remote cluster to the local one. Noop if already here. Multicluster only call",
    """
    """)
 
 Api.volumeFromRemote = POST('VolumeFromRemote', json=sp.VolumeFromRemoteDesc).doc("Create a volume from a snapshot from a remote location",
   """
   """)
+
+Api.volumeRevert = POST("VolumeRevert/{volumeName}", VolumeName, json=sp.VolumeRevertDesc, multiCluster=True).doc("Revert volume to a snapshot discarding all its current data", """ """)
 
 Api.spDocSection("Snapshots",
     """
@@ -773,6 +778,9 @@ Api.spDocSection("iSCSI", "")
 Api.iSCSIConfig = GET('iSCSIConfig', returns=sp.iSCSIConfig).doc("Get the StorPool iSCSI configuration", """ """)
 Api.iSCSIConfigChange = POST('iSCSIConfig', json=sp.iSCSIConfigChange).doc("Modify the StorPool iSCSI configuration", """ """)
 
+Api.iSCSISessionsInfo = GET('iSCSISessionsInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.iSCSISessionsInfo).doc("Query iSCSI controllers for active sessions", """ """)
+Api.iSCSInterfacesInfo = GET('iSCSInterfacesInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.iSCSIControllersIntefacesInfo).doc("Query iSCSI controllers for interfaces state", """ """)
+
 Api.spDocSection("Remote", "")
 
 Api.locationsList = GET("LocationsList", returns={'locations': [sp.RemoteLocation]}).doc("List the registered remote locations", "")
@@ -790,13 +798,8 @@ Api.remoteBridgesList = GET("RemoteBridgesList", returns={'remoteBridges': [sp.R
 Api.remoteBridgeAdd = POST("RemoteBridgeAdd", json=sp.RemoteBridgeAddDesc).doc("Register a new remote bridge", """ """)
 Api.remoteBridgeRemove = POST("RemoteBridgeRemove", json=sp.RemoteBridgeRemoveDesc).doc("Deregister a remote bridge", """ """)
 
-Api.iSCSISessionsInfo = GET('iSCSISessionsInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.iSCSISessionsInfo).doc("query iSCSI controllers for active sessions", """ """)
-Api.iSCSInterfacesInfo = GET('iSCSInterfacesInfo', json=maybe(sp.iSCSIControllersQuery), returns=sp.iSCSIControllersIntefacesInfo).doc("query iSCSI controllers for interfaces state", """ """)
-
-Api.allPeersActiveRequests = GET('AllPeersActiveRequests', json=maybe(sp.AllPeersActiveRequestsQuery), returns=sp.AllPeersActiveRequests).doc("query all peers for their status and active requests", """ """)
+Api.spDocSection("Nodes in maintenance", "")
 
 Api.maintenanceList = GET("MaintenanceList", returns=sp.MaintenanceNodesList).doc("List the nodes in maintenance", "")
 Api.maintenanceSet = POST("MaintenanceSet", json=sp.MaintenanceSetDesc).doc("Set node in maintenance", "")
-Api.maintenanceComplete = POST("MaintenanceComplete", json=sp.MaintenanceCompleteDesc).doc("complete node's maintenance.", "")
-
-Api.volumeRevert = POST("VolumeRevert/{volumeName}", VolumeName, json=sp.VolumeRevertDesc, multiCluster=True).doc("revert volume to a snapshot discarding all its current data", """ """)
+Api.maintenanceComplete = POST("MaintenanceComplete", json=sp.MaintenanceCompleteDesc).doc("Complete node's maintenance.", "")
