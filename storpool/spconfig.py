@@ -24,6 +24,8 @@ import confget
 
 
 DEFAULTS = {
+    "SP_ABRTSYNC_NEW_REMOTE_ADDRESSES": "reporter.storpool.com",
+    "SP_ABRTSYNC_NEW_REMOTE_PORTS": "443",
     "SP_ABRTSYNC_REMOTE_ADDRESSES":
         "reports.storpool.com,reports1.storpool.com,reports2.storpool.com",
     "SP_ABRTSYNC_REMOTE_PORTS": "2266",
