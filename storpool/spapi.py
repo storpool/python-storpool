@@ -532,10 +532,6 @@ Api.diskDescribe = GET('DiskDescribe/{diskId}', DiskId, returns=sp.Disk).doc("De
     """
     List all disks including detailed information about the objects on each disk.
     """)
-Api.diskInfo = GET('DiskGetInfo/{diskId}', DiskId, returns=sp.DiskInfo).doc("Get disk info",
-    """
-    List all disks including information about the volumes stored on each disk.
-    """)
 Api.diskEject = POST('DiskEject/{diskId}', DiskId).doc("Eject a disk",
     """ Stop operations on the given disk even if it is not empty. """)
 Api.diskForget = POST('DiskForget/{diskId}', DiskId).doc("Forget a disk",
