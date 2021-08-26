@@ -37,7 +37,10 @@ CONFIG_DATA = (
     ConfigData(
         filename='/etc/storpool.conf',
         exists=True,
-        data={'beleriand': {'SP_CACHE_SIZE': '8192'}},
+        data={'beleriand': {
+            'SP_CACHE_SIZE': '8192',
+            'SP_API_HTTP_PORT': '80',
+        }},
     ),
     ConfigData(
         filename='/etc/storpool.conf.d/local.conf',
@@ -139,7 +142,11 @@ class FakeINICheck(object):
 @mock.patch('confget.BACKENDS', new={'ini': FakeINI})
 def test_success():
     """ Test that a SPConfig object behaves almost like a dictionary. """
-    cfg = spconfig.SPConfig(section='beleriand', missing_ok=True)
+    cfg = spconfig.SPConfig(
+        section='beleriand',
+        missing_ok=True,
+        use_env=False,
+    )
 
     assert cfg['SP_CACHE_SIZE'] == '8192'
     with pytest.raises(KeyError):
@@ -152,9 +159,14 @@ def test_success():
         set(
             item
             for item in spconfig.DEFAULTS.items()
-            if item[0] != 'SP_CACHE_SIZE'
+            if item[0] not in ('SP_CACHE_SIZE', 'SP_API_HTTP_PORT')
         )
-        | set({'SP_CACHE_SIZE': '8192', 'a': '4', 'c': '3'}.items())
+        | set({
+            'SP_CACHE_SIZE': '8192',
+            'SP_API_HTTP_PORT': '80',
+            'a': '4',
+            'c': '3',
+        }.items())
     )
 
     assert (
@@ -163,13 +175,18 @@ def test_success():
 
     assert sorted(
         set(cfg.iteritems()) - set(spconfig.DEFAULTS.items())
-    ) == [('SP_CACHE_SIZE', '8192'), ('a', '4'), ('c', '3')]
+    ) == [
+        ('SP_API_HTTP_PORT', '80'),
+        ('SP_CACHE_SIZE', '8192'),
+        ('a', '4'),
+        ('c', '3'),
+    ]
 
     assert sorted(
         set(cfg.iterkeys()) - set(spconfig.DEFAULTS.keys())
     ) == ['a', 'c']
 
-    cfg = spconfig.SPConfig(section='beleriand')
+    cfg = spconfig.SPConfig(section='beleriand', use_env=False)
 
     assert cfg['SP_CACHE_SIZE'] == '8192'
     with pytest.raises(KeyError):
@@ -182,9 +199,14 @@ def test_success():
         set(
             item
             for item in spconfig.DEFAULTS.items()
-            if item[0] != 'SP_CACHE_SIZE'
+            if item[0] not in ('SP_CACHE_SIZE', 'SP_API_HTTP_PORT')
         )
-        | set({'SP_CACHE_SIZE': '8192', 'a': '4', 'c': '3'}.items())
+        | set({
+            'SP_CACHE_SIZE': '8192',
+            'SP_API_HTTP_PORT': '80',
+            'a': '4',
+            'c': '3',
+        }.items())
     )
 
     assert (
@@ -193,7 +215,12 @@ def test_success():
 
     assert sorted(
         set(cfg.iteritems()) - set(spconfig.DEFAULTS.items())
-    ) == [('SP_CACHE_SIZE', '8192'), ('a', '4'), ('c', '3')]
+    ) == [
+        ('SP_API_HTTP_PORT', '80'),
+        ('SP_CACHE_SIZE', '8192'),
+        ('a', '4'),
+        ('c', '3'),
+    ]
 
     assert sorted(
         set(cfg.iterkeys()) - set(spconfig.DEFAULTS.keys())
@@ -203,11 +230,62 @@ def test_success():
 @mock.patch('storpool.spconfig.SPConfig.get_config_files',
             new=fake_get_config_files)
 @mock.patch('confget.Config', new=FakeConfig)
+@mock.patch('confget.BACKENDS', new={'ini': FakeINI})
+def test_environment():
+    """ Test that environment variables may override the config. """
+    cfg = spconfig.SPConfig(
+        section='beleriand',
+        missing_ok=True,
+        use_env=False,
+    )
+
+    assert cfg['SP_CACHE_SIZE'] == '8192'
+    assert cfg['SP_API_HTTP_HOST'] == '127.0.0.1'
+    assert cfg['SP_API_HTTP_PORT'] == '80'
+    with pytest.raises(KeyError):
+        assert cfg['SP_AUTH_TOKEN'] == 'we should never get here, right?'
+
+    default_dict = dict(cfg.items())
+    del default_dict['SP_API_HTTP_HOST']
+    del default_dict['SP_API_HTTP_PORT']
+
+    env = {'SP_AUTH_TOKEN': 'secret', 'SP_CACHE_SIZE': '4096'}
+    with mock.patch.object(os.environ, 'get', new=env.get):
+        cfg = spconfig.SPConfig(section='beleriand', missing_ok=True)
+
+    assert cfg['SP_API_HTTP_HOST'] == '127.0.0.1'
+    assert cfg['SP_API_HTTP_PORT'] == '80'
+    assert cfg['SP_AUTH_TOKEN'] == 'secret'
+
+    cfg_dict = dict(cfg.items())
+    del cfg_dict['SP_API_HTTP_HOST']
+    del cfg_dict['SP_API_HTTP_PORT']
+    del cfg_dict['SP_AUTH_TOKEN']
+    assert cfg_dict == default_dict
+
+    env = {'SP_API_HTTP_HOST': 'nowhere', 'SP_API_HTTP_PORT': 'none'}
+    with mock.patch.object(os.environ, 'get', new=env.get):
+        cfg = spconfig.SPConfig(section='beleriand', missing_ok=True)
+
+    assert cfg['SP_API_HTTP_HOST'] == 'nowhere'
+    assert cfg['SP_API_HTTP_PORT'] == 'none'
+    with pytest.raises(KeyError):
+        assert cfg['SP_AUTH_TOKEN'] == 'we should never get here, right?'
+
+    cfg_dict = dict(cfg.items())
+    del cfg_dict['SP_API_HTTP_HOST']
+    del cfg_dict['SP_API_HTTP_PORT']
+    assert cfg_dict == default_dict
+
+
+@mock.patch('storpool.spconfig.SPConfig.get_config_files',
+            new=fake_get_config_files)
+@mock.patch('confget.Config', new=FakeConfig)
 @mock.patch('confget.BACKENDS', new={'ini': FakeINICheck})
 def test_file_not_found():
     """ Test that a SPConfig object behaves almost like a dictionary. """
     with pytest.raises(spconfig.SPConfigException) as err:
-        spconfig.SPConfig(section='beleriand', missing_ok=True)
+        spconfig.SPConfig(section='beleriand', missing_ok=True, use_env=False)
 
     assert "/etc/storpool.conf.d/storpool.conf" in str(err.value)
 

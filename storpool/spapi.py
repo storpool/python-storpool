@@ -293,9 +293,9 @@ class Api(object):
             self._source = {}
 
     @classmethod
-    def fromConfig(klass, cfg=None, **kwargs):
+    def fromConfig(klass, cfg=None, use_env=True, **kwargs):
         if cfg is None:
-            cfg = SPConfig()
+            cfg = SPConfig(use_env=use_env)
         return klass(host=cfg['SP_API_HTTP_HOST'], port=int(cfg['SP_API_HTTP_PORT']), auth=cfg['SP_AUTH_TOKEN'], **kwargs)
 
     def __call__(self, method, multiCluster, query, json=None, clusterName=None):
@@ -376,6 +376,11 @@ Api.spDocSection("General",
 
     >>> from storpool import spapi
     >>> api=spapi.Api.fromConfig()
+
+    # Use the default StorPool configuration settings, but do NOT allow environment variables to override them
+
+    >>> from storpool import spapi
+    >>> api=spapi.Api.fromConfig(use_env=False)
 
     # Use an already-created spconfig.SPConfig object
     >>> api=spapi.Api.fromConfig(cfg=cfg)

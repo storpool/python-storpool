@@ -90,9 +90,20 @@ DEFAULTS = {
     "SP_NVME_PCI_DRIVER": "storpool_pci",
 }
 
+ENV_OVERRIDE = ["SP_AUTH_TOKEN", "SP_API_HTTP_HOST", "SP_API_HTTP_PORT"]
+
 
 class SPConfigException(Exception):
     """ An error that occurred during the StorPool configuration parsing. """
+
+
+def get_env_overrides():
+    """Return a dictionary with environment variable overrides."""
+    return dict(
+        item
+        for item in ((name, os.environ.get(name)) for name in ENV_OVERRIDE)
+        if item[1] is not None
+    )
 
 
 class SPConfig(object):
@@ -106,10 +117,10 @@ class SPConfig(object):
     PATH_CONFIG = '/etc/storpool.conf'
     PATH_CONFIG_DIR = '/etc/storpool.conf.d'
 
-    def __init__(self, section=None, missing_ok=False):
+    def __init__(self, section=None, missing_ok=False, use_env=True):
         self._dict = dict()
         self._section = section
-        self.run_confget(missing_ok=missing_ok)
+        self.run_confget(missing_ok=missing_ok, use_env=use_env)
 
     @classmethod
     def get_config_files(cls, missing_ok=False):
@@ -126,7 +137,7 @@ class SPConfig(object):
             return to_check
         return [path for path in to_check if os.path.isfile(path)]
 
-    def run_confget(self, missing_ok=False):
+    def run_confget(self, missing_ok=False, use_env=True):
         """ Parse the StorPool configuration files by ourselves. """
         if self._section is not None:
             section = self._section
@@ -148,6 +159,9 @@ class SPConfig(object):
 
             for section in sections:
                 res.update(raw.get(section, {}))
+
+        if use_env:
+            res.update(get_env_overrides())
 
         self._dict = res
 
