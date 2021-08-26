@@ -22,8 +22,7 @@ Version history
 6.0.0
 -----
 
-INCOMPATIBLE CHANGES:
-- spconfig.SPConfig:
+- INCOMPATIBLE CHANGES: spconfig.SPConfig:
   - raise an exception if /etc/storpool.conf is missing
   - no longer look for /usr/lib/storpool/storpool-defaults.conf,
     use a static list of default values instead
