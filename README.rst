@@ -22,6 +22,19 @@ Version history
 7.0.0
 -----
 
+- INCOMPATIBLE CHANGES: spconfig.SPConfig:
+  - the default behavior has changed to allow the `SP_AUTH_TOKEN`,
+    `SP_API_HTTP_HOST`, and `SP_API_HTTP_PORT` environment variables to
+    override the values obtained from the configuration
+  - the old behavior is available if `use_env=False` is passed to
+    the SPConfig constructor
+
+- INCOMPATIBLE CHANGES: spapi.Api:
+  - the default behavior of the `Api.fromConfig()` method has changed to
+    allow environment variable overrides as per the above SPConfig change
+  - the old behavior is available if `use_env=False` is passed to
+    the `fromConfig()` method
+
 6.0.0
 -----
 
