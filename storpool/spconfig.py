@@ -92,6 +92,7 @@ DEFAULTS = {
     ),
     "SP_PREFERRED_PORT": "0",
     "SP_NVME_PCI_DRIVER": "storpool_pci",
+    "SP_BD_LOG_OPEN_CLOSE": "1",
 }
 
 ENV_OVERRIDE = ["SP_AUTH_TOKEN", "SP_API_HTTP_HOST", "SP_API_HTTP_PORT"]
