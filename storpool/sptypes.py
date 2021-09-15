@@ -1003,38 +1003,6 @@ class UpDiskTarget(object):
 DiskTarget = either(UpDiskTarget, DownDiskTarget)
 
 
-@JsonObject(storedSize=int, objectsCount=int)
-class VolumeBalancerSlot(object):
-    '''
-    storedSize: Number of bytes of client data stored on the corresponding disk set.
-    objectsCount: Number of objects on the corresponding disk set.
-    '''
-
-
-@JsonObject(placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName, replication=VolumeReplication,
-    feasible=bool, blocked=bool,
-    size=int, storedSize=int, objectsCount=int,
-    root=either(VolumeNameOrGlobalId, SnapshotNameOrGlobalId), volumes=[either(VolumeNameOrGlobalId, SnapshotNameOrGlobalId)],
-    targetDiskSets=[[DiskId]], slots=[VolumeBalancerSlot], reuseServer=maybe(bool))
-class VolumeBalancerAllocationGroup(object):
-    '''
-    root: The name of this group's root volume or snapshot
-    volumes: The names of all volumes and snapshots in this group.
-    size: The total size of all volumes and snapshots in the group.
-    storedSize: The total number of bytes of client data on all volumes and  snapshots in this group.
-    objectsCount: The total number of objects of all volumes and snapshots in the group.
-    replication: The number of copies/replicas kept.
-    placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
-    placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
-    placeHead: The name of a placement group which describes the disks to be used for the first replica.
-    feasible: Can new volumes be allocated with the current placement policy and redundancy constraints.
-    blocked: Can this volume be rebalanced, or is rebalancing impossible with the current placement policy due to for example missing or soft-ejecting drives.
-    targetDiskSets: The current sets of disks that the volume's data should be stored on.
-    slots: Statistics about each of the current disk sets.
-    reuseServer: allow placement of replicas on same server
-    '''
-
-
 @JsonObject(remoteLocation=RemoteLocationName, remoteId=GlobalVolumeId, name=maybe(VolumeName), placeAll=maybe(PlacementGroupName), placeTail=maybe(PlacementGroupName), placeHead=maybe(PlacementGroupName), replication=maybe(VolumeReplication), template=maybe(VolumeTemplateName), export=maybe(bool), tags=maybe({VolumeTagName: VolumeTagValue}))
 class SnapshotFromRemoteDesc(object):
     '''
