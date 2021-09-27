@@ -111,6 +111,10 @@ setuptools.setup(
     keywords='storpool StorPool',
     url='http://www.storpool.com/',
 
+    setup_requires=[
+        'confget',
+        'six',
+    ],
     install_requires=[
         'confget',
     ],
