@@ -35,6 +35,18 @@ Version history
   - the old behavior is available if `use_env=False` is passed to
     the `fromConfig()` method
 
+- add some new SPConfig default values:
+  - `SP_BD_LOG_OPEN_CLOSE`
+  - `SP_ABRTSYNC_ALTERNATIVE_SENDER`
+  - `SP_ABRTSYNC_ALTERNATIVE_SENDER_HTTPS`
+  - `SP_ABRTSYNC_NEW_REMOTE_ADDRESSES`
+  - `SP_ABRTSYNC_NEW_REMOTE_PORTS`
+- add some new fields:
+  - AttachmentDesc.globalId
+- spconfig.SPConfig: use a `{}` literal instead of `dict()` in the constructor
+- use `io.open()` instead of `open()` in various places
+- ignore pylint's "consider-using-f-string" diagnostic for Python 2.x code
+
 6.0.0
 -----
 
