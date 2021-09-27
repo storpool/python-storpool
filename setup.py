@@ -18,6 +18,7 @@
 
 
 from distutils import cmd
+import io
 import os
 import re
 import subprocess
@@ -46,7 +47,7 @@ def get_version():
     """ Get the version string from the module's __init__ file. """
     found = None
     re_semver = re.compile(RE_VERSION, re.X)
-    with open('storpool/spapi.py') as init:
+    with io.open('storpool/spapi.py', encoding='UTF-8') as init:
         for line in init.readlines():
             match = re_semver.match(line)
             if not match:
@@ -76,7 +77,7 @@ class APIDocCommand(cmd.Command):
         command = (sys.executable, '-m', 'storpool.spdocbuild')
         apifile = 'storpool/apidoc.html'
 
-        with open(apifile, 'w') as apidoc:
+        with open(apifile, mode='wb') as apidoc:
             try:
                 subprocess.check_call(command, stdout=apidoc)
             except subprocess.CalledProcessError:

@@ -18,6 +18,8 @@
 
 from __future__ import print_function
 
+import io
+
 from . import spapi
 from . import spdoc
 
@@ -27,7 +29,11 @@ def main():
     html = spdoc.Html()
     spapi.Api.spDoc.build(html)
 
-    with open('storpool/ApiDoc.html.template') as tmpl:
+    with io.open(
+        'storpool/ApiDoc.html.template',
+        mode='r',
+        encoding='UTF-8',
+    ) as tmpl:
         for line in tmpl.read().split('\n'):
             if line == '__DOC__':
                 print(html)

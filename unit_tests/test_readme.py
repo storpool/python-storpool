@@ -16,8 +16,8 @@
 #
 """ Tests for the README file. """
 
+import io
 import re
-import sys
 
 from storpool import spapi
 
@@ -49,11 +49,7 @@ RE_SEMVER = re.compile(r'''
 
 def get_file_contents(fname, encoding='UTF-8'):
     """ Read the lines from a file. """
-    if sys.version_info[0] < 3:
-        with open(fname, mode='r') as infile:
-            return infile.read().decode(encoding)
-
-    with open(fname, mode='r', encoding=encoding) as infile:
+    with io.open(fname, mode='r', encoding=encoding) as infile:
         return infile.read()
 
 
