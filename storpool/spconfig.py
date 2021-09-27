@@ -123,7 +123,7 @@ class SPConfig(object):
     PATH_CONFIG_DIR = '/etc/storpool.conf.d'
 
     def __init__(self, section=None, missing_ok=False, use_env=True):
-        self._dict = dict()
+        self._dict = {}
         self._section = section
         self.run_confget(missing_ok=missing_ok, use_env=use_env)
 
