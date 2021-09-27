@@ -815,7 +815,7 @@ class VolumesReassignWaitDesc(object):
     '''
 
 
-@JsonObject(volume=VolumeNameOrGlobalId, snapshot=bool, client=ClientId, rights=AttachmentRights, pos=AttachmentPos, globalId=GlobalVolumeId, cluster=maybe(RemoteLocationName), clusterId=maybe(ClusterId))
+@JsonObject(volume=VolumeNameOrGlobalId, snapshot=bool, client=ClientId, rights=AttachmentRights, pos=AttachmentPos, globalId=maybe(GlobalVolumeId), cluster=maybe(RemoteLocationName), clusterId=maybe(ClusterId))
 class AttachmentDesc(object):
     '''
     snapshot: Whether it is a snapshot or a volume.
