@@ -192,6 +192,7 @@ MAX_PEERS_PER_SUBTYPE = 0x1000
 MAX_SERVER_ID = PEER_TYPE_CLIENT - 1
 MAX_BRIDGE_ID = MAX_PEERS_PER_SUBTYPE - 1
 MAX_CLIENT_ID = MAX_PEERS_PER_SUBTYPE - 1
+MAX_CLIENT_ISCSI_ID = MAX_PEERS_PER_SUBTYPE - 1
 MAX_MGMT_ID = MAX_PEERS_PER_SUBTYPE - 1
 
 NO_DISK_ID = 2**32 - 2
@@ -206,6 +207,7 @@ PeerStatus = oneOf('PeerStatus', 'up', 'down')
 ClientStatus = oneOf('ClientStatus', 'running', 'down')
 ServerStatus = oneOf('ServerStatus', 'running', 'waiting', 'booting', 'down')
 BridgeStatus = oneOf('BridgeStatus', 'running', 'joining', 'down')
+iscsiTargetStatus = oneOf('iscsiTargetStatus', 'running', 'joining', 'down')
 ClusterStatus = oneOf('ClusterStatus', 'running', 'waiting', 'down')
 GUID = regex('GUID', r'^0x[0-9a-fA-F]{2,16}$')
 
@@ -216,6 +218,7 @@ ClientId = intRange('ClientID', 1, MAX_CLIENT_ID)
 ServerId = intRange('ServerID', 1, MAX_SERVER_ID)
 MgmtId = intRange('MgmtID', 1, MAX_MGMT_ID)
 BridgeId = intRange('BridgeId', 1, MAX_BRIDGE_ID)
+iscsiTargetId = intRange('iscsiTargetId', 1, MAX_CLIENT_ISCSI_ID)
 
 DiskId = intRange('DiskID', 0, MAX_DISK_ID)
 DiskDescription = regex('DiskDescritpion', DISK_DESC_REGEX)
@@ -346,7 +349,15 @@ class Bridge(Service):
     '''
 
 
-@JsonObject(clusterStatus=ClusterStatus, mgmt={MgmtId: Mgmt}, clients={ClientId: Client}, servers={ServerId: Server}, bridges={BridgeId: Bridge})
+@JsonObject(id=iscsiTargetId, status=iscsiTargetStatus)
+class iscsiTarget(Service):
+    '''
+    id: The ID of the service.
+    status: The current status of the iSCSI target service.
+    '''
+
+
+@JsonObject(clusterStatus=ClusterStatus, mgmt={MgmtId: Mgmt}, clients={ClientId: Client}, servers={ServerId: Server}, bridges={BridgeId: Bridge}, iscsiTargets={iscsiTargetId: iscsiTarget})
 class ClusterStatus(object):
     '''
     clusterStatus: The current status of the whole cluster. running - At least one running server; a cluster is formed. waiting - In quorum but negotiations between servers are not over yet. down - No quorum; most likely because more beacons are needed.

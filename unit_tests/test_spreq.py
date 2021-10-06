@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019  StorPool.
+# Copyright (c) 2019, 2021  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -80,6 +80,15 @@ STATUS_JSON = sptypes.ClusterStatus(
         ),
     },
     bridges={},
+    iscsiTargets={
+        1: sptypes.iscsiTarget(
+            id=1,
+            nodeId=1,
+            version='19.01.2333',
+            startTime=20,
+            status='running',
+        ),
+    },
 )
 
 STATUS_PYTHON = {
@@ -135,6 +144,15 @@ STATUS_PYTHON = {
         },
     },
     'bridges': {},
+    'iscsiTargets': {
+        1: {
+            'id': 1,
+            'nodeId': 1,
+            'version': '19.01.2333',
+            'startTime': 20,
+            'status': 'running',
+        },
+    },
 }
 
 ArgsType = collections.namedtuple('ArgType', [
