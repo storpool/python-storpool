@@ -669,10 +669,10 @@ class SnapshotInfo(SnapshotSummary):
 
 @JsonObject(name=either(VolumeNameOrGlobalId, SnapshotNameOrGlobalId), size=VolumeSize, replication=VolumeReplication,
     status=oneOf("VolumeCurentStatus", "up", "up soon", "data lost", "down"), snapshot=bool, migrating=bool, decreasedRedundancy=bool, balancerBlocked=bool,
-    storedSize=int, onDiskSize=int, syncingDataBytes=int, syncingMetaObjects=int, downBytes=int,
+    syncingDataBytes=int, syncingMetaObjects=int, downBytes=int,
     downDrives=[DiskId], missingDrives=[DiskId], missingTargetDrives=[DiskId], softEjectingDrives=[DiskId],
     tags=maybe({VolumeTagName: VolumeTagValue}), clusterName=maybe(ClusterName), clusterId=maybe(ClusterId))
-class VolumeStatus(object):
+class VolumeStatusQuick(object):
     '''
     name: The volume's name.
     size: The volume's size in bytes.
@@ -682,8 +682,6 @@ class VolumeStatus(object):
     migrating: True if there are tasks for reallocation of the volume.
     decreasedRedundancy: True if any of the replicas of the volume are missing.
     balancerBlocked: Can this volume be rebalanced, or is rebalancing impossible with the current placement policy due to for example missing or soft-ejecting drives.
-    storedSize: The number of bytes of client data on the volume. This does not take into account the StorPool replication and overhead, thus it is never larger than the volume size.
-    onDiskSize: The actual size that the objects of this volume occupy on the disks.
     syncingDataBytes: The total number of bytes in objects currently being synchronized (degraded objects or objects with not yet known version)
     syncingMetaObjects: The number of objects currently being synchronized (degraded objects or objects with not yet known version)
     downBytes: The number of bytes of the volume that are not accessible at the moment.
@@ -692,6 +690,14 @@ class VolumeStatus(object):
     tags: Arbitrary short name/value pairs stored with the volume.
     clusterName: multicluster call only - the name of the cluster volume currently recides in
     clusterId: multicluster call only - the id of the cluster volume currently recides in
+    '''
+
+
+@JsonObject(storedSize=int, onDiskSize=int)
+class VolumeStatus(VolumeStatusQuick):
+    '''
+    storedSize: The number of bytes of client data on the volume. This does not take into account the StorPool replication and overhead, thus it is never larger than the volume size.
+    onDiskSize: The actual size that the objects of this volume occupy on the disks.
     '''
 
 
