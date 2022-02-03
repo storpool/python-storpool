@@ -179,10 +179,11 @@ class ApiOk(object):
     '''
 
 
-@JsonObject(autoName=sp.maybe(sp.SnapshotName))
+@JsonObject(autoName=sp.maybe(sp.SnapshotName), globalId=sp.maybe(sp.GlobalVolumeId))
 class ApiOkVolumeCreate(ApiOk):
     '''
     autoName: The name of the transient snapshot used during the creation of the volume.
+    globalId: The globalId of the new volume
     '''
 
 
