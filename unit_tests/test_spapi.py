@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019, 2020  StorPool.
+# Copyright (c) 2019, 2020, 2022  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -277,7 +277,7 @@ class TestAPI(unittest.TestCase):
             assert meth.json is None
         else:
             assert isinstance(meth.json, sptype.SpType)
-        assert meth.types == {}
+        assert not meth.types
         assert getattr(meth, 'spDoc', None) is None
 
         meth.doc('QueryQuery', 'QueryDesc')
