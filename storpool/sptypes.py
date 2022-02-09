@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014 - 2021  StorPool.
+# Copyright (c) 2014 - 2022  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -731,7 +731,7 @@ class VolumePolicyDesc(object):
     '''
 
 
-@JsonObject(name=VolumeName, size=maybe(VolumeSize), parent=maybe(SnapshotNameOrGlobalId), template=maybe(VolumeTemplateName), baseOn=maybe(VolumeNameOrGlobalId))
+@JsonObject(name=maybe(VolumeName), size=maybe(VolumeSize), parent=maybe(SnapshotNameOrGlobalId), template=maybe(VolumeTemplateName), baseOn=maybe(VolumeNameOrGlobalId))
 class VolumeCreateDesc(VolumePolicyDesc):
     '''
     name: The name of the volume to be created.

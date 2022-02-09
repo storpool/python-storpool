@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014 - 2021  StorPool.
+# Copyright (c) 2014 - 2022  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -179,10 +179,11 @@ class ApiOk(object):
     '''
 
 
-@JsonObject(autoName=sp.maybe(sp.SnapshotName), globalId=sp.maybe(sp.GlobalVolumeId))
+@JsonObject(autoName=sp.maybe(sp.SnapshotName), name=sp.maybe(sp.VolumeNameOrGlobalId), globalId=sp.maybe(sp.GlobalVolumeId))
 class ApiOkVolumeCreate(ApiOk):
     '''
     autoName: The name of the transient snapshot used during the creation of the volume.
+    name: The name of the newly-created volume if one was not provided in the VolumeCreate request's parameters.
     globalId: The globalId of the new volume
     '''
 
