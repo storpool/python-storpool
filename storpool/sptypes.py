@@ -319,7 +319,7 @@ class Server(Service):
     '''
     id: The ID of the service. Currently this is the same as the ID of the node.
     status: down - There is no storpool_server daemon running or it is still recovering its drives from a crashed state. waiting - storpool_server is running but waiting for some disks to appear to prevent split-brain situations. booting - No missing disks; the server is in the process of joining the cluster ...
-    missingDisks: The cluster will remain down until these disks are seen again. This happens in the case of simultaneous failure of the whole cluster (power failure); the servers keep track of where the most recent configuration and data was stored.
+    missingDisks: The cluster will remain down until these disks are seen again. This may happen in case of a simultaneous failure of the whole cluster (e.g. a power failure); the servers keep track of where the most recent configuration and data was stored.
     pendingDisks: Similar to missingDisks, these are the disks that are ready and waiting for the missing ones.
     '''
 
@@ -379,7 +379,7 @@ class ClientConfigStatus(object):
 @JsonObject(diskId=DiskId, transactionId=longType, allObjects=int, completedObjects=int, dispatchedObjects=int, unresolvedObjects=internal(int))
 class Task(object):
     '''
-    diskId: The disk ID this task is on.
+    diskId: The ID of the disk this task is on.
     transactionId: An ID associated with the currently running task. This ID is the same for all the tasks running on different disks but initiated by the same action (e.g. when reallocating a volume, all tasks associated with that volume will have the same ID).
     allObjects: The number of all the objects that the task is performing actions on.
     completedObjects: The number of objects that the task has finished working on.
@@ -434,8 +434,8 @@ class DiskSummaryBase(object):
     generationLeft: The last cluster generation when the disk was active on a running server, or -1 if the disk is currently active.
     softEject: The status of the soft-eject process.
     description: A user-defined description of the disk for easier identification of the device.
-    model: The drive's model.
-    serial: The drive's serial.
+    model: The drive's model name.
+    serial: The drive's serial number.
     '''
 
 
@@ -453,7 +453,7 @@ class DownDiskSummary(DiskSummaryBase):
     scrubbingPausedFor=int, scrubbingPaused=bool, lastScrubCompleted=int)
 class UpDiskSummary(DiskSummaryBase):
     '''
-    sectorsCount: The amount of 512-byte sectors on the disk.
+    sectorsCount: The number of 512-byte sectors on the disk.
     noFua: Whether to issue FUA writes to this device.
     noFlush: Whether write-back cache flushing is disabled for this device.
     noTrim: Whether trim-below is disabled for this device.
@@ -470,7 +470,7 @@ class UpDiskSummary(DiskSummaryBase):
     objectsOnDiskSize: Total size occupied by objects. In essence, this is the estimated disk usage by StorPool.
     scrubbingStartedBefore: In seconds.
     scrubbedBytes: For current scrubbing job run.
-    scrubbingBW: Estimate of the disk BS used for scrubbing B/s.
+    scrubbingBW: Estimate of the disk bandwidth used for scrubbing B/s.
     scrubbingFinishAfter: Extimate of when the scrubbing job is expected to finish based on scrubbingBW and current disk usage.
     scrubbingPausedFor: How many seconds has the current scrubbing job been paused.
     scrubbingPaused: Is scrubbing currently paused
@@ -581,10 +581,10 @@ class VolumeLimits(object):
 class VolumeSummaryBase(VolumeLimits):
     '''
     parentName: The volume/snapshot's parent snapshot.
-    templateName: The template that the volume/snapshot's settings are taken from.
+    templateName: The template that the volume/snapshot's settings are inherited from.
     size: The volume/snapshots's size in bytes.
     replication: The number of copies/replicas kept.
-    globalId: The global identifier.
+    globalId: The globally-unique identifier of the volume or snapshot.
     placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
     placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
     placeHead: The name of a placement group which describes the disks to be used for the first replica.
@@ -593,8 +593,8 @@ class VolumeSummaryBase(VolumeLimits):
     objectsCount: The number of objects that the volume/snapshot is comprised of.
     creationTimestamp: The volume's creation timestamp (UNIX timestamp)
     tags: Arbitrary short name/value pairs stored with the volume.
-    clusterName: multicluster calls only - the name of the cluster volume currently recides in
-    clusterId: multicluster calls only - the id of the cluster volume currently recides in
+    clusterName: multicluster calls only - the name of the cluster volume currently resides in
+    clusterId: multicluster calls only - the id of the cluster volume currently resides in
     reuseServer: is it allowed to place replicas on the same server
     '''
 
@@ -688,8 +688,8 @@ class VolumeStatusQuick(object):
     downDrives: The IDs of the drives that are not accessible at the moment but needed by this volume. The volume will be in the 'down' status until all or some of these drives reappear.
     missingDrives: The IDs of the drives that are not accessible at the moment. The volume has all the needed data on the rest of the disks and can continue serving requests but it is in the 'degraded' status.
     tags: Arbitrary short name/value pairs stored with the volume.
-    clusterName: multicluster call only - the name of the cluster volume currently recides in
-    clusterId: multicluster call only - the id of the cluster volume currently recides in
+    clusterName: multicluster call only - the name of the cluster volume currently resides in
+    clusterId: multicluster call only - the id of the cluster volume currently resides in
     '''
 
 
@@ -835,12 +835,12 @@ class VolumesReassignWaitDesc(object):
 @JsonObject(volume=VolumeNameOrGlobalId, snapshot=bool, client=ClientId, rights=AttachmentRights, pos=AttachmentPos, globalId=maybe(GlobalVolumeId), cluster=maybe(RemoteLocationName), clusterId=maybe(ClusterId))
 class AttachmentDesc(object):
     '''
-    snapshot: Whether it is a snapshot or a volume.
-    client: The ID of the client on which it is attached.
+    snapshot: Whether this is a snapshot or a volume.
+    client: The ID of the client on which the volume or snapshot is attached.
     volume: The name of the attached volume.
     rights: Whether the volume is attached as read only or read/write; always ro for snapshots.
     pos: The attachment position on the client; used by the StorPool client to form the name of the internal /dev/spN device node.
-    globalId: The globally unique iddentifier of the volume or snapshot.
+    globalId: The globally-unique identifier of the volume or snapshot.
     cluster: The local name of the cluster of this attachement for the multicluster call
     clusterId: The clusterId of the cluster of this attachement for the multicluster call
     '''
@@ -1082,8 +1082,8 @@ class VolumeBackupDesc(object):
 @JsonObject(remoteId=GlobalVolumeId, snapshotGlobalId=GlobalVolumeId)
 class VolumesGroupBackupSingle(object):
     '''
-    remoteId: the globally unique id of the backup.
-    snapshotGlobalId: the globally unique id of the backup.
+    remoteId: the globally-unique id of the backup.
+    snapshotGlobalId: the globally-unique id of the backup.
     '''
 
 
@@ -1332,10 +1332,10 @@ class GroupSnapshotsSpec(object):
 class GroupSnapshotResult(object):
     '''
     volume: The name of the source volume.
-    volumeGlobalId: The globally unique id of the volume.
+    volumeGlobalId: The globally-unique id of the volume.
     snapshot: The name of the created snapshot.
-    remoteId: The globally unique id of the created snapshot.
-    snapshotGlobalId: The globally unique id of the created snapshot.
+    remoteId: The globally-unique id of the created snapshot.
+    snapshotGlobalId: The globally-unique id of the created snapshot.
     '''
 
 
