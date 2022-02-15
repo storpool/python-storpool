@@ -607,7 +607,7 @@ Api.volumesGroupBackup = POST('VolumesGroupBackup', json=sp.VolumesGroupBackupDe
     """
     """)
 
-Api.volumeMoveToRemote = POST('VolumeMoveToRemote/{volumeName}', VolumeName, json=sp.VolumeMoveToRemoteDesc).doc("Move a volume from local cluster to a remote cluster",
+Api.volumeMoveToRemote = POST('VolumeMoveToRemote/{volumeName}', VolumeName, json=sp.VolumeMoveToRemoteDesc).doc("Move a volume from the local cluster to a remote cluster",
    """
    """)
 
