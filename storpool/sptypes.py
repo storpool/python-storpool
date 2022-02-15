@@ -1011,11 +1011,12 @@ class VolumeTemplateUpdateDesc(VolumePolicyDesc):
 
 
 # VOLUME RELOCATOR and BALANCER
-@JsonObject(status=oneOf("RelocatorStatus", 'on', 'off', 'blocked'), volumesToRelocate=int)
+@JsonObject(status=oneOf("RelocatorStatus", 'on', 'off', 'blocked'), volumesToRelocate=int, recoveringFromRemote=maybe(int))
 class VolumeRelocatorStatus(object):
     '''
     status: 'off' - relocator is currently turned off. 'on' - relocator is on. 'blocked' - relocation is blocked, most likely due to missing drives.
     volumesToRelocate: Number of volumes currently being relocated.
+    recoveringFromRemote: Number of volumes currently being recovered from a remote location.
     '''
 
 
