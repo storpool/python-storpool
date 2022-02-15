@@ -1097,12 +1097,22 @@ class VolumesGroupBackupDesc(object):
 
 
 @JsonObject(cluster=maybe(ClusterName), clusterId=maybe(ClusterId), onAttached=maybe(OnAttached))
-class VolumeMoveToRemoteDesc(object):
+class VolumeMoveToRemoteBase(object):
     '''
     cluster: The name of the target cluster, use this or clusterId
     clusterId: The id of the target cluster, use this or cluster
     onAttached: What to do if volume is attached. "fail" if not specified
     '''
+
+
+@JsonObject()
+class VolumeMoveToRemoteDesc(VolumeMoveToRemoteBase):
+    pass
+
+
+@JsonObject()
+class SnapshotMoveToRemoteDesc(VolumeMoveToRemoteBase):
+    pass
 
 
 @JsonObject(cluster=maybe(ClusterName), clusterId=maybe(ClusterId))

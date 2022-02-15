@@ -679,6 +679,11 @@ Api.snapshotCreateGroup = POST('VolumesGroupSnapshot', json=sp.GroupSnapshotsSpe
 Api.snapshotFromRemote = POST('SnapshotFromRemote', json=sp.SnapshotFromRemoteDesc).doc("Copy a snapshot from a remote location",
     """
     """)
+
+Api.snapshotMoveToRemote = POST('SnapshotMoveToRemote/{snapshotName}', SnapshotName, json=sp.SnapshotMoveToRemoteDesc).doc("Move a snapshot from the local cluster to a remote cluster",
+   """
+   """)
+
 Api.snapshotExport = POST('SnapshotExport', json=sp.SnapshotExportDesc).doc("Allow a remote location to access a local snapshot",
     """
     """)
