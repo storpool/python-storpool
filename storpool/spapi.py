@@ -117,7 +117,7 @@ class _API_METHOD(object):
         if json is not None:
             args.append(_API_ARG('json', json))
 
-        ftext = 'def func(self, {args}clusterName=None):\n'.format(
+        ftext = 'def func(self, {args}clusterName=None, returnRawAPIData=False):\n'.format(
             args=''.join(arg.defstr() + ", " for arg in args))
         for arg in args:
             ftext += '    {arg} = _validate_{arg}({arg})\n'.format(arg=arg._name)
@@ -128,6 +128,8 @@ class _API_METHOD(object):
         ftext += '\n'
 
         ftext += '    res = self("{method}", {multiCluster}, query, {json}, clusterName=clusterName)\n'.format(method=method, multiCluster=repr(self.multiCluster), json=None if json is None else 'json')
+        ftext += '    if returnRawAPIData:\n'
+        ftext += '        return res\n'
         ftext += '    try:\n'
         ftext += '        return returns(res)\n'
         ftext += '    except InvalidArgumentError as e:\n'
@@ -265,7 +267,7 @@ class Api(object):
     spDoc = ApiDoc(
         """StorPool API Reference""",
         """
-        Copyright (c) 2014 - 2021  StorPool. All rights reserved.
+        Copyright (c) 2014 - 2022  StorPool. All rights reserved.
 
         This reference document describes the StorPool API version 19.01 and
         the supported API calls.
@@ -422,6 +424,11 @@ Api.spDocSection("General",
       }
     }
     ```
+
+    Any of the methods may be invoked with the additional boolean parameter
+    "returnRawAPIData"; if it has a true value, the method call will not
+    construct a Python object representing the return value, but will return
+    a Python dictionary or list corresponding to the JSON response data instead.
 
     The calls that may be used may be found in the file spapi.py.  As a rule of
     thumb, the name of the call is the name of the HTTP query with the first
