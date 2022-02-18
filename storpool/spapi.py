@@ -373,7 +373,7 @@ Api.spDocSection("General",
     storpool placementGroup hdd addDisk 1
     ```
 
-    Python programs may use the API by importing the Python StorPool bindings (use 'pypi install storpool' to install them):
+    Python programs may use the API by importing the Python StorPool bindings (use 'pip install storpool' to install them):
 
     ```
     # Use the default StorPool configuration settings
