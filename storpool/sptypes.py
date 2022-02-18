@@ -242,6 +242,7 @@ VolumeTemplateName = nameValidator("VolumeTemplateName", VOLUME_TEMPLATE_NAME_RE
 
 Bandwidth = unlimitedInt('Bandwidth', 0, '-')
 IOPS = unlimitedInt('IOPS', 0, '-')
+LimitType = oneOf('LimitType', 'total', 'perGiB')
 AttachmentRights = oneOf('AttachmentRights', 'rw', 'ro')
 
 ObjectState = namedEnum("ObjectState", "OBJECT_UNDEF OBJECT_OK OBJECT_OUTDATED OBJECT_IN_RECOVERY OBJECT_WAITING_FOR_VERSION OBJECT_WAITING_FOR_DISK OBJECT_DATA_NOT_PRESENT OBJECT_DATA_LOST OBJECT_WAINING_FOR_CHAIN OBJECT_WAIT_IDLE".split(' '))
@@ -562,7 +563,7 @@ class FaultSet(object):
 
 
 # VOLUME and SNAPSHOT
-@JsonObject(bw=Bandwidth, iops=IOPS)
+@JsonObject(bw=Bandwidth, iops=IOPS, limitType=maybe(LimitType))
 class VolumeLimits(object):
     '''
     bw: Bandwidth limit in KB.
