@@ -763,10 +763,11 @@ class VolumeSnapshotDesc(object):
     '''
 
 
-@JsonObject(rename=maybe(VolumeName), bind=maybe(bool), targetDeleteDate=maybe(int), deleteAfter=maybe(int), tags=maybe({VolumeTagName: VolumeTagValue}))
+@JsonObject(rename=maybe(VolumeName), template=maybe(VolumeTemplateName), bind=maybe(bool), targetDeleteDate=maybe(int), deleteAfter=maybe(int), tags=maybe({VolumeTagName: VolumeTagValue}))
 class SnapshotUpdateDesc(VolumePolicyDesc):
     '''
     rename: The new name to be set.
+    template: The new template that the snapshot's settings should be based on.
     bind: When true bind this snapshot, when false - unbind it. If not set or missing - no change.
     targetDeleteDate: set absolute targetDeleteDate, or 0 to disable automatic deleting. Unix timestamp. targetDeleteDate can not be set in the past
     deleteAfter: set targetDeleteDate relative to the current time on the mgmt node. If not 0 this value will be added to the current time as seconds and set as targetDeleteDate. If 0 it will discard previous targetDeleteDate
