@@ -670,7 +670,7 @@ class SnapshotInfo(SnapshotSummary):
 
 @JsonObject(name=either(VolumeNameOrGlobalId, SnapshotNameOrGlobalId), size=VolumeSize, replication=VolumeReplication,
     status=oneOf("VolumeCurentStatus", "up", "up soon", "data lost", "down"), snapshot=bool, migrating=bool, decreasedRedundancy=bool, balancerBlocked=bool,
-    syncingDataBytes=int, syncingMetaObjects=int, downBytes=int,
+    syncingDataBytes=int, syncingMetaObjects=int, downBytes=int, objectsCount=int, upSoonChainsCount=int,
     downDrives=[DiskId], missingDrives=[DiskId], missingTargetDrives=[DiskId], softEjectingDrives=[DiskId],
     tags=maybe({VolumeTagName: VolumeTagValue}), clusterName=maybe(ClusterName), clusterId=maybe(ClusterId))
 class VolumeStatusQuick(object):
@@ -688,6 +688,8 @@ class VolumeStatusQuick(object):
     downBytes: The number of bytes of the volume that are not accessible at the moment.
     downDrives: The IDs of the drives that are not accessible at the moment but needed by this volume. The volume will be in the 'down' status until all or some of these drives reappear.
     missingDrives: The IDs of the drives that are not accessible at the moment. The volume has all the needed data on the rest of the disks and can continue serving requests but it is in the 'degraded' status.
+    objectsCount: The number of objects that the volume/snapshot is comprised of.
+    upSoonChainsCount: The number of objects that have to be transferred.
     tags: Arbitrary short name/value pairs stored with the volume.
     clusterName: multicluster call only - the name of the cluster volume currently resides in
     clusterId: multicluster call only - the id of the cluster volume currently resides in
