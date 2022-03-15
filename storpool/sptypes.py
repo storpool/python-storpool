@@ -267,7 +267,7 @@ iSCSIPGName = r'^[A-Za-z0-9_\-.:]+$'
 
 OnAttached = oneOf("OnAttached", "fail", "detach", "detachForce", "export")
 DematerializationStatus = oneOf("DematerializationStatus", "pending", "allObjectsUsed", "complete", "blockedRelocate", "blockedParentRelocate", "blockedParentRemoving", "blockedParentDifferentVag", "destroyed")
-DeleteBlocked = oneOf("DeleteBlocked", "not blocked", "pending", "rebasing", "flushing", "volume not found", "generation mismatch", "disk down", "multiple children", "peer down", "write not completed", "recovering from remote", "parent recovering from remote", "unknown")
+DeleteBlocked = oneOf("DeleteBlocked", "not blocked", "pending", "rebasing", "flushing", "volume not found", "generation mismatch", "disk down", "multiple children", "peer down", "write not completed", "recovering from remote", "parent recovering from remote", "moving to remote", "unknown")
 MultiClusterState = oneOf("MultiClusterState", "owner", "ownerExported", "slaveCopy", "clusterLocal", "clusterLocalExported", "clusterLocalAutoReconcile", "clusterLocalAutoReconcileExported")
 
 
@@ -716,16 +716,14 @@ class SnapshotInfo(SnapshotSummary):
     pass
 
 
-@JsonObject(name=either(VolumeNameOrGlobalId, SnapshotNameOrGlobalId), size=VolumeSize, replication=VolumeReplication,
-    status=oneOf("VolumeCurentStatus", "up", "up soon", "data lost", "down"), snapshot=bool, migrating=bool, decreasedRedundancy=bool, balancerBlocked=bool,
-    syncingDataBytes=int, syncingMetaObjects=int, downBytes=int, objectsCount=int, upSoonChainsCount=int,
-    downDrives=[DiskId], missingDrives=[DiskId], missingTargetDrives=[DiskId], softEjectingDrives=[DiskId],
-    tags=maybe({VolumeTagName: VolumeTagValue}), clusterName=maybe(ClusterName), clusterId=maybe(ClusterId))
-class VolumeStatusQuick(object):
+@JsonObject(status=oneOf("VolumeCurrentStatus", "up", "up soon", "data lost", "down"),
+    snapshot=bool, migrating=bool, decreasedRedundancy=bool,
+    balancerBlocked=bool, syncingDataBytes=int, syncingMetaObjects=int,
+    downBytes=int, objectsCount=int, upSoonChainsCount=int,
+    downDrives=[DiskId], missingDrives=[DiskId],
+    missingTargetDrives=[DiskId], softEjectingDrives=[DiskId])
+class VolumeStatusQuick(VolumeSummary):
     '''
-    name: The volume's name.
-    size: The volume's size in bytes.
-    replication: The number of copies/replicas kept.
     status: up - The volume is operational. up soon - Synchronizing versions of objects after a disk has come back up. data lost - The last copy of some of the data in the volume has been lost. down - Some or all of the objects of the volume are missing and the volume is not in a state to continue serving operations.
     snapshot: True if this response describes a snapshot instead of a volume.
     migrating: True if there are tasks for reallocation of the volume.
@@ -738,14 +736,42 @@ class VolumeStatusQuick(object):
     missingDrives: The IDs of the drives that are not accessible at the moment. The volume has all the needed data on the rest of the disks and can continue serving requests but it is in the 'degraded' status.
     objectsCount: The number of objects that the volume/snapshot is comprised of.
     upSoonChainsCount: The number of objects that have to be transferred.
-    tags: Arbitrary short name/value pairs stored with the volume.
-    clusterName: multicluster call only - the name of the cluster volume currently resides in
-    clusterId: multicluster call only - the id of the cluster volume currently resides in
+    '''
+
+
+@JsonObject(status=oneOf("VolumeCurrentStatus", "up", "up soon", "data lost", "down"),
+    snapshot=bool, migrating=bool, decreasedRedundancy=bool,
+    balancerBlocked=bool, syncingDataBytes=int, syncingMetaObjects=int,
+    downBytes=int, objectsCount=int, upSoonChainsCount=int,
+    downDrives=[DiskId], missingDrives=[DiskId],
+    missingTargetDrives=[DiskId], softEjectingDrives=[DiskId])
+class SnapshotStatusQuick(SnapshotSummary):
+    '''
+    status: up - The volume is operational. up soon - Synchronizing versions of objects after a disk has come back up. data lost - The last copy of some of the data in the volume has been lost. down - Some or all of the objects of the volume are missing and the volume is not in a state to continue serving operations.
+    snapshot: True if this response describes a snapshot instead of a volume.
+    migrating: True if there are tasks for reallocation of the volume.
+    decreasedRedundancy: True if any of the replicas of the volume are missing.
+    balancerBlocked: Can this volume be rebalanced, or is rebalancing impossible with the current placement policy due to for example missing or soft-ejecting drives.
+    syncingDataBytes: The total number of bytes in objects currently being synchronized (degraded objects or objects with not yet known version)
+    syncingMetaObjects: The number of objects currently being synchronized (degraded objects or objects with not yet known version)
+    downBytes: The number of bytes of the volume that are not accessible at the moment.
+    downDrives: The IDs of the drives that are not accessible at the moment but needed by this volume. The volume will be in the 'down' status until all or some of these drives reappear.
+    missingDrives: The IDs of the drives that are not accessible at the moment. The volume has all the needed data on the rest of the disks and can continue serving requests but it is in the 'degraded' status.
+    objectsCount: The number of objects that the volume/snapshot is comprised of.
+    upSoonChainsCount: The number of objects that have to be transferred.
     '''
 
 
 @JsonObject(storedSize=int, onDiskSize=int)
 class VolumeStatus(VolumeStatusQuick):
+    '''
+    storedSize: The number of bytes of client data on the volume. This does not take into account the StorPool replication and overhead, thus it is never larger than the volume size.
+    onDiskSize: The actual size that the objects of this volume occupy on the disks.
+    '''
+
+
+@JsonObject(storedSize=int, onDiskSize=int)
+class SnapshotStatus(SnapshotStatusQuick):
     '''
     storedSize: The number of bytes of client data on the volume. This does not take into account the StorPool replication and overhead, thus it is never larger than the volume size.
     onDiskSize: The actual size that the objects of this volume occupy on the disks.

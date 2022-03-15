@@ -569,9 +569,9 @@ Api.diskRetrim = POST("DiskRetrim/{diskId}", DiskId).doc("Retrim disk", """ """)
 Api.spDocSection("Volumes", """ """)
 Api.volumesList = GET('VolumesList', returns=[sp.VolumeSummary], multiCluster=True).doc("List all volumes",
     """ Return configuration information about all the volumes. """)
-Api.volumesStatus = GET('VolumesGetStatus', returns={either(sp.VolumeName, sp.SnapshotName): sp.VolumeStatus}, multiCluster=True).doc("Get volume and snapshot status and stored size",
+Api.volumesStatus = GET('VolumesGetStatus', returns={either(sp.SnapshotNameOrGlobalId, sp.VolumeNameOrGlobalId): either(sp.SnapshotStatus, sp.VolumeStatus)}, multiCluster=True).doc("Get volume and snapshot status and stored size",
     """ Return the status and stored size of each volume and snapshot. """)
-Api.volumesQuickStatus = GET('VolumesGetStatusQuick', returns={either(sp.VolumeName, sp.SnapshotName): sp.VolumeStatusQuick}, multiCluster=True).doc("Get volume and snapshot status",
+Api.volumesQuickStatus = GET('VolumesGetStatusQuick', returns={either(sp.SnapshotNameOrGlobalId, sp.VolumeNameOrGlobalId): either(sp.SnapshotStatusQuick, sp.VolumeStatusQuick)}, multiCluster=True).doc("Get volume and snapshot status",
     """ Return the status of each volume and snapshot. """)
 Api.volumesSpace = GET('VolumesSpace', returns=[sp.VolumeSpace], multiCluster=True).doc("List total used space by each volume",
     """
