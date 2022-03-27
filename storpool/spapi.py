@@ -82,6 +82,7 @@ ClientId = _API_ARG('clientId', sp.ClientId)
 VolumeName = _API_ARG('volumeName', sp.VolumeNameOrGlobalId)
 SnapshotName = _API_ARG('snapshotName', sp.SnapshotNameOrGlobalId)
 PlacementGroupName = _API_ARG('placementGroupName', sp.PlacementGroupName)
+VagId = _API_ARG('vagName', sp.VagId)
 VolumeTemplateName = _API_ARG('templateName', sp.VolumeTemplateName)
 GlobalVolumeId = _API_ARG('globalVolumeId', sp.GlobalVolumeId)
 
@@ -747,6 +748,12 @@ Api.placementGroupUpdate = POST('PlacementGroupUpdate/{placementGroupName}', Pla
 Api.placementGroupDelete = POST('PlacementGroupDelete/{placementGroupName}', PlacementGroupName).doc("Delete a placement group", """ """)
 
 Api.faultSetsList = GET('FaultSetsList', returns={sp.FaultSetName: sp.FaultSet}).doc("List all fault sets", """ """)
+
+
+Api.vagList = GET('VagList/{vagName}', VagId, returns=sp.Vag).doc("List the properties of a volume allocation group", """ """)
+Api.volumeUpdateVag = POST("VolumeUpdateVag/{volumeName}", VolumeName, json=sp.VolumeUpdateVagDesc).doc("Update the allocation group of a volume", """ """)
+Api.snapshotUpdateVag = POST("SnapshotUpdateVag/{snapshotName}", SnapshotName, json=sp.SnapshotUpdateVagDesc).doc("Update the allocation group of a snapshot", """ """)
+Api.vagUpdate = POST("VagUpdate", json=sp.VagUpdateDesc).doc("Update the targets of a volume allocation group", """ """)
 
 
 Api.spDocSection("Volume Templates",

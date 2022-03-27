@@ -224,6 +224,8 @@ DiskId = intRange('DiskID', 0, MAX_DISK_ID)
 DiskDescription = regex('DiskDescritpion', DISK_DESC_REGEX)
 DiskIdOrNoDiskId = eitherOr(DiskId, NO_DISK_ID)
 
+TargetsCount = oneOf('TargetsCount', *[2**exp for exp in range(16)])
+
 SnapshotName = nameValidator("SnapshotName", SNAPSHOT_NAME_REGEX, VOLUME_NAME_SIZE, 'list', 'status')
 SnapshotNameOrGlobalId = nameValidator("SnapshotNameOrGlobalId", SNAPSHOT_NAME_OR_GLOBAL_ID_REGEX, VOLUME_NAME_SIZE, 'list', 'status')
 
@@ -238,6 +240,8 @@ VolumeTagValue = nameValidator("VolumeTagValue", VOLUME_TAG_VALUE_REGEX, VOLUME_
 
 PlacementGroupName = nameValidator("PlacementGroupName", PLACEMENT_GROUP_NAME_REGEX, PLACEMENT_GROUP_NAME_SIZE, 'list')
 FaultSetName = PlacementGroupName
+VagId = intRange('VagId', 1, 2**64)
+OverrideId = unlimitedInt('OverrideId', 0, '-')
 VolumeTemplateName = nameValidator("VolumeTemplateName", VOLUME_TEMPLATE_NAME_REGEX, VOLUME_NAME_SIZE, 'list')
 
 Bandwidth = unlimitedInt('Bandwidth', 0, '-')
@@ -559,6 +563,50 @@ class PlacementGroupUpdateDesc(object):
 class FaultSet(object):
     '''
     servers: List of servers in one fault set
+    '''
+
+
+# VAGs
+@JsonObject(name=VagId, chains=[[DiskId]], diskSetsConstraintsViolated=bool, overrides={OverrideId: [DiskId]},
+    parentVagId=internal(longType), placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName,
+    replication=VolumeReplication, reuseServer=maybe(bool), targetDiskSets=[[DiskId]], templateName=eitherOr(VolumeTemplateName, ""),
+    templateId=internal(longType), vagId=internal(longType))
+class Vag(object):
+    '''
+    chains: The list of disks where the chains are stored.
+    diskSetsConstraintsViolated: Whether any constraint violations have been detected for this VAG so that a rebalancing is necessary.
+    overrides: The disk set overrides for this VAG.
+    parentVagId: The ID of the parent volume allocation group.
+    placeAll: The name of a placement group which describes the disks to be used for all but the last replica.
+    placeTail: The name of a placement group which describes the disks to be used for the last replica, the one used for reading.
+    placeHead: The name of a placement group which describes the disks to be used for the first replica.
+    replication: The number of copies/replicas kept.
+    reuseServer: is it allowed to place replicas on the same server
+    targetDiskSets: The sets of disks that the volume's data should be stored on.
+    templateName: The template that the volume/snapshot's settings are taken from.
+    vagId: The ID of this volume allocation group
+    '''
+
+
+@JsonObject(vagId=eitherOr(VagId, "parent"))
+class VolumeUpdateVagDesc:
+    '''
+    vagId: The numeric ID of the volume allocation group or the string "parent".
+    '''
+
+
+@JsonObject(vagId=eitherOr(VagId, "parent"))
+class SnapshotUpdateVagDesc:
+    '''
+    vagId: The numeric ID of the volume allocation group or the string "parent".
+    '''
+
+
+@JsonObject(vagId=str, targetsCount=TargetsCount)
+class VagUpdateDesc:
+    '''
+    vagId: volume allocation group ID
+    targetsCount
     '''
 
 
