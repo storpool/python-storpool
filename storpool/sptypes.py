@@ -1677,7 +1677,7 @@ class iSCSISessionTcp(object):
     stats=maybe(iSCSISessionStats), tasks=maybe(iSCSISessionTasks), tcp=maybe(iSCSISessionTcp))
 class iSCSISessionInfo(object):
     '''
-    satus: ok or other
+    status: ok or other
     controllerId: controller id
     ISID: session ISID
     timeCreated: unix timestamp when session was established
