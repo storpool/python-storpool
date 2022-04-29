@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019  StorPool.
+# Copyright (c) 2019, 2022  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,8 +37,7 @@ def deep_to_json(data):
         return [deep_to_json(obj) for obj in data]
     if isinstance(data, dict):
         # Bah, we cannot use dict comprehension on CentOS 6, can we...
-        return dict([(name, deep_to_json(value))
-                     for name, value in data.items()])
+        return {name: deep_to_json(value) for name, value in data.items()}
     return data
 
 
