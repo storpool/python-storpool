@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014 - 2021  StorPool.
+# Copyright (c) 2014 - 2022  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@
 """ Distribution definitions for the StorPool Python bindings. """
 
 
-from distutils import cmd
+from distutils import cmd  # pylint: disable=deprecated-module
 import io
 import os
 import re
