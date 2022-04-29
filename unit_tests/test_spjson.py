@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019  StorPool.
+# Copyright (c) 2019, 2022  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +28,7 @@ from storpool import sptype
     number=int, name=str, flags=sptype.maybe([bool])
 )  # pylint: disable=too-few-public-methods
 class TrivialClass(object):
+    # pylint: disable=too-few-public-methods
     """ A trivial class demonstrating member names and types. """
 
 
