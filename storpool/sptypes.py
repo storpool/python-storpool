@@ -967,6 +967,7 @@ class VolumeTemplateSpaceEst(VolumeTemplateSpaceEstEntry):
 @JsonObject(id=internal(int), name=VolumeTemplateName, placeAll=PlacementGroupName, placeTail=PlacementGroupName, placeHead=PlacementGroupName, replication=eitherOr(VolumeReplication, "-"),
     volumesCount=int, snapshotsCount=int, removingSnapshotsCount=int,
     size=eitherOr(VolumeSize, 0), totalSize=eitherOr(VolumeSize, 0), onDiskSize=longType, storedSize=longType,
+    volumesSize=maybe(eitherOr(VolumeSize, 0)), snapshotsWithoutChildrenSize=maybe(eitherOr(VolumeSize, 0)), snapshotsWithChildrenSize=maybe(eitherOr(VolumeSize, 0)),
     availablePlaceAll=longType, availablePlaceTail=longType, availablePlaceHead=longType, capacityPlaceAll=longType, capacityPlaceTail=longType, capacityPlaceHead=longType,
     stored=VolumeTemplateSpaceEst)
 class VolumeTemplateStatusDesc(object):
@@ -980,6 +981,9 @@ class VolumeTemplateStatusDesc(object):
     snapshotsCount: The number of snapshots based on this template (incl. snapshots currently being deleted).
     removingSnapshotsCount: The number of snapshots based on this template currently being deleted.
     size: The number of bytes of all volumes based on this template, not counting the StorPool replication and checksums overhead.
+    volumesSize: The number of bytes provisioned for all volumes in this template.
+    snapshotsWithoutChildrenSize: The number of bytes provisioned for all snapshots in this template that do not have children.
+    snapshotsWithChildrenSize: The number of bytes provisioned for all snapshots in this template that have children.
     totalSize: The number of bytes of all volumes based on this template, including the StorPool replication overhead.
     storedSize: The number of bytes of client data on all the volumes based on this template. This does not take into account the StorPool replication and overhead, thus it is never larger than the volume size.
     onDiskSize: The actual on-disk number of bytes occupied by all the volumes based on this template.
