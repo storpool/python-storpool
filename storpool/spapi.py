@@ -85,6 +85,8 @@ PlacementGroupName = _API_ARG('placementGroupName', sp.PlacementGroupName)
 VagId = _API_ARG('vagName', sp.VagId)
 VolumeTemplateName = _API_ARG('templateName', sp.VolumeTemplateName)
 GlobalVolumeId = _API_ARG('globalVolumeId', sp.GlobalVolumeId)
+BucketName = _API_ARG('bucketName', sp.KvsName)
+KeyName = _API_ARG('keyName', sp.KvsKeyName)
 
 
 class _API_METHOD(object):
@@ -355,6 +357,15 @@ class Api(object):
 
     def volumeDevLinkWait(self, volumeName, attach, pollTime=200 * msec, maxTime=60 * sec):
         return pathPollWait(SP_DEV_PATH + volumeName, attach, True, pollTime, maxTime)
+
+    def kvsTryUpdate(self, BucketName, json=sp.KeyValueBucketSetDesc):
+        try:
+            self.kvsUpdate(BucketName, json)
+            return True
+        except ApiError as e:
+            if (e.json['error'])['name'] != 'runIfVersionIsMismatch':
+                raise
+            return False
 
 
 Api.spDocSection("General",
@@ -829,3 +840,12 @@ Api.spDocSection("Nodes in maintenance", "")
 Api.maintenanceList = GET("MaintenanceList", returns=sp.MaintenanceNodesList).doc("List the nodes in maintenance", "")
 Api.maintenanceSet = POST("MaintenanceSet", json=sp.MaintenanceSetDesc).doc("Set node in maintenance", "")
 Api.maintenanceComplete = POST("MaintenanceComplete", json=sp.MaintenanceCompleteDesc).doc("Complete node's maintenance.", "")
+
+Api.spDocSection("Key Value Store", "")
+
+Api.kvsBuckets = GET("KV", returns=sp.KeyValueBucketsList).doc("List all created key value buckets", "")
+Api.kvsList = GET("KV/List/{bucketName}", BucketName, returns=sp.KeyValueBucket).doc("List a complete key value bucket", "")
+Api.kvsGet = GET("KV/Get/{bucketName}/{keyName}", BucketName, KeyName, returns=sp.KeyValueBucket).doc("List a specific key-value pair from a specific bucket", "")
+Api.kvsCreate = POST('KV/Create/{bucketName}', BucketName).doc("Create a new bucket", "")
+Api.kvsDelete = POST('KV/Delete/{bucketName}', BucketName).doc("Delete a bucket", "")
+Api.kvsUpdate = POST('KV/Set/{bucketName}', BucketName, json=sp.KeyValueBucketSetDesc).doc("Update a bucket", "")

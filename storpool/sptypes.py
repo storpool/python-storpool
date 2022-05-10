@@ -139,6 +139,17 @@ def nameValidator(argName, regex, size, *blacklisted):
     return spTypeFun(argName, validator, '''a string({size}), matching {regex}, except {{{blacklisted}}}'''.format(size=size, regex=regex, blacklisted=", ".join(map(str, blacklisted))))
 
 
+def stringSizeValidator(argName, size):
+    def validator(name):
+        if name is None:
+            error('No {argName} specified', argName=argName)
+        if len(name) >= size:
+            error('Invalid {argName}. Max length is {max}', argName=argName, max=size)
+        return name
+
+    return spTypeFun(argName, validator, '''a string with a max length of {max}'''.format(max=size))
+
+
 def volumeSizeValidator(argName):
     def validator(size):
         try:
@@ -173,6 +184,9 @@ REMOTE_CLUSTER_NAME_REGEX = VOLUME_NAME_REGEX
 REMOTE_CLUSTER_NAME_SIZE = 64
 VOLUME_TAG_NAME_REGEX = r'^[A-Za-z0-9_\-.:]+$'
 VOLUME_TAG_VALUE_REGEX = r'^[A-Za-z0-9_\-.:]*$'
+KVS_NAME_REGEX = VOLUME_NAME_REGEX
+KVS_NAME_SIZE = 1023
+KVS_KEY_SIZE = 1023
 
 SECTOR_SIZE = 512
 MAX_CHAIN_LENGTH = 6
@@ -269,6 +283,10 @@ OnAttached = oneOf("OnAttached", "fail", "detach", "detachForce", "export")
 DematerializationStatus = oneOf("DematerializationStatus", "pending", "allObjectsUsed", "complete", "blockedRelocate", "blockedParentRelocate", "blockedParentRemoving", "blockedParentDifferentVag", "destroyed")
 DeleteBlocked = oneOf("DeleteBlocked", "not blocked", "pending", "rebasing", "flushing", "volume not found", "generation mismatch", "disk down", "multiple children", "peer down", "write not completed", "recovering from remote", "parent recovering from remote", "moving to remote", "unknown")
 MultiClusterState = oneOf("MultiClusterState", "owner", "ownerExported", "slaveCopy", "clusterLocal", "clusterLocalExported", "clusterLocalAutoReconcile", "clusterLocalAutoReconcileExported")
+
+
+KvsName = nameValidator("KvsName", KVS_NAME_REGEX, KVS_NAME_SIZE)
+KvsKeyName = stringSizeValidator('KvsKeyName', KVS_KEY_SIZE)
 
 
 # NETWORK
@@ -1874,4 +1892,30 @@ class MaintenanceCompleteDesc(object):
 class VolumeRevertDesc(object):
     '''
     toSnapshot: name of the snapshot to revert to
+    '''
+
+# KEY VALUE STORE
+
+
+@JsonObject(name=KvsName, version=longType, pairs=maybe({KvsKeyName: str}))
+class KeyValueBucket(object):
+    '''
+    name: name of the bucket
+    version: change version of the bucket, increments with each change
+    tags: arbitrary short key/value pairs stored in the bucket
+    '''
+
+
+@JsonObject(buckets={KvsName: longType})
+class KeyValueBucketsList(object):
+    '''
+    list of created buckets in the cluster
+    '''
+
+
+@JsonObject(runIfVersionIs=maybe(longType), set={KvsKeyName: str})
+class KeyValueBucketSetDesc(object):
+    '''
+    runIfVersionIs: if versions don't match, don't execute the command
+    set: list of key-value pairs to set / update / delete (empty value = deletion)
     '''
