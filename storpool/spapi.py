@@ -48,7 +48,7 @@ else:
     import urllib.parse as uquote
 
 
-VERSION = '7.1.0'
+VERSION = '7.1.1'
 
 
 SP_DEV_PATH = '/dev/storpool/'
