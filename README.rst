@@ -22,6 +22,43 @@ Version history
 7.1.0
 -----
 
+- INCOMPATIBLE CHANGES: spapi.Api:
+  - the useless and unused `diskInfo()` method was removed
+  - the internal `volumeBalancerGroups()` method was removed along with
+    the `VolumeBalancerSlot` and `VolumeBalancerAllocationGroup` types
+
+- INCOMPATIBLE CHANGES hopefully not affecting any installations:
+  - drop Python 2.6 support
+
+- add the `SP_SERVER7_CGROUPS` configuration value to support one more
+  StorPool server instance by default
+- add some new API methods:
+  - snapshotMoveToRemote
+  - snapshotUpdateVag
+  - vagList
+  - vagUpdate
+  - volumeUpdateVag
+  - volumesQuickStatus
+- add some new fields:
+  - ApiOkVolumeCreate.globalId
+  - ApiOkVolumeCreate.name
+  - ClusterStatus.iscsiTargets
+  - SnapshotUpdateDesc.template
+  - VolumeLimits.limitType
+- make the VolumeCreateDesc.name field optional to allow the creation of
+  StorPool volumes with an empty name (only accessible via globalId)
+- use a boolean check for an empty list
+- silence a couple of Pylint warnings with prejudice
+- clarify the description of the `volumesStatus()` API method to show that
+  it returns more information (and does more work) than `volumesQuickStatus()`
+- correct some grammar nits in the documentation
+- correct a pypi/pip confusion in the documentation
+- add more values to the internal `DematerializationStatus` enumeration
+- allow the API calls to be invoked with the additional `returnRawAPIData`
+  boolean parameter that skips the interpretation of the JSON data returned by
+  the StorPool API as Python classes and returns the JSON response directly as
+  a Python dictionary
+
 7.0.0
 -----
 
