@@ -159,7 +159,8 @@ class _API_METHOD(object):
             doc += "    Returns: {res}\n".format(res=returns.name)
 
         func.__doc__ = doc
-        func.spDoc = self.spDoc
+        if hasattr(self, "spDoc"):
+            func.spDoc = self.spDoc
 
         return func
 
@@ -236,7 +237,9 @@ class ApiMeta(type):
         cls.spDoc.add_section(name, desc)
 
     def __setattr__(cls, name, func):
-        cls.spDoc.add_call(func.spDoc)
+        doc = getattr(func, "spDoc", None)
+        if doc is not None:
+            cls.spDoc.add_call(func.spDoc)
 
         func = func.compile()
         func.__name__ = func.func_name = name
