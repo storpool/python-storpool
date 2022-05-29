@@ -69,6 +69,14 @@ DEFAULTS = {
         "-g cpuset:storpool.slice/server_6 -g memory:storpool.slice/common",
     "SP_SERVER7_CGROUPS":
         "-g cpuset:storpool.slice/server_7 -g memory:storpool.slice/common",
+    "SP_SERVER8_CGROUPS":
+        "-g cpuset:storpool.slice/server_8 -g memory:storpool.slice/common",
+    "SP_SERVER9_CGROUPS":
+        "-g cpuset:storpool.slice/server_9 -g memory:storpool.slice/common",
+    "SP_SERVER10_CGROUPS":
+        "-g cpuset:storpool.slice/server_10 -g memory:storpool.slice/common",
+    "SP_SERVER11_CGROUPS":
+        "-g cpuset:storpool.slice/server_11 -g memory:storpool.slice/common",
     "SP_NVMED_CGROUPS":
         "-g cpuset:storpool.slice/beacon -g memory:storpool.slice/common",
     "SP_CONTROLLER_CGROUPS": "-g cpuset:system.slice -g memory:system.slice",
