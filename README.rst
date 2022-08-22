@@ -22,6 +22,34 @@ Version history
 7.2.0
 -----
 
+- add the optional `override_config` string-to-string dict parameter to
+  the `spconfig.SPConfig` constructor to avoid reading any configuration
+  files and use the specified values instead
+- add support for up to 12 server instances in the SPConfig defaults
+- allow the definition of spapi.Api methods with no documentation,
+  e.g. method aliases
+- add some new API methods:
+  - kvsBuckets
+  - kvsList
+  - kvsGet
+  - kvsCreate
+  - kvsDelete
+  - kvsUpdate
+  - kvsTryUpdate
+- add some new fields:
+  - VolumeTemplateSpaceEst.snapshotsWithChildrenSize
+  - VolumeTemplateSpaceEst.snapshotsWithoutChildrenSize
+  - VolumeTemplateSpaceEst.volumesSize
+- add some new types:
+  - BucketName
+  - KeyName
+  - KeyValueBucket
+  - KeyValueBucketSetDesc
+  - KeyValueBucketsList
+  - KvsKeyName
+  - KvsName
+- make `spjson.JsonObjectImpl.__str__()` a real method
+
 7.1.0
 -----
 
