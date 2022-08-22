@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019 - 2021  StorPool.
+# Copyright (c) 2019 - 2022  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -349,3 +349,21 @@ def test_get_config_files():
         for filename, wanted in TEST_CONFIG_FILES.items()
         if wanted
     ) | set(["/etc/storpool.conf.d/another-subdir.conf"])
+
+
+def test_override_config():
+    """Test that SPConfig(override_config={...}) works properly."""
+
+    def do_not_invoke(*_args, **__kwargs):
+        """Make sure run_configet() is never invoked."""
+        raise NotImplementedError("This function should not be invoked!")
+
+    ncfg = {"SP_API_HTTP_HOST": "127.0.53.0", "SP_API_HTTP_PORT": 53}
+
+    with mock.patch(
+        "storpool.spconfig.SPConfig.run_confget",
+        new=do_not_invoke
+    ):
+        cfg = spconfig.SPConfig(override_config=ncfg)
+
+    assert dict(cfg.items()) == ncfg

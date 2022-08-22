@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014 - 2021  StorPool.
+# Copyright (c) 2014 - 2022  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -127,15 +127,30 @@ class SPConfig(object):
     When constructed, an object of this class will look for the various
     StorPool configuration files, parse them, and store the obtained
     variables and values into its internal dictionary.
-    The object may later be accessed as a dictionary. """
+    The object may later be accessed as a dictionary.
+
+    If the `override_config` parameter is passed to the constructor,
+    the string-to-string dictionary that it contains will be copied and
+    used instead. In that case, no configuration files will be read at all.
+    """
 
     PATH_CONFIG = '/etc/storpool.conf'
     PATH_CONFIG_DIR = '/etc/storpool.conf.d'
 
-    def __init__(self, section=None, missing_ok=False, use_env=True):
-        self._dict = {}
+    def __init__(
+        self,
+        section=None,
+        missing_ok=False,
+        use_env=True,
+        override_config=None,
+    ):
         self._section = section
-        self.run_confget(missing_ok=missing_ok, use_env=use_env)
+
+        if override_config is not None:
+            self._dict = dict(override_config)
+        else:
+            self._dict = {}
+            self.run_confget(missing_ok=missing_ok, use_env=use_env)
 
     @classmethod
     def get_config_files(cls, missing_ok=False):
