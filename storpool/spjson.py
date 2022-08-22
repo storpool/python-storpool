@@ -132,4 +132,6 @@ class JsonObjectImpl(object):
     toJson = to_json
 
     _asdict = to_json
-    __str__ = __repr__ = lambda self: str(self.to_json())
+
+    def __str__(self):
+        return str(self.to_json())
