@@ -663,6 +663,7 @@ class VolumeSummary(VolumeSummaryBase):
     createdFromGlobalId=maybe(internal(GlobalVolumeId)),
     dematerializationStatus=maybe(internal(DematerializationStatus)),
     deleteBlocked=maybe(internal(DeleteBlocked)),
+    destroyed=maybe(internal(bool)),
     volumeMoveSource=maybe(internal(bool)),
     mcState=maybe(internal(MultiClusterState)),
     mcStateVal=maybe(internal(int)))
@@ -673,6 +674,7 @@ class SnapshotSummary(VolumeSummaryBase):
     autoName: Is this snapshot anonymous.
     bound: Is this a bound snapshot. Bound snapshots are garbage-collected as soon as they remain childless and are no longer attached.
     deleted: Is this snapshot currently being deleted.
+    destroyed: Is this snapshot currently being destroyed.
     transient: Is this a transient snapshot. Transient snapshots are internally created when cloning a volume. They cannot be attached as they may be garbage-collected at any time.
     targetDeleteDate: Scheduled date for the snapshot to be deleted. Unix timestamp
     recoveringFromRemote: Is this snapshot's data currently being transferred from a remote location.
