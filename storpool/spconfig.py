@@ -80,6 +80,7 @@ DEFAULTS = {
     "SP_NVMED_CGROUPS":
         "-g cpuset:storpool.slice/beacon -g memory:storpool.slice/common",
     "SP_CONTROLLER_CGROUPS": "-g cpuset:system.slice -g memory:system.slice",
+    "SP_LOGD_CGROUPS": "-g cpuset:system.slice -g memory:system.slice",
     "SP_STAT_CGROUPS": "-g cpuset:system.slice -g memory:system.slice",
     "SP_ABRTSYNC_CGROUPS": "-g cpuset:system.slice -g memory:system.slice",
     "SP_KUBCSI_CGROUPS": "-g cpuset:system.slice -g memory:system.slice",
