@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014 - 2022  StorPool.
+# Copyright (c) 2014 - 2023  StorPool.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -117,6 +117,7 @@ setuptools.setup(
     ],
     install_requires=[
         'confget',
+        'six',
     ],
 
     zip_safe=True,
