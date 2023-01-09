@@ -112,12 +112,12 @@ setuptools.setup(
     url='http://www.storpool.com/',
 
     setup_requires=[
-        'confget',
-        'six',
+        'confget >= 2.2.0, < 6',
+        'six >= 1.9, < 2',
     ],
     install_requires=[
-        'confget',
-        'six',
+        'confget >= 2.2.0, < 6',
+        'six >= 1.9, < 2',
     ],
 
     zip_safe=True,
