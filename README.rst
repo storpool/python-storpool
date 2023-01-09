@@ -22,6 +22,8 @@ Version history
 7.2.0
 -----
 
+- add `six` as a runtime dependency; it has been used for years, but
+  we got away with `confget` pulling it in; this is no longer the case
 - add the optional `override_config` string-to-string dict parameter to
   the `spconfig.SPConfig` constructor to avoid reading any configuration
   files and use the specified values instead
@@ -49,6 +51,11 @@ Version history
   - KvsKeyName
   - KvsName
 - make `spjson.JsonObjectImpl.__str__()` a real method
+- add both upper and lower version constraints to all dependencies,
+  both in the setuptools metadata and the Tox test environments
+- drop the `feature_check` dependency from the `python_lint_3` Tox test
+  environment: we have not used `feature_check` ever since `SPConfig` was
+  rewritten to use the `confget` Python library
 
 7.1.0
 -----
