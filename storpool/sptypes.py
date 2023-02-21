@@ -280,6 +280,7 @@ iSCSIName = r'^[a-z0-9\-.:]+$'
 iSCSIPGName = r'^[A-Za-z0-9_\-.:]+$'
 
 OnAttached = oneOf("OnAttached", "fail", "detach", "detachForce", "export")
+mcMode = oneOf("move", "export")
 DematerializationStatus = oneOf("DematerializationStatus", "pending", "allObjectsUsed", "complete", "blockedRelocate", "blockedParentRelocate", "blockedParentRemoving", "blockedParentDifferentVag", "destroyed")
 DeleteBlocked = oneOf("DeleteBlocked", "not blocked", "pending", "rebasing", "flushing", "volume not found", "generation mismatch", "disk down", "multiple children", "peer down", "write not completed", "recovering from remote", "parent recovering from remote", "moving to remote", "unknown")
 MultiClusterState = oneOf("MultiClusterState", "owner", "ownerExported", "slaveCopy", "clusterLocal", "clusterLocalExported", "clusterLocalAutoReconcile", "clusterLocalAutoReconcileExported")
@@ -899,7 +900,7 @@ DetachClientsList = eitherOr([ClientId], "all")
 AttachmentPos = intRange('AttachmentPos', 0, MAX_CLIENT_DISK)
 
 
-@JsonObject(volume=VolumeNameOrGlobalId, detach=maybe(DetachClientsList), ro=maybe([ClientId]), rw=maybe([ClientId]), force=False, allowRemoteExported=maybe(bool), onRemoteAttached=maybe(OnAttached))
+@JsonObject(volume=VolumeNameOrGlobalId, detach=maybe(DetachClientsList), ro=maybe([ClientId]), rw=maybe([ClientId]), force=False, allowRemoteExported=maybe(bool), onRemoteAttached=maybe(OnAttached), mcMode=maybe(mcMode))
 class VolumeReassignDesc(object):
     '''
     volume: The name of the volume to be reassigned.
@@ -909,6 +910,7 @@ class VolumeReassignDesc(object):
     force: Whether to force detaching of open volumes.
     allowRemoteExported: if true allow attaching a remote exported volume
     onRemoteAttached: mutlicluster only. What to do if volume is attached in the remote cluster. "export" if not specified
+    mcMode: multicluster only. Wether to move the the volume to the local cluster if remote ("move", the default) or to leave it at the remote and export it ("export").
     '''
 
 
