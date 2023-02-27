@@ -22,6 +22,10 @@ Version history
 7.3.0
 -----
 
+- add the `SP_LOGD_CGROUPS` setting to the built-in configuration defaults
+- add the new mcMode type and the VolumeReassignDesc.mcMode field to control
+  the StorPool behavior when attaching a remote volume in multicluster mode
+
 7.2.0
 -----
 
