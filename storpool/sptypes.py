@@ -910,7 +910,7 @@ class VolumeReassignDesc(object):
     force: Whether to force detaching of open volumes.
     allowRemoteExported: if true allow attaching a remote exported volume
     onRemoteAttached: mutlicluster only. What to do if volume is attached in the remote cluster. "export" if not specified
-    mcMode: multicluster only. Wether to move the the volume to the local cluster if remote ("move", the default) or to leave it at the remote and export it ("export").
+    mcMode: multicluster only. Whether to move the the volume to the local cluster if remote ("move", the default) or to leave it at the remote and export it ("export").
     '''
 
 
